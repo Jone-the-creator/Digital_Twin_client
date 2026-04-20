@@ -3,7 +3,6 @@
 
 import logging
 import time
-from Classes import ProtocolAdapter, Quadcopter
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -13,7 +12,8 @@ from cflib.utils import uri_helper
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncLogger import SyncLogger
 
-class CRTP:
+# Crazyradio logger plugin
+class CRTP_logger:
 
     def __init__(self, quadcopter):
         # URI for the Crazyflie to connect to
