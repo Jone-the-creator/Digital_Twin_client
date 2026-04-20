@@ -1,47 +1,43 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 import time
 
+
 @dataclass
 class Position:
-    x: float = 0.0 # x coordinate in meters
-    y: float = 0.0 # y coordinate in meters
-    z: float = 0.0 # z coordinate in meters
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
 
 @dataclass
 class Attitude:
-    roll: float = 0.0 # roll in degrees
-    pitch: float = 0.0 # pitch in degrees
-    yaw: float = 0.0 # yaw in degrees
+    roll: float = 0.0
+    pitch: float = 0.0
+    yaw: float = 0.0
+
 
 class Quadcopter:
-    def __init__(self, ID):
-        # Device details
-        self.ID: str = ID 
-
-        # Kinematic state
-        self.position = Position() # position coordinates in meters
-        self.velocity = Position() # velocity in x, y, z in meters / second
-        self.attitude = Attitude() # attitude angles in degrees
-
-        # Timing
+    def __init__(self, ID: str):
+        self.ID: str = ID
+        self.position = Position()
+        self.velocity = Position()
+        self.attitude = Attitude()
         self.last_update_time: float = time.time()
 
         # System status (to be integrated later)
-"""       
+    """       
         self.battery_voltage: Optional[float] = None
         self.battery_percent: Optional[float] = None
-   #     self.flight_mode: Optional[str] = None
-"""
+        self.flight_mode: Optional[str] = None
+    """
+
+    def _update_time(self, timestamp: Optional[float] = None):  
+        self.last_update_time = timestamp if timestamp else time.time()
 
 
-# Centralised time update, when called will update with either current time on system or timestamp parameter
-def _update_time(self, timestamp):
-    self.last_update_time = timestamp if timestamp else time.time()
-
-
-# Update functions to be utilised by protocol adapter, must be input with keywords
-    def update_position(self, *, x=None, y=None, z=None, timestamp=None):
+    # Update functions to be utilised by protocol adapter, must be input with keywords
+    def update_position(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:
             self.position.x = x
         if y is not None:
@@ -51,7 +47,7 @@ def _update_time(self, timestamp):
 
         self._update_time(timestamp)
 
-    def update_velocity(self, *, x=None, y=None, z=None, timestamp=None):
+    def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:
             self.velocity.x = x
         if y is not None:
@@ -61,7 +57,7 @@ def _update_time(self, timestamp):
 
         self._update_time(timestamp)
 
-    def update_attitude(self, *, roll=None, pitch=None, yaw=None, timestamp=None):
+    def update_attitude(self, *, roll=None, pitch=None, yaw=None, timestamp: Optional[float] = None):
         if roll is not None:
             self.attitude.roll = roll
         if pitch is not None:
