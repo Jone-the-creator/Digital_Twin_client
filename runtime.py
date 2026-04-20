@@ -1,7 +1,4 @@
-from Classes.quadcopter import Quadcopter
-from Classes.adapter_manager import AdapterManager
-from Classes.crazyradio import CrazyradioUsbAdapter
-from Classes.transport_classes import UsbTransport
+from Classes import Quadcopter, AdapterManager, UsbTransport, CrazyradioUsbAdapter
 
 def main():
     quad = Quadcopter("quad_001")

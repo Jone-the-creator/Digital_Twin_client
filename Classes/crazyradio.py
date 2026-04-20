@@ -1,3 +1,5 @@
+#OBSELETE Crazyradio adapter, use connect_log_param instead
+
 from .protocol_adapter import ProtocolAdapter
 
 
