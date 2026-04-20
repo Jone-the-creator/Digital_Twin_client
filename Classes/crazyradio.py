@@ -2,22 +2,36 @@ from .protocol_adapter import ProtocolAdapter
 
 
 class CrazyradioUsbAdapter(ProtocolAdapter):
-    """Placeholder adapter for testing auto-detection.
-
-    This adapter treats the integer value 0x1000 as its detection token.
-    """
 
     @classmethod
     def detect(cls, data: bytes) -> bool:
-        try:
-            return data == 0x1000
-        except Exception:
-            return False
+        # checks that received data is both in bytes and is longer than 1 byte
+        return isinstance(data, (bytes, bytearray)) and len(data) >= 1
+
+    def __init__(self, quadcopter):
+        super().__init__(quadcopter)
+        self.packet_count = 0
 
     def feed(self, data: bytes):
-        # simple behavior for testing: update the quad's x position
-        try:
-            if isinstance(data, int):
-                self.quadcopter.update_position(x=float(data & 0xFF))
-        except Exception:
-            pass
+        if not data:
+            return
+        
+        status = data[0]
+        payload = data[1:]
+        self.packet_count += 1
+
+        if status != 0x00:
+            # transmission failed
+            return
+        
+        if not payload:
+            # valid ACK, no payload transmitted
+            return
+        
+        self._handle_radio_payload(payload)
+
+    def _handle_radio_payload(self, payload: bytes):
+
+        # PLACEHOLDER FOR ENCODING
+
+        pass
