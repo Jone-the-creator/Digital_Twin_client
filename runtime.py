@@ -3,33 +3,46 @@ from Comms_Plugins.Crazyradio import CRTP_logger
 import PySimpleGUI as sg
 import os.path
 
-
 # the following runtime will only be run when script is run, NOT when imported
 if __name__ == "__main__": 
+    comms_options =["Crazyradio", "TEST"]
+    state: str = "init" # begin in initialisation state
+    quad = None 
+    # layout for initialisation window
     layout = [
         [
-            [sg.Text("Enter your quadcopter ID:"),
-            sg.Input(default_text="quad_001",size=(25,1),key = "-QUADID-")],
-            [sg.Button("Enter", key = '-ENTERID-')],
+            [sg.Text("Enter your quadcopter ID and comms system:"),
+            sg.Input(default_text="quad_001",size=(25,1),key = "-QUADID-"),
+            sg.OptionMenu(default_value= "Crazyradio",size =(15,2), values=comms_options, key = "-COMMS-")],
+            [sg.Button("Enter", key = '-ENTER-')],
         ]
     ]
 
-    window = sg.Window("Quadcopter GUI", layout)
+    window = sg.Window("Quadcopter GUI", layout, element_padding= (4,10) )
+
+    # -- GUI LOOP --
     while True:
+        # run the initialisation window once
         event, values = window.read()
+
+        # if window is closed skip GUI loop
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
-        if event == "-ENTERID-":
-            quad = Quadcopter(values["-QUADID-"])
-            print(quad.ID)
+
+        # when ENTER button is pressed, instantiate a quadcopter object with the set values
+        if event == "-ENTER-":
+            quad = Quadcopter(ID = values["-QUADID-"], comms = values["-COMMS-"])
+            print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
+#                state = "logging"
             break
-#    quad = Quadcopter("quad_001")
-    
-    #comms plugin will be selected here based on selection in GUI
- #   if 1:
- #       comms = CRTP_logger(quad)
-
-#    print("Runtime started. Press Ctrl+C to stop.")
-
-#    comms.start()
     window.close()
+
+    # -- LOGGING --
+    # instantiate comms based on selected system
+    if(quad.comms == "Crazyradio"):
+        comms = CRTP_logger(quad)
+        comms.start()
+        print("Started Crazyradio logging for", quad.ID)
+
+
+

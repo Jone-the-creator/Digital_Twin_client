@@ -19,8 +19,9 @@ class Attitude:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str):
+    def __init__(self, ID: str, comms: str):
         self.ID: str = ID 
+        self.comms: str = comms
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
