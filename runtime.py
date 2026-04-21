@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
         # when ENTER button is pressed, instantiate a quadcopter object with the set values
         if event == "-ENTER-":
-            quad = Quadcopter(ID = values["-QUADID-"], comms = values["-COMMS-"])
+            quad = Quadcopter(ID = values["-QUADID-"].strip(), comms = values["-COMMS-"])
             print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
             break
     window.close()
