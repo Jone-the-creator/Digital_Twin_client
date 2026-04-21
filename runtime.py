@@ -6,8 +6,9 @@ import os.path
 # the following runtime will only be run when script is run, NOT when imported
 if __name__ == "__main__": 
     comms_options =["Crazyradio", "TEST"]
-    state: str = "init" # begin in initialisation state
     quad = None 
+    sg.theme('GrayGrayGray') # set theme for window
+
     # layout for initialisation window
     layout = [
         [
@@ -33,7 +34,6 @@ if __name__ == "__main__":
         if event == "-ENTER-":
             quad = Quadcopter(ID = values["-QUADID-"], comms = values["-COMMS-"])
             print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
-#                state = "logging"
             break
     window.close()
 
