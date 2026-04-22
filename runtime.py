@@ -1,7 +1,6 @@
 from Classes import Quadcopter
 from Comms_Plugins.Crazyradio import CRTP_logger
 import PySimpleGUI as sg
-import os.path
 
 # the following runtime will only be run when script is run, NOT when imported
 if __name__ == "__main__": 
@@ -12,14 +11,15 @@ if __name__ == "__main__":
     # layout for initialisation window
     layout = [
         [
-            [sg.Text("Enter your quadcopter ID and comms system:"),
-            sg.Input(default_text="quad_001",size=(25,1),key = "-QUADID-"),
-            sg.OptionMenu(default_value= "Crazyradio",size =(15,2), values=comms_options, key = "-COMMS-")],
-            [sg.Button("Enter", key = '-ENTER-')],
+            [sg.Text("Enter your quadcopter ID:", size=(35,1), justification='Right'),
+            sg.Input(default_text="quad_001",size=(25,1),key = "-QUADID-")],
+            [sg.Text("Select supported communications system:", size=(35,1), justification='Right'),
+            sg.OptionMenu(default_value= "Crazyradio",size =(20,2), values=comms_options, key = "-COMMS-")],
+            [sg.Push(),sg.Button("Enter", key = '-ENTER-')],
         ]
     ]
 
-    window = sg.Window("Quadcopter GUI", layout, element_padding= (4,10) )
+    window = sg.Window("Quadcopter GUI", layout, element_padding= (4,5) )
 
     # -- GUI LOOP --
     while True:
