@@ -1,6 +1,7 @@
 from Classes import Quadcopter
 from Comms_Plugins.Crazyradio import CRTP_logger
 import PySimpleGUI as sg
+import functions
 
 # the following runtime will only be run when script is run, NOT when imported
 if __name__ == "__main__": 
@@ -8,14 +9,16 @@ if __name__ == "__main__":
     quad = None 
     sg.theme('GrayGrayGray') # set theme for window
 
+    defaults = functions.load_settings("init_defaults.txt")
+
     # layout for initialisation window
     layout = [
         [
             [sg.Text("Enter your quadcopter ID:", size=(35,1), justification='Right'),
-            sg.Input(default_text="quad_001",size=(25,1),key = "-QUADID-")],
+            sg.Input(default_text=defaults.get("ID"),size=(25,1),key = "-QUADID-")],
             [sg.Text("Select supported communications system:", size=(35,1), justification='Right'),
-            sg.OptionMenu(default_value= "Crazyradio",size =(20,2), values=comms_options, key = "-COMMS-")],
-            [sg.Push(),sg.Button("Enter", key = '-ENTER-')],
+            sg.OptionMenu(default_value= defaults.get("comms"),size =(20,2), values=comms_options, key = "-COMMS-")],
+            [sg.Push(), sg.Button("Save as defaults", key = "-SAVE-"), sg.Button("Enter", key = "-ENTER-")],
         ]
     ]
 
@@ -35,6 +38,13 @@ if __name__ == "__main__":
             quad = Quadcopter(ID = values["-QUADID-"].strip(), comms = values["-COMMS-"])
             print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
             break
+        elif event == "-SAVE-": 
+                # when save as defaults button is pressed, save the entered parameters in a .txt file
+                functions.save_settings("init_defaults.txt", {
+                    "ID":values["-QUADID-"].strip(),
+                    "comms":values["-COMMS-"].strip()
+                })
+
     window.close()
 
     # -- LOGGING --
