@@ -1,5 +1,5 @@
 from Classes import Quadcopter
-from Comms_Plugins.Crazyradio import CRTP_logger
+from Comms_Plugins import CRTP_logger
 import PySimpleGUI as sg
 import functions
 

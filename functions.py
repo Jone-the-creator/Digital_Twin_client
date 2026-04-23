@@ -1,6 +1,8 @@
+import os
+
 # save dictionary keys and values into a file
 def save_settings(filename, settings):
-    with open(filename, "w") as file:
+    with open(os.path.join("cache",filename), "w") as file:
         for key, value in settings.items():
             file.write(f"{key}={value}\n")
 
@@ -9,7 +11,7 @@ def load_settings(filename):
     settings = {}
 
     try:
-        with open(filename, "r") as file:
+        with open(os.path.join("cache",filename), "r") as file:
             for line in file:
                 key, value = line.strip().split("=", 1)
                 settings[key] = value
