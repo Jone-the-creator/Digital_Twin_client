@@ -37,13 +37,13 @@ class CRTP_logger:
 
         self._setup_logging()
 
+        print(f"Opening link to {self.uri}")
+        self.cf.open_link(self.uri)
+
     def stop(self):
         if self.cf is not None and self.is_connected:
             print("Closing Crazyflie link")
             self.cf.close_link()
-
-        print(f"Opening link to {self.uri}")
-        self.cf.open_link(self.uri)
     
     def _setup_logging(self):
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
@@ -88,6 +88,6 @@ class CRTP_logger:
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
-        print(f"[{timestamp}] roll = {self.quadcopter.roll:.3f}, pitch = {self.quadcopter.pitch:.3f}, yaw = {self.quadcopter.yaw:.3f} ")
+        print(f"[{timestamp}] roll = {self.quadcopter.attitude.roll:.3f}, pitch = {self.quadcopter.attitude.pitch:.3f}, yaw = {self.quadcopter.attitude.yaw:.3f} ")
 
 
