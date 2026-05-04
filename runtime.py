@@ -1,6 +1,7 @@
 from Classes import Quadcopter
 from Comms_Plugins import CRTP_logger
 import PySimpleGUI as sg
+from cflib import crtp
 import functions
 
 # the following runtime will only be run when script is run, NOT when imported
@@ -23,6 +24,8 @@ if __name__ == "__main__":
     ]
 
     window = sg.Window("Quadcopter GUI", layout, element_padding= (4,5) )
+    
+    crtp.init_drivers() # Initialise CRTP drivers
 
     # -- GUI LOOP --
     while True:

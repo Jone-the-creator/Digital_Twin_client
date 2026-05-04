@@ -15,10 +15,13 @@ from cflib.crazyflie.syncLogger import SyncLogger
 # Crazyradio logger plugin
 class CRTP_logger:
 
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, uri = None):
         # URI for the Crazyflie to connect to
-        self.uri = uri_helper.uri_from_env(default= 'radio://0/80/2M/E7E7E7E7E7')
+        self.uri = uri or "radio://0/80/2M/E7E7E7E7E7"
         self.quadcopter = quadcopter
+        self.cf = None
+        self.logconf = None
+        self.is_connected = None
         #check URI of crazyflie with a USB cable 
         # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
 
@@ -26,30 +29,65 @@ class CRTP_logger:
         # Initialize the low-level drivers
         cflib.crtp.init_drivers()
 
+        self.cf = Crazyflie(rw_cache="./cache")
+
+        self.cf.connected.add_callback(self._connected)
+        self.cf.connection_failed.add_callback(self._connection_failed)
+        self.cf.disconnected.add_callback(self._disconnected)
+
+        self._setup_logging()
+
+    def stop(self):
+        if self.cf is not None and self.is_connected:
+            print("Closing Crazyflie link")
+            self.cf.close_link()
+
+        print(f"Opening link to {self.uri}")
+        self.cf.open_link(self.uri)
+    
+    def _setup_logging(self):
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
         # https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/user-guides/sbs_connect_log_param/ 
-
-        with SyncCrazyflie(self.uri, cf=Crazyflie(rw_cache='./cache')) as scf:
-            logconf = LogConfig(name='Stabilizer', period_in_ms=10)
-            logconf.add_variable('stabilizer.roll', 'float')
-            logconf.add_variable('stabilizer.pitch', 'float')
-            logconf.add_variable('stabilizer.yaw', 'float')
-
-        scf.cf.log.add_config(logconf)
-        logconf.data_received_cb.add_callback(self._on_log)
-        logconf.start()
-
-        time.sleep(5)
-
-        # Only output errors from the logging framework
-        logging.basicConfig(level=logging.ERROR)
+        self.logconf = LogConfig(
+            name='Stabilizer', 
+            period_in_ms=10
+        )
+        self.logconf.add_variable('stabilizer.roll', 'float')
+        self.logconf.add_variable('stabilizer.pitch', 'float')
+        self.logconf.add_variable('stabilizer.yaw', 'float')
 
         
-    def _on_log(self, timestamp, data, logconf):
+        self.logconf.data_received_cb.add_callback(self._log_data_received)
+
+
+    def _connected(self, uri):
+        print(f"Connected to Crazyflie at {uri}")
+        self.is_connected = True
+
+        try:
+            self.cf.log.add_config(self.logconf)
+            self.logconf.start()
+            print("Logging started")
+        except Exception as e:
+            print(f"Failed to start logging: {e}")
+
+    def _connection_failed(self, uri, msg):
+        print(f"Connection failed to {uri}: {msg}")
+        self.is_connected = False
+
+ 
+    def _disconnected(self, uri):
+        print(f"Disconnected from {uri}")
+        self.is_connected = False
+   
+        
+    def _log_data_received(self, timestamp, data, logconf):
         self.quadcopter.update_attitude(
             roll=data['stabilizer.roll'],
             pitch=data['stabilizer.pitch'],
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
-        print("Quadcopter update success!")
+        print(f"[{timestamp}] roll = {self.quadcopter.roll:.3f}, pitch = {self.quadcopter.pitch:.3f}, yaw = {self.quadcopter.yaw:.3f} ")
+
+
