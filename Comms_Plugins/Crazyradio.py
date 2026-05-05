@@ -17,20 +17,22 @@ class CRTP_logger:
 
     def __init__(self, quadcopter, uri = None):
         # URI for the Crazyflie to connect to
+        # check URI of crazyflie with a USB cable 
+        # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
         self.uri = uri or "radio://0/80/2M/E7E7E7E7E7"
         self.quadcopter = quadcopter
         self.cf = None
         self.logconf = None
-        self.is_connected = None
-        #check URI of crazyflie with a USB cable 
-        # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
+        self.is_connected = False
 
     def start(self):    
         # Initialize the low-level drivers
         cflib.crtp.init_drivers()
 
+        # instantiate crazyflie object
         self.cf = Crazyflie(rw_cache="./cache")
 
+        # add main callbacks (occurs under certain conditions, like an interrupt)
         self.cf.connected.add_callback(self._connected)
         self.cf.connection_failed.add_callback(self._connection_failed)
         self.cf.disconnected.add_callback(self._disconnected)
@@ -41,6 +43,7 @@ class CRTP_logger:
         self.cf.open_link(self.uri)
 
     def stop(self):
+        # stops connection if was previously connected to a crazyflie object
         if self.cf is not None and self.is_connected:
             print("Closing Crazyflie link")
             self.cf.close_link()
@@ -59,7 +62,7 @@ class CRTP_logger:
         
         self.logconf.data_received_cb.add_callback(self._log_data_received)
 
-
+    # callback functions (to be run in certain conditions)
     def _connected(self, uri):
         print(f"Connected to Crazyflie at {uri}")
         self.is_connected = True
@@ -71,6 +74,7 @@ class CRTP_logger:
         except Exception as e:
             print(f"Failed to start logging: {e}")
 
+
     def _connection_failed(self, uri, msg):
         print(f"Connection failed to {uri}: {msg}")
         self.is_connected = False
@@ -79,9 +83,10 @@ class CRTP_logger:
     def _disconnected(self, uri):
         print(f"Disconnected from {uri}")
         self.is_connected = False
-   
-        
+
+
     def _log_data_received(self, timestamp, data, logconf):
+        # updates values in quadcopter object based on readings from crazyflie
         self.quadcopter.update_attitude(
             roll=data['stabilizer.roll'],
             pitch=data['stabilizer.pitch'],
@@ -89,5 +94,3 @@ class CRTP_logger:
             timestamp=timestamp / 1000.0
         )
         print(f"[{timestamp}] roll = {self.quadcopter.attitude.roll:.3f}, pitch = {self.quadcopter.attitude.pitch:.3f}, yaw = {self.quadcopter.attitude.yaw:.3f} ")
-
-

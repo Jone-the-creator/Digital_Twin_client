@@ -38,7 +38,7 @@ class Quadcopter:
         self.last_update_time = timestamp if timestamp else time.time()
 
 
-    # Update functions to be utilised by comms plugins, must be input with keywords
+    # Update functions to be utilised by comms plugins, must be input with keywords (USE THESE IN PLUGINS)
     def update_position(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:
             self.position.x = x
