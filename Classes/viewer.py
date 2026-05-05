@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, QtCore
 import pyqtgraph.opengl as gl
 import numpy as np
 import math
+from .ModelClasses import ThrustBar, ThrustPanel
 
 class DroneViewer(QtWidgets.QWidget,):
     def __init__(self, quadcopter):
@@ -14,9 +15,12 @@ class DroneViewer(QtWidgets.QWidget,):
 
         self.view = gl.GLViewWidget()
         self.view.setCameraPosition(distance=5)
+        self.thrust_panel = ThrustPanel()
 
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(self.view)
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(self.view, stretch=3)
+        layout.addWidget(self.thrust_panel, stretch=1)
+
 
         self.model = self.create_drone_model()
         self.view.addItem(self.model)
