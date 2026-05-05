@@ -1,4 +1,4 @@
-from Classes import Quadcopter, DroneViewer
+from Classes import Quadcopter, DroneViewer, PS5Controller
 from Comms_Plugins import CRTP_logger
 import PySimpleGUI as sg
 import functions
@@ -12,6 +12,7 @@ if __name__ == "__main__":
     # List of all comms plugins (UPDATE WHEN ADDING PLUGIN)
     comms_options =["Crazyradio", "TEST"]
 
+    controller = PS5Controller()
     quad = None 
     sg.theme('GrayGrayGray') # set theme for window
 
@@ -64,6 +65,9 @@ if __name__ == "__main__":
         comms = CRTP_logger(quad)
         comms.start()
         print("Started Crazyradio logging for test")
+
+    lx, ly, rx, ry = controller.read()
+    roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
 
     app = QApplication(sys.argv)
     viewer = DroneViewer(quad)     # <-- same quad object
