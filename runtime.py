@@ -11,8 +11,15 @@ from PyQt6.QtWidgets import QApplication
 if __name__ == "__main__": 
     # List of all comms plugins (UPDATE WHEN ADDING PLUGIN)
     comms_options =["Crazyradio", "TEST"]
+    controller_exists: bool = True
 
-    controller = PS5Controller()
+    # instantiate controller if possible, otherwise move forward
+    try:
+        controller = PS5Controller()
+    except RuntimeError as e:
+        print(f"{e}, proceeding without")
+        controller_exists = False
+
     quad = None 
     sg.theme('GrayGrayGray') # set theme for window
 
@@ -66,11 +73,12 @@ if __name__ == "__main__":
         comms.start()
         print("Started Crazyradio logging for test")
 
-    lx, ly, rx, ry = controller.read()
-    roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
+    if (controller_exists):
+        lx, ly, rx, ry = controller.read()
+        roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
 
     app = QApplication(sys.argv)
-    viewer = DroneViewer(quad)     # <-- same quad object
+    viewer = DroneViewer(quad)    
     viewer.show()
 
     try:
