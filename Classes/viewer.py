@@ -1,4 +1,4 @@
-from PyQt6 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 import math
@@ -17,20 +17,23 @@ faces = mesh.faces
 center = vertices.mean(axis=0)
 vertices -= center
 
+md = gl.MeshData.sphere(rows=10,cols=10)
+
 class DroneViewer(QtWidgets.QWidget,):
     def __init__(self, quadcopter):
         super().__init__()
         self.quadcopter = quadcopter
 
         # window settings 
-        self.setWindowTitle("Quadcopter 3D Model")
+        self.setWindowTitle("Quadcopter Client")
         self.resize(1200,800)
 
+        # create and add thrust panel
         self.view = gl.GLViewWidget()
         self.view.setCameraPosition(
             distance=5,
             elevation=20,
-            azimuth=45)
+            azimuth=0)
         self.thrust_panel = ThrustPanel()
 
         layout = QtWidgets.QHBoxLayout(self)
@@ -38,6 +41,7 @@ class DroneViewer(QtWidgets.QWidget,):
         layout.addWidget(self.thrust_panel, stretch=1)
 
 
+        #create quadcopter model
         self.model = gl.GLMeshItem(
             vertexes = vertices,
             faces = faces,
@@ -46,7 +50,18 @@ class DroneViewer(QtWidgets.QWidget,):
             color = (0.7,0.7,0.7,1.0),
             shader = 'shaded'
         )
+
+        #create front marker
+        self.front_marker = gl.GLMeshItem(
+            meshdata = md,
+            color=(1, 0, 0, 1),
+            smooth=False,
+            shader='balloon'
+        )
+
+        #add models
         self.view.addItem(self.model)
+        self.view.addItem(self.front_marker)
 
         # Timer → render loop
         self.timer = QtCore.QTimer()
@@ -71,3 +86,11 @@ class DroneViewer(QtWidgets.QWidget,):
         self.model.rotate(yaw, 0, 0, 1)     # Z
         self.model.rotate(pitch, 0, 1, 0)   # Y
         self.model.rotate(-roll, 1, 0, 0)    # X
+
+        # position front marker in front of the drone
+        local = QtGui.QMatrix4x4()
+        local.translate(100, -10, 0)
+        local.scale(5, 5, 5)
+        world = self.model.transform() * local
+        self.front_marker.setTransform(world)
+
