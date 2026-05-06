@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Optional
 import time
 import numpy as np
+from Classes import PS5controller
+import functions
 
 
 @dataclass
@@ -17,12 +19,21 @@ class Attitude:
     pitch: float = 0.0
     yaw: float = 0.0
 
+@dataclass
+class ControlInputs:
+    roll: float = 0.0
+    pitch: float = 0.0
+    yaw_rate: float = 0.0
+    thrust: float = 0.0
+
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str, comms: str):
+    def __init__(self, ID: str, comms: str, controller):
         self.ID: str = ID 
         self.comms: str = comms
+        self.controller = controller
+        self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
@@ -93,3 +104,13 @@ class Quadcopter:
             self.thrust[4,0] = m4
 
         self._update_time(timestamp)
+
+    def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None):
+        if roll is not None:
+            self.controls.roll = roll
+        if pitch is not None:
+            self.controls.pitch = pitch
+        if yaw_rate is not None:
+            self.controls.yaw_rate = yaw_rate
+        if thrust is not None:
+            self.controls.thrust = thrust

@@ -50,9 +50,9 @@ class ThrustPanel(QWidget):
         layout.addWidget(self.m3)
         layout.addWidget(self.m4)
 
-    def update(self, thrust):
-        self.total.set_value(thrust[0,0])
-        self.m1.set_value(thrust[1,0])
-        self.m2.set_value(thrust[2,0])
-        self.m3.set_value(thrust[3,0])
-        self.m4.set_value(thrust[4,0])
+    def update(self, total, m1, m2, m3, m4):
+        self.total.set_value(total)
+        self.m1.set_value(m1)
+        self.m2.set_value(m2)
+        self.m3.set_value(m3)
+        self.m4.set_value(m4)

@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
         # when ENTER button is pressed, instantiate a quadcopter object with the set values
         if event == "-ENTER-":
-            quad = Quadcopter(ID = values["-QUADID-"].strip(), comms = values["-COMMS-"])
+            quad = Quadcopter(ID = values["-QUADID-"].strip(), comms = values["-COMMS-"], controller = controller if controller_exists else None)
             print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
             break
         elif event == "-SAVE-": 
@@ -73,12 +73,8 @@ if __name__ == "__main__":
         comms.start()
         print("Started Crazyradio logging for test")
 
-    if (controller_exists):
-        lx, ly, rx, ry = controller.read()
-        roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
-
     app = QApplication(sys.argv)
-    viewer = DroneViewer(quad, controller if controller_exists else None)    
+    viewer = DroneViewer(quad)    
     viewer.show()
 
     try:
