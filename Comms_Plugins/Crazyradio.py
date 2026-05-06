@@ -93,4 +93,3 @@ class CRTP_logger:
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
-        print(f"[{timestamp}] roll = {self.quadcopter.attitude.roll:.3f}, pitch = {self.quadcopter.attitude.pitch:.3f}, yaw = {self.quadcopter.attitude.yaw:.3f} ")

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 import time
+import numpy as np
 
 
 @dataclass
@@ -25,6 +26,15 @@ class Quadcopter:
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
+        # thrust array
+        self.thrust = np.array([ [0.0], # total thrust
+                                 [0.0], # M1 thrust
+                                 [0.0], # M2 thrust
+                                 [0.0], # M3 thrust
+                                 [0.0], # M4 thrust
+
+        ])
+
         self.last_update_time: float = time.time()
 
         # System status (to be integrated later)
@@ -66,5 +76,20 @@ class Quadcopter:
             self.attitude.pitch = pitch
         if yaw is not None:
             self.attitude.yaw = yaw
+
+        self._update_time(timestamp)
+
+        
+    def update_thrust(self, total=None, m1=None, m2=None, m3=None, m4=None, timestamp: Optional[float] = None):
+        if total is not None:
+            self.thrust[0,0] = total
+        if m1 is not None:
+            self.thrust[1,0] = m1
+        if m2 is not None:
+            self.thrust[2,0] = m2
+        if m3 is not None:
+            self.thrust[3,0] = m3
+        if m4 is not None:
+            self.thrust[4,0] = m4
 
         self._update_time(timestamp)

@@ -5,6 +5,7 @@ import math
 import trimesh
 from .ModelClasses import ThrustBar, ThrustPanel
 import os
+import functions
 
 #importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(__file__)
@@ -20,9 +21,10 @@ vertices -= center
 md = gl.MeshData.sphere(rows=10,cols=10)
 
 class DroneViewer(QtWidgets.QWidget,):
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, controller = None):
         super().__init__()
         self.quadcopter = quadcopter
+        self.controller = controller
 
         # window settings 
         self.setWindowTitle("Quadcopter Client")
@@ -30,16 +32,17 @@ class DroneViewer(QtWidgets.QWidget,):
 
         # create and add thrust panel
         self.view = gl.GLViewWidget()
-        self.view.setCameraPosition(
-            distance=5,
-            elevation=20,
-            azimuth=0)
         self.thrust_panel = ThrustPanel()
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
         layout.addWidget(self.thrust_panel, stretch=1)
 
+        # initialise camera viewing from behind drone
+        self.view.setCameraPosition(
+            distance=5,
+            elevation=20,
+            azimuth=0)
 
         #create quadcopter model
         self.model = gl.GLMeshItem(
@@ -63,7 +66,7 @@ class DroneViewer(QtWidgets.QWidget,):
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
 
-        # Timer → render loop
+        #render loop
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_model)
         self.timer.start(16)  # ~60 FPS
@@ -93,4 +96,13 @@ class DroneViewer(QtWidgets.QWidget,):
         local.scale(5, 5, 5)
         world = self.model.transform() * local
         self.front_marker.setTransform(world)
+
+        # update thrust in model
+        if self.controller:
+            lx, ly, rx, ry = self.controller.read()
+
+            roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
+
+            self.quadcopter.update_thrust(total=thrust)
+            self.thrust_panel.update(self.quadcopter.thrust)
 

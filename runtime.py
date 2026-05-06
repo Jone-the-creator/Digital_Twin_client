@@ -78,7 +78,7 @@ if __name__ == "__main__":
         roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
 
     app = QApplication(sys.argv)
-    viewer = DroneViewer(quad)    
+    viewer = DroneViewer(quad, controller if controller_exists else None)    
     viewer.show()
 
     try:
