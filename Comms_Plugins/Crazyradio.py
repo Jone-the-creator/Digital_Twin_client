@@ -1,8 +1,7 @@
 # written based on instruction from 
 # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
 
-import logging
-import time
+import logging, time, threading
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -41,6 +40,7 @@ class CRTP_logger:
 
         print(f"Opening link to {self.uri}")
         self.cf.open_link(self.uri)
+        threading.Thread(target=self._control_loop, daemon=True).start()
 
     def stop(self):
         # stops connection if was previously connected to a crazyflie object
@@ -92,4 +92,22 @@ class CRTP_logger:
             pitch=data['stabilizer.pitch'],
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
+        )
+
+
+
+    def _control_loop(self):
+        while True:
+            if self.is_connected:
+                self.send_controls()
+            time.sleep(0.02)
+
+    def send_controls(self):
+        if not self.is_connected:
+            return
+        self.cf.commander.send_setpoint(
+            float(self.quadcopter.controls.roll),
+            float(self.quadcopter.controls.pitch),
+            float(self.quadcopter.controls.yaw_rate),
+            int(self.quadcopter.controls.thrust)
         )

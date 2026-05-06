@@ -98,21 +98,12 @@ class DroneViewer(QtWidgets.QWidget,):
 
         # update thrust in model
         
-        if self.quadcopter.controller:
-            lx, ly, rx, ry = self.quadcopter.controller.read()
+        thrust = self.quadcopter.controls.thrust
 
-            roll, pitch, yaw_rate, thrust = functions.joystick_to_setpoint(lx, ly, rx, ry)
-
-            self.quadcopter.update_controls(
-                roll=roll,
-                pitch=pitch,
-                yaw_rate=yaw_rate,
-                thrust=thrust
-            )
-
-            self.quadcopter.update_thrust(total=thrust)
-            self.thrust_panel.update(total=thrust, 
-                                    m1 = self.quadcopter.thrust[1,0],
-                                    m2 = self.quadcopter.thrust[2,0],
-                                    m3 = self.quadcopter.thrust[3,0],
-                                    m4 = self.quadcopter.thrust[4,0])
+        self.thrust_panel.update(
+            total=thrust / 60000 * 100,
+            m1=self.quadcopter.thrust[1,0],
+            m2=self.quadcopter.thrust[2,0],
+            m3=self.quadcopter.thrust[3,0],
+            m4=self.quadcopter.thrust[4,0],
+        )
