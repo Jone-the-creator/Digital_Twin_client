@@ -21,6 +21,7 @@ class PS5Controller:
         ly = self.joy.get_axis(1)   # Left stick Y
         rx = self.joy.get_axis(2)   # Right stick X
         ry = self.joy.get_axis(3)   # Right stick Y
+        square = self.joy.get_button(2) # Square button
 
-        return lx, ly, rx, ry
+        return lx, ly, rx, ry, square
     

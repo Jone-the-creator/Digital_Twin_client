@@ -36,17 +36,16 @@ def joystick_to_setpoint(lx, ly, rx, ry):
     yaw_rate = lx * 50.0      # deg/s
 
 
-
+    # thrust calculation
     thrust = -ly
     thrust = max(0.0, thrust)
-
     if thrust < 0.05:
         thrust = 0.0
-
     thrust = int(max(0, min(thrust * 60000, 65000)))
 
     return roll, pitch, yaw_rate, thrust
 
+# hover logic to be run when hover mode active
 def hover_logic():
     thrust = int(38000)
     roll = 0.0

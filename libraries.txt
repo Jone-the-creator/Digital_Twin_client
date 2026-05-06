@@ -1,0 +1,8 @@
+numpy
+pygame
+cflib
+PyQt6
+pyqtgraph
+PyOpenGL
+trimesh
+PySimpleGUI

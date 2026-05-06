@@ -6,52 +6,10 @@ from PyQt6.QtWidgets import QApplication
 # const errors
 pitch_trim = 1.02
 
-
-def control_loop(quad):
-    import time
-
-    # initialise smoothed thrust once
-    quad._thrust_smoothed = 0
-
-    alpha = 0.1  # smoothing factor
-
-    while True:
-        if quad.controller:
-            lx, ly, rx, ry = quad.controller.read()
-            hover_pressed = quad.controller.joy.get_button(2)  # square button
-            if hover_pressed:
-                # hover mode
-                roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
-                print(f"thrust = {thrust_raw}")
-            else:
-                # manual mode
-                roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
-
-            quad._thrust_smoothed = (
-                (1 - alpha) * quad._thrust_smoothed +
-                alpha * thrust_raw
-            )
-
-            thrust = int(quad._thrust_smoothed)
-
-            pitch -= pitch_trim
-
-            quad.update_controls(
-                roll=roll,
-                pitch=pitch,
-                yaw_rate=yaw_rate,
-                thrust=thrust
-            )
-
-            quad.update_thrust(total=thrust)
-
-        time.sleep(0.03)  # ~30 Hz
-
-
 # the following runtime will only be run when script is run, NOT when imported
 if __name__ == "__main__": 
     # List of all comms plugins (UPDATE WHEN ADDING PLUGIN)
-    comms_options =["Crazyradio", "TEST"]
+    comms_options =["Crazyradio",]
     controller_exists: bool = True
 
     # instantiate controller if possible, otherwise move forward
@@ -106,6 +64,44 @@ if __name__ == "__main__":
 
     # -- CONTROL --
 
+    # quadcopter control loop
+    def control_loop(quad):
+        # initialise smoothed thrust once
+        quad._thrust_smoothed = 0
+
+        alpha = 0.1  # smoothing factor
+
+        while True:
+            if quad.controller:
+                # read controller inputs
+                lx, ly, rx, ry, square = quad.controller.read() # controller read
+                hover_pressed = square  # hover mode enabled with holding square
+
+                if hover_pressed:
+                    # hover mode
+                    roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
+                else:
+                    # manual mode
+                    roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
+
+                # thrust is smoothed for safety
+                quad._thrust_smoothed = ((1 - alpha) * quad._thrust_smoothed +alpha * thrust_raw)
+                thrust = int(quad._thrust_smoothed)
+                
+                # corrected for error in attitude estimation
+                pitch -= pitch_trim
+
+                # update quadcopter object control inputs with inputs from controller
+                quad.update_controls(
+                    roll=roll,
+                    pitch=pitch,
+                    yaw_rate=yaw_rate,
+                    thrust=thrust
+                )
+
+            time.sleep(0.03)  # ~30 Hz
+
+    # run control loop in separate thread
     threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
 
     # -- LOGGING --
@@ -118,6 +114,7 @@ if __name__ == "__main__":
         comms.start()
         print("Started Crazyradio logging for test")
 
+    # instantiate client window
     app = QApplication(sys.argv)
     viewer = DroneViewer(quad)    
     viewer.show()

@@ -40,6 +40,8 @@ class CRTP_logger:
 
         print(f"Opening link to {self.uri}")
         self.cf.open_link(self.uri)
+
+        # send controls in a separate thread
         threading.Thread(target=self._control_loop, daemon=True).start()
 
     def stop(self):
@@ -101,8 +103,9 @@ class CRTP_logger:
         while True:
             if self.is_connected:
                 self.send_controls()
-            time.sleep(0.02)
+            time.sleep(0.03) # ~30Hz
 
+    # controls that will be sent to the crazyflie 
     def send_controls(self):
         if not self.is_connected:
             return

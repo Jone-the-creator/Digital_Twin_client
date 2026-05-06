@@ -1,11 +1,8 @@
 from PyQt6 import QtWidgets, QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
-import math
-import trimesh
+import math, os, trimesh, functions
 from .ModelClasses import ThrustBar, ThrustPanel
-import os
-import functions
 
 #importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(__file__)

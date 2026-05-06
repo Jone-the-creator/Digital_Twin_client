@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
-import time
+import time, functions
 import numpy as np
 from Classes import PS5controller
-import functions
 
 
 @dataclass
@@ -90,20 +89,6 @@ class Quadcopter:
 
         self._update_time(timestamp)
 
-        
-    def update_thrust(self, total=None, m1=None, m2=None, m3=None, m4=None, timestamp: Optional[float] = None):
-        if total is not None:
-            self.thrust[0,0] = total
-        if m1 is not None:
-            self.thrust[1,0] = m1
-        if m2 is not None:
-            self.thrust[2,0] = m2
-        if m3 is not None:
-            self.thrust[3,0] = m3
-        if m4 is not None:
-            self.thrust[4,0] = m4
-
-        self._update_time(timestamp)
 
     def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None):
         if roll is not None:
