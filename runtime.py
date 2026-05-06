@@ -1,10 +1,51 @@
 from Classes import Quadcopter, DroneViewer, PS5Controller
 from Comms_Plugins import CRTP_logger
 import PySimpleGUI as sg
-import functions
-import time
-import sys
+import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
+# const errors
+pitch_trim = 1.02
+
+
+def control_loop(quad):
+    import time
+
+    # initialise smoothed thrust once
+    quad._thrust_smoothed = 0
+
+    alpha = 0.1  # smoothing factor
+
+    while True:
+        if quad.controller:
+            lx, ly, rx, ry = quad.controller.read()
+            hover_pressed = quad.controller.joy.get_button(2)  # square button
+            if hover_pressed:
+                # hover mode
+                roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
+                print(f"thrust = {thrust_raw}")
+            else:
+                # manual mode
+                roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
+
+            quad._thrust_smoothed = (
+                (1 - alpha) * quad._thrust_smoothed +
+                alpha * thrust_raw
+            )
+
+            thrust = int(quad._thrust_smoothed)
+
+            pitch -= pitch_trim
+
+            quad.update_controls(
+                roll=roll,
+                pitch=pitch,
+                yaw_rate=yaw_rate,
+                thrust=thrust
+            )
+
+            quad.update_thrust(total=thrust)
+
+        time.sleep(0.03)  # ~30 Hz
 
 
 # the following runtime will only be run when script is run, NOT when imported
@@ -63,6 +104,10 @@ if __name__ == "__main__":
 
     window.close()
 
+    # -- CONTROL --
+
+    threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
+
     # -- LOGGING --
     # instantiate comms based on selected system
     comms = None
@@ -83,6 +128,8 @@ if __name__ == "__main__":
         print("Shutting down")
         if comms:
             comms.stop()
+
+
 
 
 

@@ -36,20 +36,21 @@ def joystick_to_setpoint(lx, ly, rx, ry):
     yaw_rate = lx * 50.0      # deg/s
 
 
-    thrust = -ly
 
-    # ignore downward motion
+    thrust = -ly
     thrust = max(0.0, thrust)
 
-    # deadzone near zero
     if thrust < 0.05:
         thrust = 0.0
 
-    # scale
-    thrust = thrust * 100
+    thrust = int(max(0, min(thrust * 60000, 65000)))
 
-    # clamp + convert
-    thrust = int(max(0, min(thrust, 100)))
+    return roll, pitch, yaw_rate, thrust
 
+def hover_logic():
+    thrust = int(38000)
+    roll = 0.0
+    pitch = 0.0
+    yaw_rate = 0.0
 
     return roll, pitch, yaw_rate, thrust
