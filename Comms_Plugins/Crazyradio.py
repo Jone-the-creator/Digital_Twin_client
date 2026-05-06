@@ -93,6 +93,7 @@ class CRTP_logger:
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
+        print(f"roll = {data['stabilizer.roll']}, pitch = {data['stabilizer.pitch']}, yaw = {data['stabilizer.yaw']}")
 
 
 

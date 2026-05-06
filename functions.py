@@ -47,6 +47,10 @@ def joystick_to_setpoint(lx, ly, rx, ry):
 
     return roll, pitch, yaw_rate, thrust
 
-
+def hover_logic():
+    thrust = int(38000)
+    roll = 0.0
+    pitch = 0.0
+    yaw_rate = 0.0
 
     return roll, pitch, yaw_rate, thrust

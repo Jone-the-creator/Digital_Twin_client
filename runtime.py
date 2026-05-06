@@ -3,6 +3,8 @@ from Comms_Plugins import CRTP_logger
 import PySimpleGUI as sg
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
+# const errors
+pitch_trim = 1.02
 
 
 def control_loop(quad):
@@ -15,13 +17,16 @@ def control_loop(quad):
 
     while True:
         if quad.controller:
-            # ✅ 1. Read controller
             lx, ly, rx, ry = quad.controller.read()
+            hover_pressed = quad.controller.joy.get_button(2)  # square button
+            if hover_pressed:
+                # hover mode
+                roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
+                print(f"thrust = {thrust_raw}")
+            else:
+                # manual mode
+                roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
 
-            # ✅ 2. Compute raw setpoints
-            roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
-
-            # ✅ 3. Apply smoothing
             quad._thrust_smoothed = (
                 (1 - alpha) * quad._thrust_smoothed +
                 alpha * thrust_raw
@@ -29,10 +34,8 @@ def control_loop(quad):
 
             thrust = int(quad._thrust_smoothed)
 
-            # ✅ 4. Limit thrust (safety)
-            thrust = min(thrust, 30000)
+            pitch -= pitch_trim
 
-            # ✅ 5. Update quad state
             quad.update_controls(
                 roll=roll,
                 pitch=pitch,
