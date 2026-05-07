@@ -74,15 +74,15 @@ if __name__ == "__main__":
         while True:
             if quad.controller:
                 # read controller inputs
-                lx, ly, rx, ry, square = quad.controller.read() # controller read
+                lx, ly, lt, rx, ry, rt, square = quad.controller.read() # controller read
                 hover_pressed = square  # hover mode enabled with holding square
 
-                if hover_pressed:
+#                if hover_pressed:
                     # hover mode
-                    roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
-                else:
+#                    roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
+#                else:
                     # manual mode
-                    roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
+                roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
 
                 # thrust is smoothed for safety
                 quad._thrust_smoothed = ((1 - alpha) * quad._thrust_smoothed +alpha * thrust_raw)

@@ -1,5 +1,4 @@
-import os
-import pygame
+import os, pygame
 import numpy as np
 
 # save dictionary keys and values into a file
@@ -22,27 +21,45 @@ def load_settings(filename):
     
     return settings
 
-def joystick_to_setpoint(lx, ly, rx, ry):
+def joystick_to_setpoint(lx, ly, lt, rx, ry, rt):
     # Deadzone
     def dz(v, d=0.05):
         if abs(v) < d:
             return 0
         return (v - np.sign(v) * d / 1 - d)
 
-    lx, ly, rx, ry = map(dz, (lx, ly, rx, ry))
+    lx, ly, rx, ry = map(dz, (lx, ly, lt, rx, ry, rt))
 
     roll = rx * 10.0          # degrees
     pitch = -ry * 10.0        # invert Y
     yaw_rate = lx * 50.0      # deg/s
 
+    # trigger thrust calculation
+    # Deadzones
+    rt_val = 0.0 if abs(rt) < 0.05 else max(0.0, rt)
+    lt_val = 0.0 if abs(lt) < 0.05 else max(0.0, lt)
 
-    # thrust calculation
+    step = 0.03   # increase/decrease per update tick
+
+    # Apply changes
+    thrust_set += rt_val * step
+    thrust_set -= lt_val * step
+
+    # Clamp to valid range
+    thrust_set = max(0.0, min(1.0, thrust_set))
+
+    # Output
+    thrust = int(thrust_set * 65000)
+
+
+    # left stick thrust calculation
+    """
     thrust = -ly
     thrust = max(0.0, thrust)
     if thrust < 0.05:
         thrust = 0.0
     thrust = int(max(0, min(thrust * 60000, 65000)))
-
+    """
     return roll, pitch, yaw_rate, thrust
 
 # hover logic to be run when hover mode active
