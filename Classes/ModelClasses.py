@@ -56,3 +56,54 @@ class ThrustPanel(QWidget):
         self.m2.set_value(m2)
         self.m3.set_value(m3)
         self.m4.set_value(m4)
+
+class Reading(QWidget):
+    def __init__(self, name = "Reading", hasProgressBar = False):
+        super().__init__()
+
+        self.name = name
+        self.hasProgressBar = hasProgressBar
+        self.bar = None
+
+        # Layout
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        # Label (text)
+        self.label = QLabel(f"{self.name}: 0")
+        layout.addWidget(self.label)
+        
+        if self.hasProgressBar:
+            # Progress bar
+            self.bar = QProgressBar()
+            self.bar.setRange(0, 100)
+            
+            layout.addWidget(self.bar)
+
+    def set_value(self, value, suffix = ""): # If progress bar already set, suffix will automatically be %
+        # Clamp value to 0–100
+        if self.hasProgressBar:
+            value = max(0, min(100, value))
+            self.bar.setValue(value)
+            self.label.setText(f"{self.name}: {value}%")
+            if value < 20:
+                color = "red"
+            elif value < 50:
+                color = "orange"
+            else:
+                color = "green"
+                self.bar.setStyleSheet(f"QProgressBar::chunk {{ background: {color}; }}")
+
+        else:
+            self.label.setText(f"{self.name}: {value} {suffix}")
+
+class ReadingPanel(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.battery = Reading(name = "Battery", hasProgressBar= True)
+
+        layout = QHBoxLayout(self)
+        layout.addWidget(self.battery)
+
+    def update(self, battery):
+        self.battery.set_value(battery)

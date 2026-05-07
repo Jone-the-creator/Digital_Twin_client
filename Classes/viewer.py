@@ -2,7 +2,7 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 import math, os, trimesh, functions
-from .ModelClasses import ThrustBar, ThrustPanel
+from .ModelClasses import ThrustBar, ThrustPanel, Reading, ReadingPanel
 
 #importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(__file__)
@@ -29,10 +29,12 @@ class DroneViewer(QtWidgets.QWidget,):
         # create and add thrust panel
         self.view = gl.GLViewWidget()
         self.thrust_panel = ThrustPanel()
+        self.reading_panel = ReadingPanel()
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
         layout.addWidget(self.thrust_panel, stretch=1)
+        layout.addWidget(self.reading_panel,stretch=1)
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(
@@ -104,3 +106,8 @@ class DroneViewer(QtWidgets.QWidget,):
             m3=self.quadcopter.thrust[3,0],
             m4=self.quadcopter.thrust[4,0],
         )
+
+        # update readings
+
+        battery = self.quadcopter.battery_percent
+        self.reading_panel.update(battery=battery)

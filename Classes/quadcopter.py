@@ -48,11 +48,8 @@ class Quadcopter:
         self.last_update_time: float = time.time()
 
         # System status (to be integrated later)
-    """       
-        self.battery_voltage: Optional[float] = None
         self.battery_percent: Optional[float] = None
-        self.flight_mode: Optional[str] = None
-    """
+
     # centralised timestamp update function, will use provided timestamp if possible
     def _update_time(self, timestamp: Optional[float] = None):  
         self.last_update_time = timestamp if timestamp else time.time()
