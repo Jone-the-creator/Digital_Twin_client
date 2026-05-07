@@ -102,8 +102,10 @@ class ReadingPanel(QWidget):
         super().__init__()
         self.battery = Reading(name = "Battery", hasProgressBar= True)
 
-        layout = QHBoxLayout(self)
+        layout = QVBoxLayout(self)
         layout.addWidget(self.battery)
+
+        layout.addStretch()
 
     def update(self, battery):
         self.battery.set_value(battery)

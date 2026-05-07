@@ -31,6 +31,7 @@ class DroneViewer(QtWidgets.QWidget,):
         self.thrust_panel = ThrustPanel()
         self.reading_panel = ReadingPanel()
 
+
         layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
         layout.addWidget(self.thrust_panel, stretch=1)

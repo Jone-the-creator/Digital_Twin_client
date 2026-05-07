@@ -60,6 +60,7 @@ class CRTP_logger:
         self.logconf.add_variable('stabilizer.roll', 'float')
         self.logconf.add_variable('stabilizer.pitch', 'float')
         self.logconf.add_variable('stabilizer.yaw', 'float')
+        self.logconf.add_variable('pm.batteryLevel', 'uint8_t')
 
         
         self.logconf.data_received_cb.add_callback(self._log_data_received)
@@ -95,6 +96,7 @@ class CRTP_logger:
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
+        self.quadcopter.battery_percent = data['pm.batteryLevel']
         print(f"roll = {data['stabilizer.roll']}, pitch = {data['stabilizer.pitch']}, yaw = {data['stabilizer.yaw']}")
 
 
