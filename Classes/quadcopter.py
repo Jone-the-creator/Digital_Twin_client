@@ -36,14 +36,15 @@ class Quadcopter:
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
-        # thrust array
+        self.thrust = 0.0
+        """ #thrust array
         self.thrust = np.array([ [0.0], # total thrust
                                  [0.0], # M1 thrust
                                  [0.0], # M2 thrust
                                  [0.0], # M3 thrust
                                  [0.0], # M4 thrust
-
         ])
+        """
 
         self.last_update_time: float = time.time()
 

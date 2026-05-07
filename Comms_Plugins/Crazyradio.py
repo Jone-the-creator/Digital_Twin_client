@@ -7,7 +7,6 @@ import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.utils import uri_helper
-
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncLogger import SyncLogger
 
@@ -17,7 +16,6 @@ class CRTP_logger:
     def __init__(self, quadcopter, uri = None):
         # URI for the Crazyflie to connect to
         # check URI of crazyflie with a USB cable 
-        # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
         self.uri = uri or "radio://0/80/2M/E7E7E7E7E7"
         self.quadcopter = quadcopter
         self.cf = None
@@ -52,11 +50,12 @@ class CRTP_logger:
     
     def _setup_logging(self):
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
-        # https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/user-guides/sbs_connect_log_param/ 
         self.logconf = LogConfig(
             name='Stabilizer', 
             period_in_ms=10
         )
+        # choose logged variables here, can find in the following list:
+        # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
         self.logconf.add_variable('stabilizer.roll', 'float')
         self.logconf.add_variable('stabilizer.pitch', 'float')
         self.logconf.add_variable('stabilizer.yaw', 'float')

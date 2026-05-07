@@ -34,7 +34,7 @@ class DroneViewer(QtWidgets.QWidget,):
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
-        layout.addWidget(self.thrust_panel, stretch=1)
+        layout.addWidget(self.thrust_panel)
         layout.addWidget(self.reading_panel,stretch=1)
 
         # initialise camera viewing from behind drone
@@ -97,16 +97,8 @@ class DroneViewer(QtWidgets.QWidget,):
         self.front_marker.setTransform(world)
 
         # update thrust in model
-        
         thrust = self.quadcopter.controls.thrust
-
-        self.thrust_panel.update(
-            total=thrust / 60000 * 100,
-            m1=self.quadcopter.thrust[1,0],
-            m2=self.quadcopter.thrust[2,0],
-            m3=self.quadcopter.thrust[3,0],
-            m4=self.quadcopter.thrust[4,0],
-        )
+        self.thrust_panel.update(thrust / 60000 * 100)
 
         # update readings
 

@@ -38,24 +38,30 @@ class ThrustPanel(QWidget):
         super().__init__()
 
         self.total = ThrustBar("Thrust")
+        """
         self.m1 = ThrustBar("M1")
         self.m2 = ThrustBar("M2")
         self.m3 = ThrustBar("M3")
         self.m4 = ThrustBar("M4")
+        """
 
         layout = QHBoxLayout(self)
         layout.addWidget(self.total)
+        """
         layout.addWidget(self.m1)
         layout.addWidget(self.m2)
         layout.addWidget(self.m3)
         layout.addWidget(self.m4)
-
-    def update(self, total, m1, m2, m3, m4):
-        self.total.set_value(total)
+        """
+        
+    def update(self, thrust):
+        self.total.set_value(thrust)
+        """
         self.m1.set_value(m1)
         self.m2.set_value(m2)
         self.m3.set_value(m3)
         self.m4.set_value(m4)
+        """
 
 class Reading(QWidget):
     def __init__(self, name = "Reading", hasProgressBar = False):
@@ -82,6 +88,13 @@ class Reading(QWidget):
 
     def set_value(self, value, suffix = ""): # If progress bar already set, suffix will automatically be %
         # Clamp value to 0–100
+        if value is None:
+            # Show placeholder instead of crashing
+            self.label.setText(f"{self.name}: --")
+            if self.bar:
+                self.bar.setValue(0)
+            return
+
         if self.hasProgressBar:
             value = max(0, min(100, value))
             self.bar.setValue(value)
@@ -100,12 +113,16 @@ class Reading(QWidget):
 class ReadingPanel(QWidget):
     def __init__(self):
         super().__init__()
+        # instantiate readings here
         self.battery = Reading(name = "Battery", hasProgressBar= True)
 
         layout = QVBoxLayout(self)
+
+        # add reading widgets here
         layout.addWidget(self.battery)
 
         layout.addStretch()
 
     def update(self, battery):
+        # add update functionality to readings (adjust change in control loop)
         self.battery.set_value(battery)
