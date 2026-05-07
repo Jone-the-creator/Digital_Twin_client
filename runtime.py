@@ -10,14 +10,7 @@ pitch_trim = 1.02
 if __name__ == "__main__": 
     # List of all comms plugins (UPDATE WHEN ADDING PLUGIN)
     comms_options =["Crazyradio",]
-    controller_exists: bool = True
-
-    # instantiate controller if possible, otherwise move forward
-    try:
-        controller = PS5Controller()
-    except RuntimeError as e:
-        print(f"{e}, proceeding without")
-        controller_exists = False
+    controller_exists: bool = False
 
     quad = None 
     sg.theme('GrayGrayGray') # set theme for window
@@ -63,6 +56,15 @@ if __name__ == "__main__":
     window.close()
 
     # -- CONTROL --
+
+        # instantiate controller if possible, otherwise move forward
+    try:
+        controller = PS5Controller()
+        controller_exists = True
+    except RuntimeError as e:
+        print(f"{e}, proceeding without")
+
+
 
     # quadcopter control loop
     def control_loop(quad):
