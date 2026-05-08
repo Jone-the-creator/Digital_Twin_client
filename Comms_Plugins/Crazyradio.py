@@ -59,7 +59,7 @@ class CRTP_logger:
         self.logconf.add_variable('stabilizer.roll', 'float')
         self.logconf.add_variable('stabilizer.pitch', 'float')
         self.logconf.add_variable('stabilizer.yaw', 'float')
-        self.logconf.add_variable('pm.batteryLevel', 'uint8_t')
+        self.logconf.add_variable('pm.vbat', 'float')
 
         
         self.logconf.data_received_cb.add_callback(self._log_data_received)
@@ -86,6 +86,16 @@ class CRTP_logger:
         print(f"Disconnected from {uri}")
         self.is_connected = False
 
+    def _convbattery(self, voltage):
+        v_min = 3.0
+        v_max = 4.2
+
+        percent = ((voltage - v_min) / (v_max - v_min)) * 100
+        percent = max(0.0, min(100, percent))
+
+        return percent
+
+
 
     def _log_data_received(self, timestamp, data, logconf):
         # updates values in quadcopter object based on readings from crazyflie
@@ -95,7 +105,10 @@ class CRTP_logger:
             yaw=data['stabilizer.yaw'],
             timestamp=timestamp / 1000.0
         )
-        self.quadcopter.battery_percent = data['pm.batteryLevel']
+        self.quadcopter.battery_voltage = round(data['pm.vbat'],2) 
+        if (self.quadcopter.controls.thrust < 500):
+            self.quadcopter.battery_percent = int(self._convbattery(data['pm.vbat']))
+
         print(f"roll = {data['stabilizer.roll']}, pitch = {data['stabilizer.pitch']}, yaw = {data['stabilizer.yaw']}")
 
 

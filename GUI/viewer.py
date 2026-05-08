@@ -101,6 +101,7 @@ class DroneViewer(QtWidgets.QWidget,):
         self.thrust_panel.update(thrust / 60000 * 100)
 
         # update readings
+        self.reading_panel.update(
+            battery=self.quadcopter.battery_percent,
+            battvolt=self.quadcopter.battery_voltage)
 
-        battery = self.quadcopter.battery_percent
-        self.reading_panel.update(battery=battery)

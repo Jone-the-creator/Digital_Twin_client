@@ -35,6 +35,11 @@ def control_loop(quad):
                 pitch -= pitch_trim
                 roll -= roll_trim
 
+                # reset attitude when drone stops
+                if thrust <= 10000:
+                    pitch = 0
+                    roll = 0
+
                 # update control values in quadcopter object, these are read to send controls to quadcopter
                 quad.update_controls(
                     roll=roll,
@@ -48,9 +53,6 @@ def control_loop(quad):
 
         time.sleep(0.02)  # faster, smoother (~50 Hz)
 
-    # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
-
 def main():
     # ---- QUADCOPTER INSTANTIATE/SETUP ----
     quad = run_setup()
@@ -58,8 +60,20 @@ def main():
     if quad is None:
         print("User cancelled startup.")
         sys.exit(0)
+
+    controller_exists = False
+    try:
+        controller = PS5Controller()
+        controller_exists = True
+    except RuntimeError as e:
+        print(f"{e}, proceeding without")
+        controller = None
+    quad.controller = controller
     
     print("Quad ready:", quad)
+
+    # Run as a separate thread (CHANGE TO asynchIO in the future)
+    threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
 
     # ---- COMMS ----
     comms = None

@@ -48,8 +48,9 @@ class Quadcopter:
 
         self.last_update_time: float = time.time()
 
-        # System status (to be integrated later)
-        self.battery_percent: Optional[float] = None
+        # System status
+        self.battery_percent: Optional[int] = None # should be receieved as a percentage (e.g. 10, not 0.1)
+        self.battery_voltage: Optional[float] = None # raw battery voltage (can show changes while under load)
 
     # centralised timestamp update function, will use provided timestamp if possible
     def _update_time(self, timestamp: Optional[float] = None):  

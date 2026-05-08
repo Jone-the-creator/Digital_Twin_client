@@ -34,7 +34,7 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt):
 
     roll = rx * 10.0
     pitch = -ry * 10.0
-    yaw_rate = lx * 50.0
+    yaw_rate = lx * 100.0
 
 
     # normalize triggers
@@ -45,7 +45,6 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt):
     throttle = rt_val - lt_val
     throttle = max(0.0, throttle)
 
-    # ✅ full usable range
     MIN_THRUST = 0
     MAX_THRUST = 50000
 

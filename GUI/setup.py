@@ -11,13 +11,12 @@ import functions
 
 
 class SetupWindow(QDialog):
-    def __init__(self, defaults, comms_options, controller):
+    def __init__(self, defaults, comms_options):
         super().__init__()
 
         self.setWindowTitle("Quadcopter GUI")
         self.setFixedWidth(400)
 
-        self.controller = controller
         self.quad = None
 
         # --- Widgets ---
@@ -67,7 +66,7 @@ class SetupWindow(QDialog):
         self.quad = Quadcopter(
             ID=self.id_input.text().strip(),
             comms=self.comms_dropdown.currentText(),
-            controller=self.controller
+            controller=None
         )
 
         print(f"{self.quad.comms} was selected for {self.quad.ID}")
@@ -76,14 +75,6 @@ class SetupWindow(QDialog):
 # this will run the setup window before the main client, system will exit if this is cancelled
 def run_setup():
     comms_options = ["Crazyradio", "TEST"]
-
-    controller_exists = True
-    try:
-        controller = PS5Controller()
-    except RuntimeError as e:
-        print(f"{e}, proceeding without")
-        controller = None
-        controller_exists = False
 
     defaults = functions.load_settings("init_defaults.txt")
 
@@ -94,7 +85,6 @@ def run_setup():
     window = SetupWindow(
         defaults,
         comms_options,
-        controller if controller_exists else None
     )
 
     if window.exec():
