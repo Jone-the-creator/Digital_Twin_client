@@ -22,31 +22,46 @@ def control_loop(quad):
     while running:
         if quad.controller:
             try:
-                lx, ly, lt, rx, ry, rt, square = quad.controller.read()
+                # kill switch
+                if square:
+                    quad.update_controls(
+                        roll=0,
+                        pitch=0,
+                        yaw_rate=0,
+                        thrust=0
+                    )
+                    disabled = True
 
-                roll, pitch, yaw_rate, thrust_raw = \
-                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
+                elif not disabled:
 
-                quad._thrust_smoothed = (
-                    (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
-                )
+                    lx, ly, lt, rx, ry, rt, square = quad.controller.read()
 
-                thrust = int(quad._thrust_smoothed)
-                pitch -= pitch_trim
-                roll -= roll_trim
+                    roll, pitch, yaw_rate, thrust_raw = \
+                        functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
 
-                # reset attitude when drone stops
-                if thrust <= 10000:
-                    pitch = 0
-                    roll = 0
+                    quad._thrust_smoothed = (
+                        (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+                    )
 
-                # update control values in quadcopter object, these are read to send controls to quadcopter
-                quad.update_controls(
-                    roll=roll,
-                    pitch=pitch,
-                    yaw_rate=yaw_rate,
-                    thrust=thrust
-                )
+                    thrust = int(quad._thrust_smoothed)
+                    pitch -= pitch_trim
+                    roll -= roll_trim
+
+                    # reset attitude when drone stops
+                    if thrust <= 10000:
+                        pitch = 0
+                        roll = 0
+
+                    # update control values in quadcopter object, these are read to send controls to quadcopter
+                    quad.update_controls(
+                        roll=roll,
+                        pitch=pitch,
+                        yaw_rate=yaw_rate,
+                        thrust=thrust
+                    )
+                elif disabled:
+                    print("Kill switch activated")
+                    break
 
             except Exception as e:
                 print(f"Controller error: {e}")
