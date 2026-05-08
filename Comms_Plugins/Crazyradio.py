@@ -104,7 +104,7 @@ class CRTP_logger:
         while True:
             if self.is_connected:
                 self.send_controls()
-            time.sleep(0.03) # ~30Hz
+            time.sleep(0.02) # ~50Hz
 
     # controls that will be sent to the crazyflie 
     def send_controls(self):

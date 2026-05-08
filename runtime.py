@@ -1,75 +1,65 @@
-from Classes import Quadcopter, DroneViewer, PS5Controller
+from Classes import Quadcopter, PS5Controller
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTimer
 import pygame
+from GUI.setup import run_setup
+from GUI.viewer import DroneViewer
 
-
+# trims offset attitude controls
 pitch_trim = 1.02
+roll_trim = 0
 running = True
 
-
-if __name__ == "__main__":
-
-    # ---- LOAD DEFAULTS (NO GUI) ----
-    defaults = functions.load_settings("init_defaults.txt")
-
-    quad_id = defaults.get("ID", "cf1")
-    comms_type = defaults.get("comms", "Crazyradio")
-
-    print(f"Starting with ID={quad_id}, comms={comms_type}")
-
-    # ---- INIT CONTROLLER FIRST ----
-    controller = None
-    try:
-        controller = PS5Controller()
-        print("Controller connected (pygame active)")
-    except RuntimeError as e:
-        print(f"{e}, proceeding without controller")
-
-    # ---- CREATE QUAD ----
-    quad = Quadcopter(
-        ID=quad_id,
-        comms=comms_type,
-        controller=controller
-    )
-
     # ---- CONTROL LOOP ----
-    def control_loop(quad):
-        global running
+def control_loop(quad):
+    global running
 
-        quad._thrust_smoothed = 0
-        alpha = 0.1
+    quad._thrust_smoothed = 0
+    alpha = 0.1
 
-        while running:
-            if quad.controller:
-                try:
-                    lx, ly, lt, rx, ry, rt, square = quad.controller.read()
+    while running:
+        if quad.controller:
+            try:
+                lx, ly, lt, rx, ry, rt, square = quad.controller.read()
 
-                    roll, pitch, yaw_rate, thrust_raw = \
-                        functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
+                roll, pitch, yaw_rate, thrust_raw = \
+                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
 
-                    quad._thrust_smoothed = (
-                        (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
-                    )
+                quad._thrust_smoothed = (
+                    (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+                )
 
-                    thrust = int(quad._thrust_smoothed)
-                    pitch -= pitch_trim
+                thrust = int(quad._thrust_smoothed)
+                pitch -= pitch_trim
+                roll -= roll_trim
 
-                    quad.update_controls(
-                        roll=roll,
-                        pitch=pitch,
-                        yaw_rate=yaw_rate,
-                        thrust=thrust
-                    )
+                # update control values in quadcopter object, these are read to send controls to quadcopter
+                quad.update_controls(
+                    roll=roll,
+                    pitch=pitch,
+                    yaw_rate=yaw_rate,
+                    thrust=thrust
+                )
 
-                except Exception as e:
-                    print(f"Controller error: {e}")
+            except Exception as e:
+                print(f"Controller error: {e}")
 
-            time.sleep(0.02)  # faster, smoother (~50 Hz)
+        time.sleep(0.02)  # faster, smoother (~50 Hz)
 
+    # Run as a separate thread (CHANGE TO asynchIO in the future)
     threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
+
+def main():
+    # ---- QUADCOPTER INSTANTIATE/SETUP ----
+    quad = run_setup()
+
+    if quad is None:
+        print("User cancelled startup.")
+        sys.exit(0)
+    
+    print("Quad ready:", quad)
 
     # ---- COMMS ----
     comms = None
@@ -90,6 +80,7 @@ if __name__ == "__main__":
 
     viewer = DroneViewer(quad)
 
+    # Explicit shutdown function
     def shutdown():
         global running
         print("Shutting down...")
@@ -104,3 +95,9 @@ if __name__ == "__main__":
 
     viewer.show()
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
+
+

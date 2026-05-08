@@ -1,2 +1,2 @@
-ID=Crazyflie
+ID=test
 comms=Crazyradio
