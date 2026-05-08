@@ -37,6 +37,7 @@ class Quadcopter:
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
         self.thrust = 0.0
+        self.killed = False
         """ #thrust array
         self.thrust = np.array([ [0.0], # total thrust
                                  [0.0], # M1 thrust

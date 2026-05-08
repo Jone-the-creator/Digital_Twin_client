@@ -121,9 +121,15 @@ class CRTP_logger:
     def send_controls(self):
         if not self.is_connected:
             return
-        self.cf.commander.send_setpoint(
-            float(self.quadcopter.controls.roll),
-            float(self.quadcopter.controls.pitch),
-            float(self.quadcopter.controls.yaw_rate),
-            int(self.quadcopter.controls.thrust)
-        )
+        
+        #kill switch
+        if getattr(self.quadcopter, "killed", False):
+            self.cf.commander.send_setpoint(0.0, 0.0, 0.0, 0)
+
+        else: 
+            self.cf.commander.send_setpoint(
+                float(self.quadcopter.controls.roll),
+                float(self.quadcopter.controls.pitch),
+                float(self.quadcopter.controls.yaw_rate),
+                int(self.quadcopter.controls.thrust)
+            )

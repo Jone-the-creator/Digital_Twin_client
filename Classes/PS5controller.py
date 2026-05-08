@@ -16,6 +16,11 @@ class PS5Controller:
 
     def read(self):
         # DO NOT call pygame.event.* here
+        """use this to find button number
+        for i in range(self.joy.get_numbuttons()):
+            if self.joy.get_button(i):
+                print(f"Button {i} pressed")
+        """
 
         lx = self.joy.get_axis(0)
         ly = self.joy.get_axis(1)
@@ -24,7 +29,7 @@ class PS5Controller:
         lt = self.joy.get_axis(4)
         rt = self.joy.get_axis(5)
 
-        square = self.joy.get_button(0)
+        square = self.joy.get_button(2)
 
         return lx, ly, lt, rx, ry, rt, square
 
