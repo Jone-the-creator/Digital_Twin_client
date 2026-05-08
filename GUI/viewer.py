@@ -2,11 +2,11 @@ from PyQt6 import QtWidgets, QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 import math, os, trimesh, functions
-from .ModelClasses import ThrustBar, ThrustPanel, Reading, ReadingPanel
+from Classes.ModelClasses import ThrustBar, ThrustPanel, Reading, ReadingPanel
 
 #importing quadcopter model (RELATIVE PATH)
-base_dir = os.path.dirname(__file__)
-model_path = os.path.join(base_dir,"Models","Quadcopter.stl")
+base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
+model_path = os.path.join(base_dir,"Classes", "Models", "Quadcopter.stl")
 
 #load model and ensure centered
 mesh = trimesh.load(model_path)

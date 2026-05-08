@@ -1,6 +1,8 @@
 import os, pygame
 import numpy as np
 
+thrust_set = 0.0
+
 # save dictionary keys and values into a file
 def save_settings(filename, settings):
     with open(os.path.join("cache",filename), "w") as file:
@@ -21,46 +23,37 @@ def load_settings(filename):
     
     return settings
 
+
 def joystick_to_setpoint(lx, ly, lt, rx, ry, rt):
-    # Deadzone
     def dz(v, d=0.05):
         if abs(v) < d:
-            return 0
-        return (v - np.sign(v) * d / 1 - d)
+            return 0.0
+        return v
 
-    lx, ly, rx, ry = map(dz, (lx, ly, lt, rx, ry, rt))
+    lx, ly, rx, ry = map(dz, (lx, ly, rx, ry))
 
-    roll = rx * 10.0          # degrees
-    pitch = -ry * 10.0        # invert Y
-    yaw_rate = lx * 50.0      # deg/s
-
-    # trigger thrust calculation
-    # Deadzones
-    rt_val = 0.0 if abs(rt) < 0.05 else max(0.0, rt)
-    lt_val = 0.0 if abs(lt) < 0.05 else max(0.0, lt)
-
-    step = 0.03   # increase/decrease per update tick
-
-    # Apply changes
-    thrust_set += rt_val * step
-    thrust_set -= lt_val * step
-
-    # Clamp to valid range
-    thrust_set = max(0.0, min(1.0, thrust_set))
-
-    # Output
-    thrust = int(thrust_set * 65000)
+    roll = rx * 10.0
+    pitch = -ry * 10.0
+    yaw_rate = lx * 50.0
 
 
-    # left stick thrust calculation
-    """
-    thrust = -ly
-    thrust = max(0.0, thrust)
-    if thrust < 0.05:
-        thrust = 0.0
-    thrust = int(max(0, min(thrust * 60000, 65000)))
-    """
+    # normalize triggers
+    rt_val = (rt + 1) / 2
+    lt_val = (lt + 1) / 2
+
+    # combine
+    throttle = rt_val - lt_val
+    throttle = max(0.0, throttle)
+
+    # ✅ full usable range
+    MIN_THRUST = 0
+    MAX_THRUST = 50000
+
+    thrust = int(MIN_THRUST + throttle * (MAX_THRUST - MIN_THRUST))
+
+
     return roll, pitch, yaw_rate, thrust
+
 
 # hover logic to be run when hover mode active
 def hover_logic():

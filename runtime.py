@@ -1,99 +1,41 @@
-from Classes import Quadcopter, DroneViewer, PS5Controller
+from Classes import Quadcopter, PS5Controller
 from Comms_Plugins import CRTP_logger
-import PySimpleGUI as sg
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
-# const errors
+from PyQt6.QtCore import QTimer
+import pygame
+from GUI.setup import run_setup
+from GUI.viewer import DroneViewer
+
+# trims offset attitude controls
 pitch_trim = 1.02
+roll_trim = 0
+running = True
 
-# the following runtime will only be run when script is run, NOT when imported
-if __name__ == "__main__": 
-    # List of all comms plugins (UPDATE WHEN ADDING PLUGIN)
-    comms_options =["Crazyradio",]
-    controller_exists: bool = False
+    # ---- CONTROL LOOP ----
+def control_loop(quad):
+    global running
 
-    quad = None 
-    sg.theme('GrayGrayGray') # set theme for window
+    quad._thrust_smoothed = 0
+    alpha = 0.1
 
-    defaults = functions.load_settings("init_defaults.txt")
+    while running:
+        if quad.controller:
+            try:
+                lx, ly, lt, rx, ry, rt, square = quad.controller.read()
 
-    # layout for initialisation window
-    layout = [
-        [
-            [sg.Text("Enter your quadcopter ID:", size=(35,1), justification='Right'),
-            sg.Input(default_text=defaults.get("ID"),size=(25,1),key = "-QUADID-")],
-            [sg.Text("Select supported communications system:", size=(35,1), justification='Right'),
-            sg.OptionMenu(default_value= defaults.get("comms"),size =(20,2), values=comms_options, key = "-COMMS-")],
-            [sg.Push(), sg.Button("Save as defaults", key = "-SAVE-"), sg.Button("Enter", key = "-ENTER-")],
-        ]
-    ]
+                roll, pitch, yaw_rate, thrust_raw = \
+                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
 
-    window = sg.Window("Quadcopter GUI", layout, element_padding= (4,5) )
+                quad._thrust_smoothed = (
+                    (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+                )
 
-    # -- GUI LOOP --
-    while True:
-        # run the initialisation window once
-        event, values = window.read()
-
-        # if window is closed skip GUI loop
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            window.close()
-            sys.exit(0)
-            break
-
-        # when ENTER button is pressed, instantiate a quadcopter object with the set values
-        if event == "-ENTER-":
-            quad = Quadcopter(ID = values["-QUADID-"].strip(), comms = values["-COMMS-"], controller = controller if controller_exists else None)
-            print("%s was selected as comms system for %s" % (quad.comms, quad.ID))
-            break
-        elif event == "-SAVE-": 
-                # when save as defaults button is pressed, save the entered parameters in a .txt file
-                functions.save_settings("init_defaults.txt", {
-                    "ID":values["-QUADID-"].strip(),
-                    "comms":values["-COMMS-"].strip()
-                })
-
-    window.close()
-
-    # -- CONTROL --
-
-        # instantiate controller if possible, otherwise move forward
-    try:
-        controller = PS5Controller()
-        controller_exists = True
-    except RuntimeError as e:
-        print(f"{e}, proceeding without")
-
-
-
-    # quadcopter control loop
-    def control_loop(quad):
-        # initialise smoothed thrust once
-        quad._thrust_smoothed = 0
-
-        alpha = 0.1  # smoothing factor
-
-        while True:
-            if quad.controller:
-                # read controller inputs
-                lx, ly, lt, rx, ry, rt, square = quad.controller.read() # controller read
-                hover_pressed = square  # hover mode enabled with holding square
-
-#                if hover_pressed:
-                    # hover mode
-#                    roll, pitch, yaw_rate, thrust_raw = functions.hover_logic()
-#                else:
-                    # manual mode
-                roll, pitch, yaw_rate, thrust_raw = functions.joystick_to_setpoint(lx, ly, rx, ry)
-
-                # thrust is smoothed for safety
-                quad._thrust_smoothed = ((1 - alpha) * quad._thrust_smoothed +alpha * thrust_raw)
                 thrust = int(quad._thrust_smoothed)
-                
-                # corrected for error in attitude estimation
                 pitch -= pitch_trim
+                roll -= roll_trim
 
-                # update quadcopter object control inputs with inputs from controller
+                # update control values in quadcopter object, these are read to send controls to quadcopter
                 quad.update_controls(
                     roll=roll,
                     pitch=pitch,
@@ -101,36 +43,61 @@ if __name__ == "__main__":
                     thrust=thrust
                 )
 
-            time.sleep(0.03)  # ~30 Hz
+            except Exception as e:
+                print(f"Controller error: {e}")
 
-    # run control loop in separate thread
+        time.sleep(0.02)  # faster, smoother (~50 Hz)
+
+    # Run as a separate thread (CHANGE TO asynchIO in the future)
     threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
 
-    # -- LOGGING --
-    # instantiate comms based on selected system
-    comms = None
+def main():
+    # ---- QUADCOPTER INSTANTIATE/SETUP ----
+    quad = run_setup()
+
+    if quad is None:
+        print("User cancelled startup.")
+        sys.exit(0)
     
-    # instantiate crazyradio comms
-    if (quad.comms == "Crazyradio"):
+    print("Quad ready:", quad)
+
+    # ---- COMMS ----
+    comms = None
+    if quad.comms == "Crazyradio":
         comms = CRTP_logger(quad)
         comms.start()
-        print("Started Crazyradio logging for test")
+        print("Started Crazyradio logging")
 
-    # instantiate client window
+    # ---- QT VIEWER ----
     app = QApplication(sys.argv)
-    viewer = DroneViewer(quad)    
-    viewer.show()
 
-    try:
-        sys.exit(app.exec())
-    except KeyboardInterrupt:
-        print("Shutting down")
+    def pump_pygame():
+        pygame.event.pump()
+
+    timer = QTimer()
+    timer.timeout.connect(pump_pygame)
+    timer.start(10)  # 100 Hz
+
+    viewer = DroneViewer(quad)
+
+    # Explicit shutdown function
+    def shutdown():
+        global running
+        print("Shutting down...")
+        running = False
+
         if comms:
             comms.stop()
 
+        time.sleep(0.2)
+
+    app.aboutToQuit.connect(shutdown)
+
+    viewer.show()
+    sys.exit(app.exec())
 
 
-
-
+if __name__ == "__main__":
+    main()
 
 
