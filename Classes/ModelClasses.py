@@ -114,18 +114,27 @@ class ReadingPanel(QWidget):
     def __init__(self):
         super().__init__()
         # instantiate readings here
-        self.battery = Reading(name = "Battery (no load)", hasProgressBar= True)
+        self.battery = Reading(name = "Battery", hasProgressBar= True)
         self.battvolt = Reading(name = "Battery Voltage")
+        self.yaw = Reading(name = "Yaw")
+        self.pitch = Reading(name = "Pitch")
+        self.roll = Reading(name = "Roll")
 
         layout = QVBoxLayout(self)
 
         # add reading widgets here
         layout.addWidget(self.battery)
         layout.addWidget(self.battvolt)
+        layout.addWidget(self.yaw)
+        layout.addWidget(self.pitch)
+        layout.addWidget(self.roll)
 
         layout.addStretch()
 
-    def update(self, battery, battvolt):
+    def update(self, battery, battvolt, yaw, pitch, roll):
         # add update functionality to readings (adjust change in viewer.py)
         self.battery.set_value(battery)
         self.battvolt.set_value(battvolt)
+        self.yaw.set_value(round(yaw, 2))
+        self.pitch.set_value(round(pitch, 2))
+        self.roll.set_value(round(roll, 2))

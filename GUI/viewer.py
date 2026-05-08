@@ -103,5 +103,9 @@ class DroneViewer(QtWidgets.QWidget,):
         # update readings
         self.reading_panel.update(
             battery=self.quadcopter.battery_percent,
-            battvolt=self.quadcopter.battery_voltage)
+            battvolt=self.quadcopter.battery_voltage,
+            yaw = self.quadcopter.attitude.yaw,
+            pitch = self.quadcopter.attitude.pitch,
+            roll = self.quadcopter.attitude.roll,
+            )
 

@@ -109,8 +109,6 @@ class CRTP_logger:
         if (self.quadcopter.controls.thrust < 500):
             self.quadcopter.battery_percent = int(self._convbattery(data['pm.vbat']))
 
-        print(f"roll = {data['stabilizer.roll']}, pitch = {data['stabilizer.pitch']}, yaw = {data['stabilizer.yaw']}")
-
 
 
     def _control_loop(self):
