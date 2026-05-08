@@ -2,6 +2,9 @@ from Classes import Quadcopter, DroneViewer, PS5Controller
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTimer
+import pygame
+
 
 pitch_trim = 1.02
 running = True
@@ -45,7 +48,7 @@ if __name__ == "__main__":
                     lx, ly, lt, rx, ry, rt, square = quad.controller.read()
 
                     roll, pitch, yaw_rate, thrust_raw = \
-                        functions.joystick_to_setpoint(lx, ly, rx, ry)
+                        functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
 
                     quad._thrust_smoothed = (
                         (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
@@ -60,10 +63,6 @@ if __name__ == "__main__":
                         yaw_rate=yaw_rate,
                         thrust=thrust
                     )
-
-                    # ✅ SEND COMMANDS (if implemented)
-                    if hasattr(quad, "send_setpoint"):
-                        quad.send_setpoint(roll, pitch, yaw_rate, thrust)
 
                 except Exception as e:
                     print(f"Controller error: {e}")
@@ -81,6 +80,14 @@ if __name__ == "__main__":
 
     # ---- QT VIEWER ----
     app = QApplication(sys.argv)
+
+    def pump_pygame():
+        pygame.event.pump()
+
+    timer = QTimer()
+    timer.timeout.connect(pump_pygame)
+    timer.start(10)  # 100 Hz
+
     viewer = DroneViewer(quad)
 
     def shutdown():
