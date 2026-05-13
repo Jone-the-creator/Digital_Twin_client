@@ -1,8 +1,14 @@
-from PyQt6 import QtWidgets, QtCore, QtGui
+from PyQt6 import QtGui
+from PyQt6.QtCore import (
+    QTimer, QThread, 
+)
+from PyQt6.QtWidgets import (
+    QPushButton, QHBoxLayout, QWidget, QLabel, QVBoxLayout
+)
 import pyqtgraph.opengl as gl
-import numpy as np
-import math, os, trimesh, functions
-from Classes.ModelClasses import ThrustBar, ThrustPanel, Reading, ReadingPanel
+import os, trimesh, time
+from Classes.ModelClasses import ThrustPanel, ReadingPanel
+from GUI.recorder import RecorderWorker
 
 #importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
@@ -17,7 +23,7 @@ vertices -= center
 
 md = gl.MeshData.sphere(rows=10,cols=10)
 
-class DroneViewer(QtWidgets.QWidget,):
+class DroneViewer(QWidget,):
     def __init__(self, quadcopter):
         super().__init__()
         self.quadcopter = quadcopter
@@ -30,12 +36,34 @@ class DroneViewer(QtWidgets.QWidget,):
         self.view = gl.GLViewWidget()
         self.thrust_panel = ThrustPanel()
         self.reading_panel = ReadingPanel()
+        self.start_recording_btn = QPushButton("Start Recording")
+        self.stop_recording_btn = QPushButton("Stop Recording")
+
+        # recording label, shown and hidden based on recording state
+        self.recording = QLabel("● Recording")
+        self.recording.setStyleSheet("color: red; font-weight: bold;")
+        self.recording.hide()  # hidden by default
 
 
-        layout = QtWidgets.QHBoxLayout(self)
+        layout = QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
         layout.addWidget(self.thrust_panel)
         layout.addWidget(self.reading_panel,stretch=1)
+
+        # organises recording GUI
+        recording_widget = QWidget()
+        recording_layout = QVBoxLayout(recording_widget)
+        recording_layout.addStretch()
+        recording_layout.addWidget(self.recording)
+
+        button_layout = QHBoxLayout(self)
+        button_layout.addWidget(self.start_recording_btn)
+        button_layout.addWidget(self.stop_recording_btn)
+
+        recording_layout.addLayout(button_layout)
+
+
+        layout.addWidget(recording_widget)
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(
@@ -66,10 +94,13 @@ class DroneViewer(QtWidgets.QWidget,):
         self.view.addItem(self.front_marker)
 
         #render loop
-        self.timer = QtCore.QTimer()
+        self.timer = QTimer()
         self.timer.timeout.connect(self.update_model)
         self.timer.start(16)  # ~60 FPS
 
+        # record data when start recording button pressed
+        self.start_recording_btn.clicked.connect(self.start_record)
+        self.stop_recording_btn.clicked.connect(self.stop_record)
 
     # update model from quadcopter object
     def update_model(self):
@@ -108,4 +139,27 @@ class DroneViewer(QtWidgets.QWidget,):
             pitch = self.quadcopter.attitude.pitch,
             roll = self.quadcopter.attitude.roll,
             )
+        
+    def start_record(self):
+        # shows recording status
+        self.recording.show()
+        
+        # creates thread
+        self.thread = QThread()
+        self.worker = RecorderWorker(self.quadcopter)
 
+        # recorder worker is moved to the thread, can then be run in the background
+        self.worker.moveToThread(self.thread)
+
+        self.thread.started.connect(self.worker.start)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
+
+        self.thread.start()
+
+
+    def stop_record(self):
+        if hasattr(self, "worker"):
+            self.recording.hide()
+            self.worker.stop()
