@@ -19,7 +19,9 @@ class CRTP_logger:
         self.uri = uri or "radio://0/80/2M/E7E7E7E7E7"
         self.quadcopter = quadcopter
         self.cf = None
-        self.logconf = None
+        self.logconf_acc = None
+        self.logconf_gyro = None
+        self.logconf_periph = None
         self.is_connected = False
 
     def start(self):    
@@ -50,21 +52,31 @@ class CRTP_logger:
     
     def _setup_logging(self):
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
-        self.logconf = LogConfig(
-            name='Stabilizer', 
+        self.logconf_gyro = LogConfig(
+            name='Gyroscope', 
             period_in_ms=10
+        )
+        self.logconf_acc = LogConfig(
+            name='Accelerometer', 
+            period_in_ms=10
+        )
+        self.logconf_periph = LogConfig(
+            name='Peripherals', 
+            period_in_ms=250
         )
         # choose logged variables here, can find in the following list:
         # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
-        self.logconf.add_variable('gyro.x', 'float')
-        self.logconf.add_variable('gyro.y', 'float')
-        self.logconf.add_variable('gyro.z', 'float')
-        self.logconf.add_variable('acc.x', 'float')
-        self.logconf.add_variable('acc.y', 'float')
-        self.logconf.add_variable('pm.vbat', 'float')
+        self.logconf_gyro.add_variable('gyro.x', 'float')
+        self.logconf_gyro.add_variable('gyro.y', 'float')
+        self.logconf_gyro.add_variable('gyro.z', 'float')
+        self.logconf_acc.add_variable('acc.x', 'float')
+        self.logconf_acc.add_variable('acc.y', 'float')
 
-        
-        self.logconf.data_received_cb.add_callback(self._log_data_received)
+        self.logconf_periph.add_variable('pm.vbat', 'float')
+
+        self.logconf_gyro.data_received_cb.add_callback(self._log_gyro_data_received)
+        self.logconf_acc.data_received_cb.add_callback(self._log_acc_data_received)
+        self.logconf_periph.data_received_cb.add_callback(self._log_periph_data_received)
 
     # callback functions (to be run in certain conditions)
     def _connected(self, uri):
@@ -72,8 +84,12 @@ class CRTP_logger:
         self.is_connected = True
 
         try:
-            self.cf.log.add_config(self.logconf)
-            self.logconf.start()
+            self.cf.log.add_config(self.logconf_gyro)
+            self.logconf_gyro.start()
+            self.cf.log.add_config(self.logconf_acc)
+            self.logconf_acc.start()
+            self.cf.log.add_config(self.logconf_periph)
+            self.logconf_periph.start()
             print("Logging started")
         except Exception as e:
             print(f"Failed to start logging: {e}")
@@ -99,18 +115,28 @@ class CRTP_logger:
 
 
 
-    def _log_data_received(self, timestamp, data, logconf):
+    def _log_gyro_data_received(self, timestamp, data, logconfig):
         # updates values in quadcopter object based on readings from crazyflie
-        self.quadcopter.update_meas(
+        self.quadcopter.update_gyro(
             roll_vel=data['gyro.x'],
             pitch_vel=data['gyro.y'],
             yaw_vel=data['gyro.z'],
-            a_x = data['acc.x'],
-            a_y = data['acc.y']
         )
-        self.quadcopter.battery_voltage = round(data['pm.vbat'],2) 
+
+    def _log_acc_data_received(self, timestamp, data, logconfig):
+        # updates values in quadcopter object based on readings from crazyflie
+        self.quadcopter.update_acc(
+            a_x = data['acc.x'],
+            a_y = data['acc.y'],
+        )
+
+    def _log_periph_data_received(self, timestamp, data, logconfig):
+        # if no thrust, battery percentage can be safely calculated
         if (self.quadcopter.controls.thrust < 500):
             self.quadcopter.battery_percent = int(self._convbattery(data['pm.vbat']))
+
+        # always log battery voltage
+        self.quadcopter.battery_voltage = round(data['pm.vbat'],2)
 
 
 

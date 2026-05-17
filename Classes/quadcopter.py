@@ -29,18 +29,22 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str, comms: str, controller):
+    def __init__(self, ID: str, comms: str, controller, estimator, control_system):
         self.ID: str = ID 
         self.comms: str = comms
         self.controller = controller
+        self.control_system = control_system
+        self.estimator = estimator
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
         self.thrust = 0.0
         self.killed = False
-        self.KF = Kalmanfilter()
-
+        if self.estimator == "Kalman Filter":
+            self.KF = Kalmanfilter()
+        else:
+            self.KF = None
         self.last_update_time: float = time.time()
 
         # System status
@@ -94,16 +98,16 @@ class Quadcopter:
         if thrust is not None:
             self.controls.thrust = thrust
 
-    def update_meas(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None, a_x = None, a_y = None, timestamp: Optional[float] = None):
-
+    # predict states based on received gyro data
+    def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):
+        # calculate change in time
         now = time.time()
         dt = now - self.last_update_time
         self.last_update_time = now
 
-
         u = np.zeros((3,1))
-        z = np.zeros((2,1))
 
+        # fill control matrix with attitude velocities
         if roll_vel is not None:
             u[0,0] = np.deg2rad(roll_vel)
         
@@ -113,16 +117,42 @@ class Quadcopter:
         if yaw_vel is not None:
             u[2,0] = np.deg2rad(yaw_vel)
 
-        self.KF.predict(u, dt)
+        # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
+        if self.KF is not None:
+             # predict states
+            self.KF.predict(u, dt)
 
-        if a_x is not None and a_y is not None:
-            z[1,0] = np.deg2rad(a_x) * 60
-            z[0,0] = np.deg2rad(a_y) * 60
+            # update attitudes based on predicted states
+            self.update_attitude(
+                roll = np.rad2deg(self.KF.x[0,0]),
+                pitch = np.rad2deg(self.KF.x[1,0]),
+                yaw = np.rad2deg(self.KF.x[2,0])
+            )
+
+    # correct currently predicted states based on accelerometer data
+    def update_acc(self, *, a_x = None, a_y = None):
+        z = np.zeros((2,1))
+
+        # fill measurement matrix with accelerometer readings
+        if a_x is not None:
+            z[1,0] = a_x
+        if a_y is not None:
+            z[0,0] = -a_y
+
+        # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
+        if self.KF is not None:
+            # correct states
             self.KF.correct(z)
 
-        self.update_attitude(
-            roll = np.rad2deg(self.KF.x[0,0]),
-            pitch = np.rad2deg(self.KF.x[1,0]),
-            yaw = np.rad2deg(self.KF.x[2,0])
-        )
+            # update attitudes based on corrected states
+            self.update_attitude(
+                roll = np.rad2deg(self.KF.x[0,0]),
+                pitch = np.rad2deg(self.KF.x[1,0]),
+                yaw = np.rad2deg(self.KF.x[2,0])
+            )
+
+
+
+
+
 

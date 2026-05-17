@@ -11,7 +11,7 @@ import functions
 
 
 class SetupWindow(QDialog):
-    def __init__(self, defaults, comms_options):
+    def __init__(self, defaults, comms_options, controlsystem_options, estimator_options):
         super().__init__()
 
         self.setWindowTitle("Quadcopter GUI")
@@ -24,6 +24,12 @@ class SetupWindow(QDialog):
 
         self.comms_dropdown = QComboBox()
         self.comms_dropdown.addItems(comms_options)
+        
+        self.controlsystem_dropdown = QComboBox()
+        self.controlsystem_dropdown.addItems(controlsystem_options)
+
+        self.estimator_dropdown = QComboBox()
+        self.estimator_dropdown.addItems(estimator_options)
 
         if defaults.get("comms") in comms_options:
             self.comms_dropdown.setCurrentText(defaults.get("comms"))
@@ -39,6 +45,12 @@ class SetupWindow(QDialog):
 
         layout.addWidget(QLabel("Select supported communications system:"))
         layout.addWidget(self.comms_dropdown)
+
+        layout.addWidget(QLabel("Select control system:"))
+        layout.addWidget(self.controlsystem_dropdown)
+
+        layout.addWidget(QLabel("Select state estimator:"))
+        layout.addWidget(self.estimator_dropdown)
 
         btn_row = QHBoxLayout()
         btn_row.addStretch()
@@ -57,7 +69,9 @@ class SetupWindow(QDialog):
     def save_defaults(self):
         values = {
             "ID": self.id_input.text().strip(),
-            "comms": self.comms_dropdown.currentText().strip()
+            "comms": self.comms_dropdown.currentText(),
+            "control system": self.controlsystem_dropdown.currentText(),
+            "state estimator": self.estimator_dropdown.currentText()
         }
         functions.save_settings("init_defaults.txt", values)
         print("Defaults saved:", values)
@@ -66,15 +80,20 @@ class SetupWindow(QDialog):
         self.quad = Quadcopter(
             ID=self.id_input.text().strip(),
             comms=self.comms_dropdown.currentText(),
-            controller=None
+            controller=None,
+            estimator=self.estimator_dropdown.currentText(),
+            control_system=self.controlsystem_dropdown.currentText()
         )
 
         print(f"{self.quad.comms} was selected for {self.quad.ID}")
+        print(f"will be controlled with {self.quad.control_system}, observed using {self.quad.estimator}")
         self.accept()
 
 # this will run the setup window before the main client, system will exit if this is cancelled
 def run_setup():
-    comms_options = ["Crazyradio", "TEST"]
+    comms_options = ["Crazyradio"]
+    controlsystem_options = ["PID"]
+    estimator_options = ["Kalman Filter", "TEST"]
 
     defaults = functions.load_settings("init_defaults.txt")
 
@@ -85,6 +104,8 @@ def run_setup():
     window = SetupWindow(
         defaults,
         comms_options,
+        controlsystem_options,
+        estimator_options
     )
 
     if window.exec():
