@@ -59,6 +59,8 @@ class CRTP_logger:
         self.logconf.add_variable('gyro.x', 'float')
         self.logconf.add_variable('gyro.y', 'float')
         self.logconf.add_variable('gyro.z', 'float')
+        self.logconf.add_variable('acc.x', 'float')
+        self.logconf.add_variable('acc.y', 'float')
         self.logconf.add_variable('pm.vbat', 'float')
 
         
@@ -100,10 +102,11 @@ class CRTP_logger:
     def _log_data_received(self, timestamp, data, logconf):
         # updates values in quadcopter object based on readings from crazyflie
         self.quadcopter.update_meas(
-            roll=data['gyro.x'],
-            pitch=data['gyro.y'],
-            yaw=data['gyro.z'],
-            timestamp=timestamp / 1000.0
+            roll_vel=data['gyro.x'],
+            pitch_vel=data['gyro.y'],
+            yaw_vel=data['gyro.z'],
+            a_x = data['acc.x'],
+            a_y = data['acc.y']
         )
         self.quadcopter.battery_voltage = round(data['pm.vbat'],2) 
         if (self.quadcopter.controls.thrust < 500):
