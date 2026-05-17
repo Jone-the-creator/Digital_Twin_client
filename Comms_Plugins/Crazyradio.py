@@ -56,9 +56,9 @@ class CRTP_logger:
         )
         # choose logged variables here, can find in the following list:
         # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
-        self.logconf.add_variable('stabilizer.roll', 'float')
-        self.logconf.add_variable('stabilizer.pitch', 'float')
-        self.logconf.add_variable('stabilizer.yaw', 'float')
+        self.logconf.add_variable('gyro.x', 'float')
+        self.logconf.add_variable('gyro.y', 'float')
+        self.logconf.add_variable('gyro.z', 'float')
         self.logconf.add_variable('pm.vbat', 'float')
 
         
@@ -99,10 +99,10 @@ class CRTP_logger:
 
     def _log_data_received(self, timestamp, data, logconf):
         # updates values in quadcopter object based on readings from crazyflie
-        self.quadcopter.update_attitude(
-            roll=data['stabilizer.roll'],
-            pitch=data['stabilizer.pitch'],
-            yaw=data['stabilizer.yaw'],
+        self.quadcopter.update_meas(
+            roll=data['gyro.x'],
+            pitch=data['gyro.y'],
+            yaw=data['gyro.z'],
             timestamp=timestamp / 1000.0
         )
         self.quadcopter.battery_voltage = round(data['pm.vbat'],2) 

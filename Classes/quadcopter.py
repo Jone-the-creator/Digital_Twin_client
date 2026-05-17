@@ -3,6 +3,7 @@ from typing import Optional
 import time, functions
 import numpy as np
 from Classes import PS5controller
+from Classes.KalmanFilter import Kalmanfilter
 
 
 @dataclass
@@ -38,14 +39,7 @@ class Quadcopter:
         self.attitude = Attitude() # attitude angles in degrees
         self.thrust = 0.0
         self.killed = False
-        """ #thrust array
-        self.thrust = np.array([ [0.0], # total thrust
-                                 [0.0], # M1 thrust
-                                 [0.0], # M2 thrust
-                                 [0.0], # M3 thrust
-                                 [0.0], # M4 thrust
-        ])
-        """
+        self.KF = Kalmanfilter()
 
         self.last_update_time: float = time.time()
 
@@ -99,3 +93,29 @@ class Quadcopter:
             self.controls.yaw_rate = yaw_rate
         if thrust is not None:
             self.controls.thrust = thrust
+
+    def update_meas(self, *, roll=None, pitch=None, yaw=None, timestamp: Optional[float] = None):
+
+        now = time.time()
+        dt = now - self.last_update_time
+        self.last_update_time = now
+
+
+        u = np.zeros((3,1))
+
+        if roll is not None:
+            u[0,0] = np.deg2rad(roll)
+        
+        if pitch is not None:
+            u[1,0] = np.deg2rad(pitch)
+        
+        if yaw is not None:
+            u[2,0] = np.deg2rad(yaw)
+
+        self.KF.predict(u, dt)
+
+        self.update_attitude(
+            roll = np.rad2deg(self.KF.x[0,0]),
+            pitch = np.rad2deg(self.KF.x[1,0]),
+            yaw = np.rad2deg(self.KF.x[2,0])
+        )
