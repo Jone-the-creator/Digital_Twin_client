@@ -1,4 +1,4 @@
-from Classes import Quadcopter, PS5Controller
+from Classes import PS5Controller
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication

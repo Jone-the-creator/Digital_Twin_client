@@ -1,5 +1,5 @@
 from PyQt6.QtCore import ( 
-    QThread, QTimer, QObject, pyqtSignal
+    QObject, pyqtSignal
 )
 
 import time, csv, os

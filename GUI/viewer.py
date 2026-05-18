@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QHBoxLayout, QWidget, QLabel, QVBoxLayout
 )
 import pyqtgraph.opengl as gl
-import os, trimesh, time
+import os, trimesh
 from Classes.ModelClasses import ThrustPanel, ReadingPanel
 from GUI.recorder import RecorderWorker
 

@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QVBoxLayout, QHBoxLayout, QComboBox
 )
 
-from Classes import Quadcopter, PS5Controller
+from Classes import Quadcopter
 import functions
 
 

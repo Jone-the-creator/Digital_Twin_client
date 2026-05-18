@@ -1,4 +1,4 @@
-import os, pygame
+import os
 import numpy as np
 
 thrust_set = 0.0

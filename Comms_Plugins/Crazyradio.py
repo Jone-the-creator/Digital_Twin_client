@@ -1,14 +1,11 @@
 # written based on instruction from 
 # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
 
-import logging, time, threading
+import time, threading
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
-from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
-from cflib.utils import uri_helper
 from cflib.crazyflie.log import LogConfig
-from cflib.crazyflie.syncLogger import SyncLogger
 
 # Crazyradio logger plugin
 class CRTP_logger:

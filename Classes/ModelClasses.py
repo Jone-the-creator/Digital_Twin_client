@@ -1,9 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QProgressBar
 from PyQt6.QtCore import Qt
-from PyQt6 import QtCore
-import pyqtgraph.opengl as gl
-import numpy as np
-import math
 
 class ThrustBar(QWidget):
     def __init__(self, title):
