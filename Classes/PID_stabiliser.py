@@ -22,9 +22,9 @@ class PIDstabiliser():
         self.hovering = None
         self.max_angle = 5 # max angle change in degrees
 
-        self.Kp_roll_pitch = 0.0
-        self.Ki_roll_pitch = 0.0
-        self.Kd_roll_pitch = 0.0
+        self.Kp_roll_pitch = 1.2
+        self.Ki_roll_pitch = 0.3
+        self.Kd_roll_pitch = 0.8
 
         self.attitude_gain = 500
 
@@ -50,10 +50,10 @@ class PIDstabiliser():
         roll_cmd *= self.attitude_gain
         pitch_cmd *= self.attitude_gain
 
-        u[0,0] = roll_cmd + pitch_cmd + thrust # M1
-        u[1,0] = roll_cmd - pitch_cmd + thrust # M2
-        u[2,0] = -roll_cmd - pitch_cmd + thrust # M3
-        u[3,0] = -roll_cmd + pitch_cmd + thrust # M4
+        u[0,0] = 0 # yaw
+        u[1,0] = pitch_cmd # pitch
+        u[2,0] = roll_cmd # roll
+        u[3,0] = thrust # thrust
 
         self.previous_roll_error = roll_error
         self.previous_pitch_error = pitch_error

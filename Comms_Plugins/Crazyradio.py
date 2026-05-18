@@ -6,6 +6,7 @@ import time, threading
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
+from Classes.PID_stabiliser import PIDstabiliser
 
 # Crazyradio logger plugin
 class CRTP_logger:
@@ -20,6 +21,8 @@ class CRTP_logger:
         self.logconf_gyro = None
         self.logconf_periph = None
         self.is_connected = False
+        self.stabiliser = PIDstabiliser(self.quadcopter)
+        self.last_update_time = time.time()
 
     def start(self):    
         # Initialize the low-level drivers
@@ -138,10 +141,16 @@ class CRTP_logger:
 
 
     def _control_loop(self):
+        
+        self.cf.param.set_value('flightmode.stabModeRoll', 1)
+        self.cf.param.set_value('flightmode.stabModePitch', 1)
+        self.cf.param.set_value('flightmode.stabModeYaw', 1)
+
+#        self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
         while True:
             if self.is_connected:
                 self.send_controls()
-            time.sleep(0.02) # ~50Hz
+            time.sleep(0.005) # ~200Hz
 
     # controls that will be sent to the crazyflie 
     def send_controls(self):
@@ -153,9 +162,14 @@ class CRTP_logger:
             self.cf.commander.send_setpoint(0.0, 0.0, 0.0, 0)
 
         else: 
+            # calculate change in time
+            now = time.time()
+            dt = now - self.last_update_time
+            self.last_update_time = now
+            u = self.stabiliser.hover(self.quadcopter.controls.thrust, dt)
             self.cf.commander.send_setpoint(
-                float(self.quadcopter.controls.roll),
-                float(self.quadcopter.controls.pitch),
-                float(self.quadcopter.controls.yaw_rate),
-                int(self.quadcopter.controls.thrust)
+                roll = float(u[0,0]),
+                pitch = float(u[1,0]),
+                yawrate = float(u[2,0]),
+                thrust = int(u[3,0])
             )
