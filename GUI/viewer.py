@@ -71,6 +71,14 @@ class DroneViewer(QWidget,):
             elevation=20,
             azimuth=0)
 
+
+        self.base_transform = QtGui.QMatrix4x4()
+        self.base_transform.scale(0.01, 0.01, 0.01)
+        self.base_transform.rotate(180, 0, 0, 1)
+        self.base_transform.rotate(90, 1, 0, 0)
+        
+
+
         #create quadcopter model
         self.model = gl.GLMeshItem(
             vertexes = vertices,
@@ -108,17 +116,18 @@ class DroneViewer(QWidget,):
         pitch = self.quadcopter.attitude.pitch
         yaw = self.quadcopter.attitude.yaw
 
-        self.model.resetTransform()
+                
+        transform = QtGui.QMatrix4x4()
 
-        # fixed transform (reapply each time)
-        self.model.scale(0.01, 0.01, 0.01)
-        self.model.rotate(90,1,0,0)
-        self.model.rotate(-180,0,0,1)
+        transform.rotate(yaw, 0, 0, 1)
 
-        # live transform (based on received data)
-        self.model.rotate(yaw, 0, 0, 1)     # Z
-        self.model.rotate(pitch, 0, 1, 0)   # Y
-        self.model.rotate(-roll, 1, 0, 0)    # X
+        transform.rotate(pitch, 0, 1, 0)
+        transform.rotate(-roll, 1, 0, 0)
+
+        transform = transform * self.base_transform
+
+        self.model.setTransform(transform)
+
 
         # position front marker in front of the drone
         local = QtGui.QMatrix4x4()

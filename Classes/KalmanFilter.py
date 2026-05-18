@@ -7,7 +7,7 @@ class Kalmanfilter():
         self.Q = np.array([
             [0.175, 0, 0],
             [0, 0.175, 0],
-            [0, 0, 0.04]
+            [0, 0, 0.025]
         ])
         # measurement noise
         self.R = np.array([
@@ -21,7 +21,7 @@ class Kalmanfilter():
         self.P = np.array([
             [0.05, 0, 0],
             [0, 0.05, 0],
-            [0, 0, 0.05]
+            [0, 0, 0.06]
         ])
     
     # prediction step based on previous state and control
