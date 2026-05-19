@@ -29,8 +29,11 @@ class PS5Controller:
         lt = self.joy.get_axis(4)
         rt = self.joy.get_axis(5)
 
+        cross = self.joy.get_button(0)
+        circle = self.joy.get_button(1)
         square = self.joy.get_button(2)
+        triangle = self.joy.get_button(3)
 
-        return lx, ly, lt, rx, ry, rt, square
+        return lx, ly, lt, rx, ry, rt, cross, circle, square, triangle
 
     

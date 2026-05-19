@@ -7,55 +7,79 @@ import pygame
 from GUI.setup import run_setup
 from GUI.viewer import DroneViewer
 
-# trims offset attitude controls
-pitch_trim = 1.02
-roll_trim = 0
 running = True
 
     # ---- CONTROL LOOP ----
 def control_loop(quad):
-    global running
 
     quad._thrust_smoothed = 0
     alpha = 0.1
+    count = 0
+    thrust_raw = 0
 
     while running:
         if quad.controller:
             try:
-                lx, ly, lt, rx, ry, rt, square = quad.controller.read()
+                lx, ly, lt, rx, ry, rt, cross, circle, square, triangle = quad.controller.read()
 
                 # kill switch
                 if square: 
                     quad.killed = True
                     print("KILL SWITCH PRESSED")
 
-                roll, pitch, yaw_rate, thrust_raw = \
-                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
+#                roll, pitch, yaw_rate, thrust_raw = \
+#                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
 
+                # test flight mode
+                if triangle:
+                    quad.test_flight = True
+                
+
+                # cancel test flight if kill switch pressed or circle pressed (circle allows restarting, kill switch requires reboot)
+                if quad.killed is True or circle: 
+                    quad.test_flight = False
+                
+                # slowly increase thrust (50 counts is ~1s)
+                if quad.test_flight is True:
+                    if count <= 75:
+                        thrust_raw = 7500
+                    elif count <= 150:
+                        thrust_raw = 30000
+                    elif count <= 250:
+                        thrust_raw = 40000
+                    else:
+                        quad.test_flight = False
+                        thrust_raw = 0
+                        count = 0
+                else:
+                    thrust_raw = 0
+                    count = 0
+
+                # smooth the thrust
                 quad._thrust_smoothed = (
                     (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
                 )
-
                 thrust = int(quad._thrust_smoothed)
-                pitch -= pitch_trim
-                roll -= roll_trim
 
                 # reset attitude when drone stops
-                if thrust <= 10000:
-                    pitch = 0
-                    roll = 0
+#                if thrust <= 10000:
+#                    pitch = 0
+#                    roll = 0
 
                 # update control values in quadcopter object, these are read to send controls to quadcopter
                 quad.update_controls(
-                    roll=roll,
-                    pitch=pitch,
-                    yaw_rate=yaw_rate,
+                    roll=0,
+                    pitch=0,
+                    yaw_rate=0,
                     thrust=thrust
                 )
 
             except Exception as e:
                 print(f"Controller error: {e}")
 
+        if quad.test_flight:
+            count += 1
+            print(f"count = {count}, thrust = {thrust_raw}")
         time.sleep(0.02)  # faster, smoother (~50 Hz)
 
 def main():

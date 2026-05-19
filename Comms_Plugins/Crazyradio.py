@@ -159,7 +159,7 @@ class CRTP_logger:
         
         #kill switch
         if getattr(self.quadcopter, "killed", False):
-            self.cf.commander.send_setpoint(0.0, 0.0, 0.0, 0)
+            self.cf.commander.send_stop_setpoint()
 
         else: 
             # calculate change in time

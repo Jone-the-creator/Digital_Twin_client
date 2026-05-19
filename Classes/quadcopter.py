@@ -40,6 +40,7 @@ class Quadcopter:
         self.attitude = Attitude() # attitude angles in degrees
         self.thrust = 0.0
         self.killed = False
+        self.test_flight = False
         if self.estimator == "Kalman Filter":
             self.KF = Kalmanfilter()
         else:
