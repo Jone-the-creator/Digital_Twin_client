@@ -183,12 +183,3 @@ class DroneViewer(QWidget,):
         if hasattr(self, "worker"):
             self.recording.hide()
             self.worker.stop()
-    
-    def closeEvent(self, event):
-        if hasattr(self, "worker"):
-            self.worker.stop()
-
-        if hasattr(self, "thread") and self.thread.isRunning():
-            self.thread.wait()
-
-        event.accept()
