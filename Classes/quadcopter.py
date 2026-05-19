@@ -41,6 +41,7 @@ class Quadcopter:
         self.thrust = 0.0
         self.killed = False
         self.test_flight = False
+        self.viewer = None
         if self.estimator == "Kalman Filter":
             self.KF = Kalmanfilter()
         else:

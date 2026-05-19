@@ -2,12 +2,13 @@ from Classes import PS5Controller
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, pyqtSignal
 import pygame
 from GUI.setup import run_setup
 from GUI.viewer import DroneViewer
 
 running = True
+viewer_exists = False
 
     # ---- CONTROL LOOP ----
 def control_loop(quad):
@@ -40,7 +41,14 @@ def control_loop(quad):
                     quad.test_flight = False
                 
                 # slowly increase thrust (50 counts is ~1s)
+
+                if not hasattr(quad, "recording_active"):
+                    quad.recording_active = False
+
                 if quad.test_flight is True:
+                    if not quad.recording_active:
+                        quad.viewer.start_record_signal.emit()
+                        quad.recording_active = True
                     if count <= 75:
                         thrust_raw = 7500
                     elif count <= 150:
@@ -51,9 +59,15 @@ def control_loop(quad):
                         quad.test_flight = False
                         thrust_raw = 0
                         count = 0
+                        if quad.recording_active:
+                            quad.viewer.stop_record_signal.emit()
+                            quad.recording_active = False
                 else:
                     thrust_raw = 0
                     count = 0
+                    if quad.recording_active:
+                            quad.viewer.stop_record_signal.emit()
+                            quad.recording_active = False
 
                 # smooth the thrust
                 quad._thrust_smoothed = (
@@ -102,7 +116,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,), daemon=True).start()
+    threading.Thread(target=control_loop, args=(quad,)).start()
 
     # ---- COMMS ----
     comms = None
@@ -121,7 +135,7 @@ def main():
     timer.timeout.connect(pump_pygame)
     timer.start(10)  # 100 Hz
 
-    viewer = DroneViewer(quad)
+    quad.viewer = DroneViewer(quad)
 
     # Explicit shutdown function
     def shutdown():
@@ -136,7 +150,7 @@ def main():
 
     app.aboutToQuit.connect(shutdown)
 
-    viewer.show()
+    quad.viewer.show()
     sys.exit(app.exec())
 
 

@@ -1,6 +1,6 @@
 from PyQt6 import QtGui
 from PyQt6.QtCore import (
-    QTimer, QThread, 
+    QTimer, QThread, pyqtSignal
 )
 from PyQt6.QtWidgets import (
     QPushButton, QHBoxLayout, QWidget, QLabel, QVBoxLayout
@@ -24,6 +24,8 @@ vertices -= center
 md = gl.MeshData.sphere(rows=10,cols=10)
 
 class DroneViewer(QWidget,):
+    start_record_signal = pyqtSignal()
+    stop_record_signal = pyqtSignal()
     def __init__(self, quadcopter):
         super().__init__()
         self.quadcopter = quadcopter
@@ -110,6 +112,10 @@ class DroneViewer(QWidget,):
         self.start_recording_btn.clicked.connect(self.start_record)
         self.stop_recording_btn.clicked.connect(self.stop_record)
 
+        self.start_record_signal.connect(self.start_record)
+        self.stop_record_signal.connect(self.stop_record)
+
+
     # update model from quadcopter object
     def update_model(self):
         roll = self.quadcopter.attitude.roll
@@ -149,10 +155,15 @@ class DroneViewer(QWidget,):
             roll = self.quadcopter.attitude.roll,
             )
         
+
     def start_record(self):
+    #    if hasattr(self, "thread") and self.thread is not None:
+    #        if self.thread.isRunning():
+    #            return  # already recording
+
         # shows recording status
         self.recording.show()
-        
+
         # creates thread
         self.thread = QThread()
         self.worker = RecorderWorker(self.quadcopter)
@@ -172,3 +183,12 @@ class DroneViewer(QWidget,):
         if hasattr(self, "worker"):
             self.recording.hide()
             self.worker.stop()
+    
+    def closeEvent(self, event):
+        if hasattr(self, "worker"):
+            self.worker.stop()
+
+        if hasattr(self, "thread") and self.thread.isRunning():
+            self.thread.wait()
+
+        event.accept()
