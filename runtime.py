@@ -9,6 +9,7 @@ from GUI.viewer import DroneViewer
 
 running = True
 viewer_exists = False
+LOOP_RATE = 500 # control loop rate in Hz
 
     # ---- CONTROL LOOP ----
 def control_loop(quad):
@@ -49,11 +50,11 @@ def control_loop(quad):
                     if not quad.recording_active:
                         quad.viewer.start_record_signal.emit()
                         quad.recording_active = True
-                    if count <= 75:
+                    if count <= 1.5*LOOP_RATE:
                         thrust_raw = 7500
-                    elif count <= 150:
+                    elif count <= 3*LOOP_RATE:
                         thrust_raw = 30000
-                    elif count <= 250:
+                    elif count <= 5*LOOP_RATE:
                         thrust_raw = 40000
                     else:
                         quad.test_flight = False
@@ -93,8 +94,8 @@ def control_loop(quad):
 
         if quad.test_flight:
             count += 1
-            print(f"count = {count}, thrust = {thrust_raw}")
-        time.sleep(0.02)  # faster, smoother (~50 Hz)
+            print(f"slept time = {count/500}, thrust = {thrust_raw}")
+        time.sleep(1/LOOP_RATE)  # causes the loop rate NEED TO UPDATE LOOP TIMING
 
 def main():
     # ---- QUADCOPTER INSTANTIATE/SETUP ----
