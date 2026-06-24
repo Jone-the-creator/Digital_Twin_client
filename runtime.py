@@ -2,7 +2,7 @@ from Classes import PS5Controller
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PyQt6.QtCore import QTimer, QThread
 import pygame
 from GUI.setup import run_setup
 from GUI.viewer import DroneViewer
@@ -49,13 +49,16 @@ def control_loop(quad):
                 if quad.test_flight is True:
                     if not quad.recording_active:
                         quad.viewer.start_record_signal.emit()
+                        print("START RECORDING THREAD")
                         quad.recording_active = True
                     if count <= 1.5*LOOP_RATE:
-                        thrust_raw = 7500
-                    elif count <= 3*LOOP_RATE:
-                        thrust_raw = 30000
-                    elif count <= 5*LOOP_RATE:
-                        thrust_raw = 40000
+                        thrust_raw = 35000
+                    # elif count <= 3*LOOP_RATE:
+                    #     thrust_raw = 30000
+                    elif count <= 2.5*LOOP_RATE:
+                        thrust_raw = 45000
+                    elif count <= 3.5*LOOP_RATE:
+                        thrust_raw = 35000
                     else:
                         quad.test_flight = False
                         thrust_raw = 0
@@ -95,7 +98,7 @@ def control_loop(quad):
         if quad.test_flight:
             count += 1
             print(f"slept time = {count/500}, thrust = {thrust_raw}")
-        time.sleep(1/LOOP_RATE)  # causes the loop rate NEED TO UPDATE LOOP TIMING
+        QThread.msleep(int(1000/LOOP_RATE))  # causes the loop rate NEED TO UPDATE LOOP TIMING
 
 def main():
     # ---- QUADCOPTER INSTANTIATE/SETUP ----

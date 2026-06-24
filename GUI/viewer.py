@@ -144,7 +144,7 @@ class DroneViewer(QWidget,):
 
         # update thrust in model
         thrust = self.quadcopter.controls.thrust
-        self.thrust_panel.update(thrust / 60000 * 100)
+        self.thrust_panel.update(thrust / 40000 * 100)
 
         # update readings
         self.reading_panel.update(
@@ -157,9 +157,9 @@ class DroneViewer(QWidget,):
         
 
     def start_record(self):
-    #    if hasattr(self, "thread") and self.thread is not None:
-    #        if self.thread.isRunning():
-    #            return  # already recording
+        # if hasattr(self, "thread") and self.thread is not None:
+        #    if self.thread.isRunning():
+        #        return  # already recording
 
         # shows recording status
         self.recording.show()
@@ -183,3 +183,8 @@ class DroneViewer(QWidget,):
         if hasattr(self, "worker"):
             self.recording.hide()
             self.worker.stop()
+
+        if hasattr(self, "thread"):
+            self.thread.requestInterruption() 
+            self.thread.quit()
+            self.thread.wait()

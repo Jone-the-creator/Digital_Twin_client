@@ -1,7 +1,7 @@
 import numpy as np
 
-# pitch and roll trims
-pitch_trim = 0
+# pitch and roll trims (+ to reduce, - to increase)
+pitch_trim = 0 
 roll_trim = 0
 
 class PIDstabiliser():
@@ -33,9 +33,9 @@ class PIDstabiliser():
         self.max_int = 50 
 
         # PID gains
-        self.Kp_roll_pitch = 1.48
-        self.Ki_roll_pitch = 0.45
-        self.Kd_roll_pitch = 1.02
+        self.Kp_roll_pitch = 1.25
+        self.Ki_roll_pitch = 0.5
+        self.Kd_roll_pitch = 1
 
     # hover mode, with a thrust given and dt this will just hover and apply a thrust
     def hover(self, thrust, dt):
@@ -43,12 +43,16 @@ class PIDstabiliser():
         self.roll = self.quad.attitude.roll
         self.pitch = self.quad.attitude.pitch
 
+        # update trim on start of hover mode
+        pitch_trim = self.pitch
+        roll_trim = self.roll
+
         # initialise control array
         u = np.zeros((4,1))
 
         # calculate attitude errors
-        roll_error = self.roll_setpoint - self.roll
-        pitch_error = self.pitch_setpoint - self.pitch
+        roll_error = self.roll_setpoint - (self.roll - roll_trim)
+        pitch_error = self.pitch_setpoint - (self.pitch - pitch_trim)
 
         # calculate integral errors and clip them
         self.integral_roll_error += roll_error * dt
@@ -63,8 +67,8 @@ class PIDstabiliser():
         pitch_cmd = np.clip(pitch_cmd, -self.max_angle, self.max_angle)
 
         u[0,0] = 0 # yaw
-        u[1,0] = -pitch_cmd + pitch_trim # pitch
-        u[2,0] = roll_cmd + roll_trim # roll
+        u[1,0] = -pitch_cmd # pitch
+        u[2,0] = roll_cmd # roll
         u[3,0] = thrust # thrust
 
         # save previous error for next derivative error

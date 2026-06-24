@@ -1,5 +1,5 @@
 from PyQt6.QtCore import ( 
-    QObject, pyqtSignal
+    QObject, pyqtSignal, QThread
 )
 
 import time, csv, os
@@ -32,7 +32,7 @@ class RecorderWorker(QObject):
             writer = csv.writer(f)
             writer.writerow(["time (s)", "yaw", "pitch", "roll", "battery"])
             start_time = time.time()
-            while self.running:
+            while self.running and not QThread.currentThread().isInterruptionRequested():
                 #update this function when new variables desired
                 writer.writerow([
                     round(time.time() - start_time, 3),
@@ -43,7 +43,7 @@ class RecorderWorker(QObject):
                 ])
 
                 f.flush()
-                time.sleep(0.02)  # 50Hz
+                QThread.msleep(20)  # 50Hz
 
         self.finished.emit()
 
