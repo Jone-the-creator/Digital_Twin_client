@@ -6,7 +6,6 @@ import time, threading
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
-from Classes.PID_stabiliser import PIDstabiliser
 
 # Crazyradio logger plugin
 class CRTP_logger:
@@ -22,7 +21,6 @@ class CRTP_logger:
         self.logconf_periph = None
         self.logconf_pos = None
         self.is_connected = False
-        self.stabiliser = PIDstabiliser(self.quadcopter)
         self.last_update_time = time.time()
 
     def start(self):    
@@ -67,7 +65,7 @@ class CRTP_logger:
         )
         self.logconf_pos = LogConfig(
             name='Position',
-            period_in_ms=10
+            period_in_ms=50
         )
         # choose logged variables here, can find in the following list:
         # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
@@ -168,9 +166,15 @@ class CRTP_logger:
 
 #        self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
         while True:
+            #send controls and use microsleeps to achieve the desired loop rate
+            start_time = time.time()
             if self.is_connected:
                 self.send_controls()
-            time.sleep(0.005) # ~200Hz
+            loop_time = time.time() - start_time
+            while(loop_time < 0.0025): # 500Hz
+                time.sleep(0.00001)
+                loop_time = time.time() - start_time
+            # print(f"actual loop time = {time.time()-start_time}")
 
     # controls that will be sent to the crazyflie 
     def send_controls(self):
@@ -192,3 +196,4 @@ class CRTP_logger:
                 yawrate = float(self.quadcopter.controls.yaw_rate),
                 thrust = int(self.quadcopter.controls.thrust)
             )
+            # print(f"transmitted pitch rate {float(self.quadcopter.controls.pitch)}")

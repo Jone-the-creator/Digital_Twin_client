@@ -11,7 +11,7 @@ from GUI.viewer import DroneViewer
 
 running = True
 viewer_exists = False
-LOOP_RATE = 500 # control loop rate in Hz
+LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
     # ---- CONTROL LOOP ----
@@ -24,6 +24,7 @@ def control_loop(quad, stab):
     u = np.zeros((4,1))
 
     while running:
+        start_time = time.time()
         if quad.controller:
             try:
                 lx, ly, lt, rx, ry, rt, cross, circle, square, triangle = quad.controller.read()
@@ -57,14 +58,10 @@ def control_loop(quad, stab):
                         print("START RECORDING THREAD")
                         quad.recording_active = True
                         stab.zero()
-                    if count <= 1.5*LOOP_RATE:
-                        u = stab.hover(0.5,dt)
-                    elif count <= 3.5*LOOP_RATE:
-                        u = stab.hover(0.8,dt)
-                    elif count <= 5*LOOP_RATE:
-                        u = stab.hover(1.0,dt)
+                    if count <= 5*LOOP_RATE:
+                        u = stab.hover(1,dt)
                     elif count <= 6.5*LOOP_RATE:
-                        u = stab.hover(0.5,dt)
+                        u = stab.hover(0.8,dt)
                     else:
                         u = np.zeros((4,1))
                         quad.test_flight = False
@@ -88,6 +85,7 @@ def control_loop(quad, stab):
                 thrust = int(quad._thrust_smoothed)                            
                 
                 # update control values in quadcopter object, these are read to send controls to quadcopter
+                # print(u)
                 quad.update_controls(
                     yaw_rate = u[0,0],
                     pitch = u[1,0],
@@ -100,13 +98,18 @@ def control_loop(quad, stab):
 
         if quad.test_flight:
             count += 1
-            print(f"slept time = {count/500}")
-        # QThread.msleep(int(1000/LOOP_RATE))  # causes the loop rate NEED TO UPDATE LOOP TIMING
+            # print(f"slept time = {count/500}")
 
+        # accurate loop timing
+        loop_time = time.time() - start_time
+        while(loop_time < dt):
+            time.sleep(0.00001)
+            loop_time = time.time() - start_time
+
+        # print(f"actual loop time = {time.time()-start_time}")
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
-
     stab = PIDstabiliser(quad)
 
     if quad is None:

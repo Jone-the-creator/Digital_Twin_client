@@ -35,11 +35,12 @@ class PIDstabiliser():
         self.max_int = 50 
 
         # PID gains
-        self.Kp_roll_pitch = 2
-        self.Ki_roll_pitch = 0
-        self.Kd_roll_pitch = 0
-        self.K_z = 3000 # thrust DC gain 
-        self.Kp_z = 15
+        self.K_roll_pitch = 25.0
+        self.Kp_roll_pitch = 1
+        self.Ki_roll_pitch = 0.5
+        self.Kd_roll_pitch = 0.25
+        self.K_z = 30000 # thrust DC gain 
+        self.Kp_z = 1.5
         self.Ki_z = 0
         self.Kd_z = 0
 
@@ -76,17 +77,16 @@ class PIDstabiliser():
             self.integral_z_error = np.clip(self.integral_z_error, -self.max_int, self.max_int)
 
             # pitch and roll commands calculated with PID
-            roll_cmd = roll_error * self.Kp_roll_pitch + self.integral_roll_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (roll_error - self.previous_roll_error) / max(dt, 1e-5)
-            pitch_cmd = pitch_error * self.Kp_roll_pitch + self.integral_pitch_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (pitch_error - self.previous_pitch_error) / max(dt, 1e-5)
-            roll_cmd = np.clip(roll_cmd, -self.max_angle, self.max_angle)
-            pitch_cmd = np.clip(pitch_cmd, -self.max_angle, self.max_angle)
+            roll_cmd = self.K_roll_pitch * (roll_error * self.Kp_roll_pitch + self.integral_roll_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (roll_error - self.previous_roll_error) / dt )
+            pitch_cmd = self.K_roll_pitch* (pitch_error * self.Kp_roll_pitch + self.integral_pitch_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (pitch_error - self.previous_pitch_error) / dt)
 
             # thrust command calculated with PID
             thrust = self.K_z*(z_error * self.Kp_z + self.integral_z_error * self.Ki_z) # + (z_error - self.previous_z_error) / max(dt, 1e-5) * self.Kd_z
             
             print(f"pitch = {self.quad.attitude.pitch}, roll = {self.quad.attitude.roll}")
+            print(f"pitch rate = {pitch_cmd}, roll rate = {roll_cmd}")
             u[0,0] = 0 # yaw
-            u[1,0] = -pitch_cmd # pitch
+            u[1,0] = pitch_cmd # pitch
             u[2,0] = roll_cmd # roll
             u[3,0] = thrust # thrust
 
@@ -109,6 +109,9 @@ class PIDstabiliser():
         self.previous_z_error = 0.0
 
     def zero(self):
+        self.z_trim = 0.2
+        self.roll_trim = 0
+        self.pitch_trim = 0
         self.z_trim = self.quad.position.z
         self.roll_trim = self.quad.attitude.roll
         self.pitch_trim = self.quad.attitude.pitch
