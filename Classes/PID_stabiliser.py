@@ -35,13 +35,13 @@ class PIDstabiliser():
         self.max_int = 50 
 
         # PID gains
-        self.Kp_roll_pitch = 1.25
-        self.Ki_roll_pitch = 0.5
-        self.Kd_roll_pitch = 2.55
+        self.Kp_roll_pitch = 2
+        self.Ki_roll_pitch = 0
+        self.Kd_roll_pitch = 0
         self.K_z = 3000 # thrust DC gain 
-        self.Kp_z = 15.75
-        self.Ki_z = 2.5
-        self.Kd_z = 1.5
+        self.Kp_z = 15
+        self.Ki_z = 0
+        self.Kd_z = 0
 
     # hover mode, with a thrust given and dt this will just hover and apply a thrust
     def hover(self, z, dt):
@@ -83,7 +83,8 @@ class PIDstabiliser():
 
             # thrust command calculated with PID
             thrust = self.K_z*(z_error * self.Kp_z + self.integral_z_error * self.Ki_z) # + (z_error - self.previous_z_error) / max(dt, 1e-5) * self.Kd_z
-
+            
+            print(f"pitch = {self.quad.attitude.pitch}, roll = {self.quad.attitude.roll}")
             u[0,0] = 0 # yaw
             u[1,0] = -pitch_cmd # pitch
             u[2,0] = roll_cmd # roll

@@ -161,10 +161,10 @@ class CRTP_logger:
 
 
     def _control_loop(self):
-        
-        self.cf.param.set_value('flightmode.stabModeRoll', 1)
-        self.cf.param.set_value('flightmode.stabModePitch', 1)
-        self.cf.param.set_value('flightmode.stabModeYaw', 1)
+        # set attitude flight mode to rate
+        self.cf.param.set_value('flightmode.stabModeRoll', 0)
+        self.cf.param.set_value('flightmode.stabModePitch', 0)
+        self.cf.param.set_value('flightmode.stabModeYaw', 0)
 
 #        self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
         while True:
@@ -192,4 +192,3 @@ class CRTP_logger:
                 yawrate = float(self.quadcopter.controls.yaw_rate),
                 thrust = int(self.quadcopter.controls.thrust)
             )
-            print(f"thrust = {self.quadcopter.controls.thrust}")

@@ -63,7 +63,7 @@ def control_loop(quad, stab):
                         u = stab.hover(0.8,dt)
                     elif count <= 5*LOOP_RATE:
                         u = stab.hover(1.0,dt)
-                    elif count <= 5*LOOP_RATE:
+                    elif count <= 6.5*LOOP_RATE:
                         u = stab.hover(0.5,dt)
                     else:
                         u = np.zeros((4,1))
@@ -101,7 +101,7 @@ def control_loop(quad, stab):
         if quad.test_flight:
             count += 1
             print(f"slept time = {count/500}")
-        QThread.msleep(int(1000/LOOP_RATE))  # causes the loop rate NEED TO UPDATE LOOP TIMING
+        # QThread.msleep(int(1000/LOOP_RATE))  # causes the loop rate NEED TO UPDATE LOOP TIMING
 
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
