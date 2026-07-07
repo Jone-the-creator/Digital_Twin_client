@@ -1,23 +1,27 @@
 from Classes import PS5Controller
+from Classes.PID_stabiliser import PIDstabiliser
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTimer, QThread
 import pygame
+import numpy as np
 from GUI.setup import run_setup
 from GUI.viewer import DroneViewer
 
 running = True
 viewer_exists = False
 LOOP_RATE = 500 # control loop rate in Hz
+dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
     # ---- CONTROL LOOP ----
-def control_loop(quad):
+def control_loop(quad, stab):
 
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
     thrust_raw = 0
+    u = np.zeros((4,1))
 
     while running:
         if quad.controller:
@@ -47,49 +51,48 @@ def control_loop(quad):
                     quad.recording_active = False
 
                 if quad.test_flight is True:
+
                     if not quad.recording_active:
                         quad.viewer.start_record_signal.emit()
                         print("START RECORDING THREAD")
                         quad.recording_active = True
+                        stab.zero()
                     if count <= 1.5*LOOP_RATE:
-                        thrust_raw = 35000
-                    # elif count <= 3*LOOP_RATE:
-                    #     thrust_raw = 30000
-                    elif count <= 2.5*LOOP_RATE:
-                        thrust_raw = 45000
+                        u = stab.hover(0.5,dt)
                     elif count <= 3.5*LOOP_RATE:
-                        thrust_raw = 35000
+                        u = stab.hover(0.8,dt)
+                    elif count <= 5*LOOP_RATE:
+                        u = stab.hover(1.0,dt)
+                    elif count <= 5*LOOP_RATE:
+                        u = stab.hover(0.5,dt)
                     else:
+                        u = np.zeros((4,1))
                         quad.test_flight = False
-                        thrust_raw = 0
                         count = 0
+                        stab.reset()
                         if quad.recording_active:
                             quad.viewer.stop_record_signal.emit()
                             quad.recording_active = False
                 else:
-                    thrust_raw = 0
+                    u = np.zeros((4,1))
                     count = 0
+                    stab.reset()
                     if quad.recording_active:
                             quad.viewer.stop_record_signal.emit()
                             quad.recording_active = False
 
-                # smooth the thrust
+                # # smooth the thrust
                 quad._thrust_smoothed = (
-                    (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+                    (1 - alpha) * quad._thrust_smoothed + alpha * u[3,0]
                 )
-                thrust = int(quad._thrust_smoothed)
-
-                # reset attitude when drone stops
-#                if thrust <= 10000:
-#                    pitch = 0
-#                    roll = 0
-
+                thrust = int(quad._thrust_smoothed)                            
+                
                 # update control values in quadcopter object, these are read to send controls to quadcopter
                 quad.update_controls(
-                    roll=0,
-                    pitch=0,
-                    yaw_rate=0,
-                    thrust=thrust
+                    yaw_rate = u[0,0],
+                    pitch = u[1,0],
+                    roll = u[2,0],
+                    thrust = thrust
                 )
 
             except Exception as e:
@@ -97,12 +100,14 @@ def control_loop(quad):
 
         if quad.test_flight:
             count += 1
-            print(f"slept time = {count/500}, thrust = {thrust_raw}")
+            print(f"slept time = {count/500}")
         QThread.msleep(int(1000/LOOP_RATE))  # causes the loop rate NEED TO UPDATE LOOP TIMING
 
 def main():
-    # ---- QUADCOPTER INSTANTIATE/SETUP ----
+    # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
+
+    stab = PIDstabiliser(quad)
 
     if quad is None:
         print("User cancelled startup.")
@@ -120,7 +125,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,)).start()
+    threading.Thread(target=control_loop, args=(quad,stab)).start()
 
     # ---- COMMS ----
     comms = None

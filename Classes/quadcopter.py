@@ -24,6 +24,7 @@ class ControlInputs:
     pitch: float = 0.0
     yaw_rate: float = 0.0
     thrust: float = 0.0
+    z: float = 0.0
 
 
 # quadcopter class containing generic data requirements
@@ -89,7 +90,7 @@ class Quadcopter:
         self._update_time(timestamp)
 
 
-    def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None):
+    def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None, z=None):
         if roll is not None:
             self.controls.roll = roll
         if pitch is not None:
@@ -98,6 +99,8 @@ class Quadcopter:
             self.controls.yaw_rate = yaw_rate
         if thrust is not None:
             self.controls.thrust = thrust
+        if z is not None:
+            self.controls.z = z
 
     # predict states based on received gyro data
     def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):

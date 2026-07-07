@@ -1,12 +1,12 @@
 import numpy as np
 
-# pitch and roll trims (+ to reduce, - to increase)
-pitch_trim = 0 
-roll_trim = 0
-
 class PIDstabiliser():
     def __init__(self, quadcopter):
         self.quad = quadcopter
+        
+        self.pitch_trim = 0.0
+        self.roll_trim = 0.0
+        self.z_trim = 0.0
 
         # initialise setpoints, adjust these directly for control
         self.roll_setpoint = 0.0
@@ -16,10 +16,12 @@ class PIDstabiliser():
         # previous errors for derivative error
         self.previous_roll_error = 0.0
         self.previous_pitch_error = 0.0
+        self.previous_z_error = 0.0
 
         # integral errors
         self.integral_roll_error = 0.0
         self.integral_pitch_error = 0.0
+        self.integral_z_error = 0.0
 
         # initialise current attitude readings
         self.roll = self.quad.attitude.roll
@@ -35,45 +37,77 @@ class PIDstabiliser():
         # PID gains
         self.Kp_roll_pitch = 1.25
         self.Ki_roll_pitch = 0.5
-        self.Kd_roll_pitch = 1
+        self.Kd_roll_pitch = 2.55
+        self.K_z = 3000 # thrust DC gain 
+        self.Kp_z = 15.75
+        self.Ki_z = 2.5
+        self.Kd_z = 1.5
 
     # hover mode, with a thrust given and dt this will just hover and apply a thrust
-    def hover(self, thrust, dt):
-        # update attitude angles from quadcopter object
-        self.roll = self.quad.attitude.roll
-        self.pitch = self.quad.attitude.pitch
+    def hover(self, z, dt):
+        if not self.quad.killed:
+            # update attitude angles from quadcopter object
+            self.roll = self.quad.attitude.roll
+            self.pitch = self.quad.attitude.pitch
 
-        # update trim on start of hover mode
-        pitch_trim = self.pitch
-        roll_trim = self.roll
+            # update positions from quadcopter object
+            self.z = self.quad.position.z
 
-        # initialise control array
-        u = np.zeros((4,1))
+            # # update trim on start of hover mode
+            # pitch_trim = self.pitch
+            # roll_trim = self.roll
 
-        # calculate attitude errors
-        roll_error = self.roll_setpoint - (self.roll - roll_trim)
-        pitch_error = self.pitch_setpoint - (self.pitch - pitch_trim)
+            # initialise control array
+            u = np.zeros((4,1))
 
-        # calculate integral errors and clip them
-        self.integral_roll_error += roll_error * dt
-        self.integral_pitch_error += pitch_error * dt
-        self.integral_roll_error = np.clip(self.integral_roll_error, -self.max_int, self.max_int)
-        self.integral_pitch_error = np.clip(self.integral_pitch_error, -self.max_int, self.max_int)
+            # calculate attitude errors
+            roll_error = self.roll_setpoint - (self.roll - self.roll_trim)
+            pitch_error = self.pitch_setpoint - (self.pitch - self.pitch_trim)
 
-        # pitch and roll commands calculated with PID
-        roll_cmd = roll_error * self.Kp_roll_pitch + self.integral_roll_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (roll_error - self.previous_roll_error) / max(dt, 1e-5)
-        pitch_cmd = pitch_error * self.Kp_roll_pitch + self.integral_pitch_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (pitch_error - self.previous_pitch_error) / max(dt, 1e-5)
-        roll_cmd = np.clip(roll_cmd, -self.max_angle, self.max_angle)
-        pitch_cmd = np.clip(pitch_cmd, -self.max_angle, self.max_angle)
+            # calculate z error
+            z_error = z - (self.z - self.z_trim)
 
-        u[0,0] = 0 # yaw
-        u[1,0] = -pitch_cmd # pitch
-        u[2,0] = roll_cmd # roll
-        u[3,0] = thrust # thrust
+            # calculate integral errors and clip them
+            self.integral_roll_error += roll_error * dt
+            self.integral_pitch_error += pitch_error * dt
+            self.integral_z_error += z_error * dt
+            self.integral_roll_error = np.clip(self.integral_roll_error, -self.max_int, self.max_int)
+            self.integral_pitch_error = np.clip(self.integral_pitch_error, -self.max_int, self.max_int)
+            self.integral_z_error = np.clip(self.integral_z_error, -self.max_int, self.max_int)
 
-        # save previous error for next derivative error
-        self.previous_roll_error = roll_error
-        self.previous_pitch_error = pitch_error
+            # pitch and roll commands calculated with PID
+            roll_cmd = roll_error * self.Kp_roll_pitch + self.integral_roll_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (roll_error - self.previous_roll_error) / max(dt, 1e-5)
+            pitch_cmd = pitch_error * self.Kp_roll_pitch + self.integral_pitch_error * self.Ki_roll_pitch + self.Kd_roll_pitch * (pitch_error - self.previous_pitch_error) / max(dt, 1e-5)
+            roll_cmd = np.clip(roll_cmd, -self.max_angle, self.max_angle)
+            pitch_cmd = np.clip(pitch_cmd, -self.max_angle, self.max_angle)
 
-        return u 
+            # thrust command calculated with PID
+            thrust = self.K_z*(z_error * self.Kp_z + self.integral_z_error * self.Ki_z) # + (z_error - self.previous_z_error) / max(dt, 1e-5) * self.Kd_z
 
+            u[0,0] = 0 # yaw
+            u[1,0] = -pitch_cmd # pitch
+            u[2,0] = roll_cmd # roll
+            u[3,0] = thrust # thrust
+
+            # save previous error for next derivative error
+            self.previous_roll_error = roll_error
+            self.previous_pitch_error = pitch_error
+            self.previous_z_error = z_error
+
+            return u 
+
+    def reset(self):
+        # reset integral errors
+        self.integral_pitch_error = 0.0
+        self.integral_roll_error = 0.0
+        self.integral_z_error = 0.0
+
+        # reset previous errors
+        self.previous_pitch_error = 0.0
+        self.previous_roll_error = 0.0
+        self.previous_z_error = 0.0
+
+    def zero(self):
+        self.z_trim = self.quad.position.z
+        self.roll_trim = self.quad.attitude.roll
+        self.pitch_trim = self.quad.attitude.pitch
