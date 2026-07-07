@@ -20,10 +20,10 @@ def control_loop(quad, stab):
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
-    thrust_raw = 0
     u = np.zeros((4,1))
+    thrust_raw = 0
 
-    while running:
+    while running: # THIS LOOP NEEDS TO BE GREATLY IMPROVED!!!
         start_time = time.time()
         if quad.controller:
             try:
@@ -34,19 +34,25 @@ def control_loop(quad, stab):
                     quad.killed = True
                     print("KILL SWITCH PRESSED")
 
-#                roll, pitch, yaw_rate, thrust_raw = \
-#                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt)
+                # --- MANUAL CONTROL MODE ---
+                roll, pitch, yaw_rate, altitude = \
+                   functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)
+                
+                # print(f"altitude setpoint = {altitude}")
+                
+                # u[0,0] = yaw_rate
+                # u[1,0] = pitch
+                # u[2,0] = roll
+                # thrust_raw = functions.altitude_control(altitude, quad, dt)
+                # print(f"thrust = {thrust_raw}")
 
-                # test flight mode
+                # --- TEST FLIGHT MODE ---
                 if triangle:
                     quad.test_flight = True
-                
 
                 # cancel test flight if kill switch pressed or circle pressed (circle allows restarting, kill switch requires reboot)
                 if quad.killed is True or circle: 
                     quad.test_flight = False
-                
-                # slowly increase thrust (50 counts is ~1s)
 
                 if not hasattr(quad, "recording_active"):
                     quad.recording_active = False
@@ -59,9 +65,11 @@ def control_loop(quad, stab):
                         quad.recording_active = True
                         stab.zero()
                     if count <= 5*LOOP_RATE:
-                        u = stab.hover(1,dt)
+                        u = stab.hover(altitude,dt)
+                        thrust_raw = u[3,0]
                     elif count <= 6.5*LOOP_RATE:
-                        u = stab.hover(0.8,dt)
+                        u = stab.hover(altitude,dt)
+                        thrust_raw = u[3,0]
                     else:
                         u = np.zeros((4,1))
                         quad.test_flight = False
@@ -71,7 +79,6 @@ def control_loop(quad, stab):
                             quad.viewer.stop_record_signal.emit()
                             quad.recording_active = False
                 else:
-                    u = np.zeros((4,1))
                     count = 0
                     stab.reset()
                     if quad.recording_active:
@@ -80,7 +87,7 @@ def control_loop(quad, stab):
 
                 # # smooth the thrust
                 quad._thrust_smoothed = (
-                    (1 - alpha) * quad._thrust_smoothed + alpha * u[3,0]
+                    (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
                 )
                 thrust = int(quad._thrust_smoothed)                            
                 
@@ -99,6 +106,7 @@ def control_loop(quad, stab):
         if quad.test_flight:
             count += 1
             # print(f"slept time = {count/500}")
+        
 
         # accurate loop timing
         loop_time = time.time() - start_time

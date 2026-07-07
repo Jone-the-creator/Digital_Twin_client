@@ -83,8 +83,8 @@ class PIDstabiliser():
             # thrust command calculated with PID
             thrust = self.K_z*(z_error * self.Kp_z + self.integral_z_error * self.Ki_z) # + (z_error - self.previous_z_error) / max(dt, 1e-5) * self.Kd_z
             
-            print(f"pitch = {self.quad.attitude.pitch}, roll = {self.quad.attitude.roll}")
-            print(f"pitch rate = {pitch_cmd}, roll rate = {roll_cmd}")
+            # print(f"pitch = {self.quad.attitude.pitch}, roll = {self.quad.attitude.roll}")
+            # print(f"pitch rate = {pitch_cmd}, roll rate = {roll_cmd}")
             u[0,0] = 0 # yaw
             u[1,0] = pitch_cmd # pitch
             u[2,0] = roll_cmd # roll

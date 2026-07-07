@@ -146,7 +146,7 @@ class CRTP_logger:
             y = data['kalman.stateY'],
             z = data['kalman.stateZ'],
         )
-        # print(f"z = {data['kalman.stateZ']}")
+        print(f"z = {data['kalman.stateZ']}")
 
     def _log_periph_data_received(self, timestamp, data, logconfig):
         # if no thrust, battery percentage can be safely calculated
@@ -197,3 +197,4 @@ class CRTP_logger:
                 thrust = int(self.quadcopter.controls.thrust)
             )
             # print(f"transmitted pitch rate {float(self.quadcopter.controls.pitch)}")
+            print(f"transmitted thrust = {int(self.quadcopter.controls.thrust)}")
