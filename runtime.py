@@ -27,50 +27,56 @@ def control_loop(quad, stab):
         start_time = time.time()
         if quad.controller:
             try:
-                lx, ly, lt, rx, ry, rt, cross, circle, square, triangle = quad.controller.read()
+                lx, ly, lt, l1, rx, ry, rt, r1, cross, circle, square, triangle = quad.controller.read()
 
-                # kill switch
+                # --- ACTIVATE KILL SWITCH --- (requires reboot to restart)
                 if square: 
                     quad.killed = True
                     print("KILL SWITCH PRESSED")
-
+                
                 # --- MANUAL CONTROL MODE ---
-                roll, pitch, yaw_rate, altitude = \
-                   functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)
-                
-                # print(f"altitude setpoint = {altitude}")
-                
-                # u[0,0] = yaw_rate
-                # u[1,0] = pitch
-                # u[2,0] = roll
-                # thrust_raw = functions.altitude_control(altitude, quad, dt)
-                # print(f"thrust = {thrust_raw}")
+                # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
+                if r1 and not quad.killed and not quad.test_flight:
+                    roll, pitch, yaw_rate, altitude = \
+                    functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)   
+                    print(f"altitude = {altitude}")
+                    u[0,0] = yaw_rate
+                    u[1,0] = pitch
+                    u[2,0] = roll
+                    thrust_raw = functions.altitude_control(altitude, quad, dt)
+                    print(f"thrust = {thrust_raw}")
 
-                # --- TEST FLIGHT MODE ---
-                if triangle:
+                # --- AUTOMATIC CONTROL MODE ---
+                # Start with triangle, only works if kill switch not pressed and manual mode not armed
+                elif triangle and not quad.killed:
                     quad.test_flight = True
 
-                # cancel test flight if kill switch pressed or circle pressed (circle allows restarting, kill switch requires reboot)
-                if quad.killed is True or circle: 
-                    quad.test_flight = False
+                # Reset altitude and thrust when r1 is released
+                else:
+                    altitude = 0
+                    thrust_raw = 0
 
-                if not hasattr(quad, "recording_active"):
-                    quad.recording_active = False
+                # Cancel test flight if circle pressed
+                if circle: quad.test_flight = False 
 
+                # --- TEST FLIGHT PROCESS ---
                 if quad.test_flight is True:
-
+                    # Only start a recording thread if one hasn't started
                     if not quad.recording_active:
                         quad.viewer.start_record_signal.emit()
-                        print("START RECORDING THREAD")
                         quad.recording_active = True
                         stab.zero()
+                    if count <= 0.5*LOOP_RATE:
+                        u = stab.hover(0.2,dt)
+                        thrust_raw = u[3,0]
                     if count <= 5*LOOP_RATE:
-                        u = stab.hover(altitude,dt)
+                        u = stab.hover(0.8,dt)
                         thrust_raw = u[3,0]
                     elif count <= 6.5*LOOP_RATE:
-                        u = stab.hover(altitude,dt)
+                        u = stab.hover(0.3,dt)
                         thrust_raw = u[3,0]
                     else:
+                        # Once completed reset counter and stabiliser
                         u = np.zeros((4,1))
                         quad.test_flight = False
                         count = 0
@@ -79,20 +85,21 @@ def control_loop(quad, stab):
                             quad.viewer.stop_record_signal.emit()
                             quad.recording_active = False
                 else:
+                    # If no test flight started reset count and stabiliser
                     count = 0
                     stab.reset()
                     if quad.recording_active:
                             quad.viewer.stop_record_signal.emit()
                             quad.recording_active = False
 
-                # # smooth the thrust
+                # # Smooth the thrust using an 'alpha' value
                 quad._thrust_smoothed = (
                     (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
                 )
                 thrust = int(quad._thrust_smoothed)                            
                 
                 # update control values in quadcopter object, these are read to send controls to quadcopter
-                # print(u)
+                print(thrust_raw)
                 quad.update_controls(
                     yaw_rate = u[0,0],
                     pitch = u[1,0],
@@ -108,13 +115,13 @@ def control_loop(quad, stab):
             # print(f"slept time = {count/500}")
         
 
-        # accurate loop timing
+        # --- CONTROL LOOP TIMING ---
         loop_time = time.time() - start_time
         while(loop_time < dt):
             time.sleep(0.00001)
             loop_time = time.time() - start_time
-
         # print(f"actual loop time = {time.time()-start_time}")
+
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()

@@ -43,6 +43,7 @@ class Quadcopter:
         self.killed = False
         self.test_flight = False
         self.viewer = None
+        self.recording_active = False
         if self.estimator == "Kalman Filter":
             self.KF = Kalmanfilter()
         else:

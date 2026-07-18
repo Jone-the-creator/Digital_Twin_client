@@ -39,7 +39,7 @@ class PIDstabiliser():
         self.Kp_roll_pitch = 1
         self.Ki_roll_pitch = 0.5
         self.Kd_roll_pitch = 0.25
-        self.K_z = 30000 # thrust DC gain 
+        self.K_z = 3000 # thrust DC gain 
         self.Kp_z = 1.5
         self.Ki_z = 0
         self.Kd_z = 0
