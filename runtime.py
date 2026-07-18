@@ -23,7 +23,7 @@ def control_loop(quad, stab):
     u = np.zeros((4,1))
     thrust_raw = 0
 
-    while running: # THIS LOOP NEEDS TO BE GREATLY IMPROVED!!!
+    while running:
         start_time = time.time()
         if quad.controller:
             try:
@@ -43,54 +43,68 @@ def control_loop(quad, stab):
                     u[0,0] = yaw_rate
                     u[1,0] = pitch
                     u[2,0] = roll
-                    thrust_raw = functions.altitude_control(altitude, quad, dt)
+                    thrust_raw = quad.altitude_control(altitude, dt)
                     print(f"thrust = {thrust_raw}")
+                
 
                 # --- AUTOMATIC CONTROL MODE ---
                 # Start with triangle, only works if kill switch not pressed and manual mode not armed
                 elif triangle and not quad.killed:
                     quad.test_flight = True
 
-                # Reset altitude and thrust when r1 is released
-                else:
-                    altitude = 0
+                # Reset altitude and thrust when r1 cross is pressed
+                elif cross:
+                    functions.joystick_to_setpoint.altitude = 0.0
                     thrust_raw = 0
+                    quad.altitude_integral = 0.0
+                    quad.altitude_error = 0.0
+                    quad.altitude_derivative = 0.0
+                    quad.prev_altitude_error = 0.0
 
-                # Cancel test flight if circle pressed
-                if circle: quad.test_flight = False 
-
-                # --- TEST FLIGHT PROCESS ---
-                if quad.test_flight is True:
-                    # Only start a recording thread if one hasn't started
-                    if not quad.recording_active:
-                        quad.viewer.start_record_signal.emit()
-                        quad.recording_active = True
-                        stab.zero()
-                    if count <= 0.5*LOOP_RATE:
-                        u = stab.hover(0.2,dt)
-                        thrust_raw = u[3,0]
-                    if count <= 5*LOOP_RATE:
-                        u = stab.hover(0.8,dt)
-                        thrust_raw = u[3,0]
-                    elif count <= 6.5*LOOP_RATE:
-                        u = stab.hover(0.3,dt)
-                        thrust_raw = u[3,0]
-                    else:
-                        # Once completed reset counter and stabiliser
-                        u = np.zeros((4,1))
-                        quad.test_flight = False
-                        count = 0
-                        stab.reset()
-                        if quad.recording_active:
-                            quad.viewer.stop_record_signal.emit()
-                            quad.recording_active = False
                 else:
-                    # If no test flight started reset count and stabiliser
-                    count = 0
-                    stab.reset()
-                    if quad.recording_active:
-                            quad.viewer.stop_record_signal.emit()
-                            quad.recording_active = False
+                    thrust_raw = 0
+                    functions.joystick_to_setpoint.altitude = 0.0
+                    quad.altitude_integral = 0.0
+                    quad.altitude_error = 0.0
+                    quad.altitude_derivative = 0.0
+                    quad.prev_altitude_error = 0.0
+
+                # # Cancel test flight if circle pressed
+                # if circle: quad.test_flight = False 
+
+                # # --- TEST FLIGHT PROCESS ---
+                # if quad.test_flight is True:
+                #     # Only start a recording thread if one hasn't started
+                #     if not quad.recording_active:
+                #         quad.viewer.start_record_signal.emit()
+                #         quad.recording_active = True
+                #         stab.zero()
+                #     if count <= 0.5*LOOP_RATE:
+                #         u = stab.hover(0.2,dt)
+                #         thrust_raw = u[3,0]
+                #     if count <= 5*LOOP_RATE:
+                #         u = stab.hover(0.8,dt)
+                #         thrust_raw = u[3,0]
+                #     elif count <= 6.5*LOOP_RATE:
+                #         u = stab.hover(0.3,dt)
+                #         thrust_raw = u[3,0]
+                #     else:
+                #         # Once completed reset counter and stabiliser
+                #         u = np.zeros((4,1))
+                #         quad.test_flight = False
+                #         count = 0
+                #         stab.reset()
+                #         if quad.recording_active:
+                #             quad.viewer.stop_record_signal.emit()
+                #             quad.recording_active = False
+                # else:
+                #     # If no test flight started reset count and stabiliser
+                #     count = 0
+                #     stab.reset()
+                #     u = np.zeros((4,1))
+                #     if quad.recording_active:
+                #             quad.viewer.stop_record_signal.emit()
+                #             quad.recording_active = False
 
                 # # Smooth the thrust using an 'alpha' value
                 quad._thrust_smoothed = (
@@ -99,16 +113,20 @@ def control_loop(quad, stab):
                 thrust = int(quad._thrust_smoothed)                            
                 
                 # update control values in quadcopter object, these are read to send controls to quadcopter
-                print(thrust_raw)
+                # print(thrust_raw)
                 quad.update_controls(
                     yaw_rate = u[0,0],
                     pitch = u[1,0],
                     roll = u[2,0],
                     thrust = thrust
                 )
+                import traceback
 
-            except Exception as e:
-                print(f"Controller error: {e}")
+            except Exception:
+                traceback.print_exc()
+
+            # except Exception as e:
+            #     print(f"Controller error: {e}")
 
         if quad.test_flight:
             count += 1

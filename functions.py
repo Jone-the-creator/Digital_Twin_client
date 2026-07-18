@@ -2,7 +2,6 @@ import os
 import numpy as np
 
 thrust_set = 0.0
-altitude_integral = 0.0
 
 # save dictionary keys and values into a file
 def save_settings(filename, settings):
@@ -72,17 +71,3 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt):
 
     return roll, pitch, yaw_rate, altitude
 
-def altitude_control(altitude_setpoint, quad, dt):
-    altitude = quad.position.z - 0.2
-
-    altitude_error = altitude_setpoint - altitude
-    # altitude_integral += altitude_error * dt
-
-    Kp = 30000.0
-    Ki = 0.3
-    Kd = 0.8
-
-    thrust = altitude_error * Kp
-    # thrust = altitude_error * Kp + altitude_integral * Ki
-    
-    return thrust
