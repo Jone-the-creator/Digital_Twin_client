@@ -46,11 +46,15 @@ class Quadcopter:
         self.prev_altitude_error = 0.0
         self.altitude_derivative = 0.0
 
+        self.max_thrust = 54000
         self.thrust = 0.0
+
+        # Conditions
         self.killed = False
         self.test_flight = False
+        self.recording_active = False      
+
         self.viewer = None
-        self.recording_active = False
         if self.estimator == "Kalman Filter":
             self.KF = Kalmanfilter()
         else:
@@ -181,6 +185,7 @@ class Quadcopter:
         thrust = altitude_error * Kp + self.altitude_integral * Ki + self.altitude_derivative * Kd + hover_thrust
     
         return thrust
+    
 
 
 
