@@ -16,12 +16,18 @@ dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
     # ---- CONTROL LOOP ----
 def control_loop(quad, stab):
-
+    # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
+    print_count = 0
     u = np.zeros((4,1))
     thrust_raw = 0
+
+    current_x = 0.65
+    current_x_sum = 0.0
+    current_y = 0.75
+    current_y_sum = 0.0
 
     while running:
         start_time = time.time()
@@ -45,7 +51,7 @@ def control_loop(quad, stab):
                 u[0,0] = yaw_rate
                 u[1,0] = pitch
                 u[2,0] = roll
-                thrust_raw = stab.altitude_control(altitude, dt)
+                pitch_cmd, roll_cmd, thrust_raw = stab.hover(altitude_setpoint = altitude, x_setpoint = current_x, y_setpoint = current_y, dt = dt)
                 # print(f"thrust = {thrust_raw}")
             
 
@@ -63,6 +69,13 @@ def control_loop(quad, stab):
                 quad.prev_altitude_error = 0.0
                 pitch_cmd = 0.0
                 roll_cmd = 0.0
+                current_x_sum = 0.0
+                current_y_sum = 0.0
+                for i in range(0,100):
+                    current_x_sum += quad.position.x
+                    current_y_sum += quad.position.y
+                    current_x = current_x_sum/100
+                    current_y = current_y_sum/100
             else:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
@@ -71,6 +84,7 @@ def control_loop(quad, stab):
                 quad.prev_altitude_error = 0.0
                 pitch_cmd = 0.0
                 roll_cmd = 0.0
+            
 
             # # Cancel test flight if circle pressed
             # if circle: quad.test_flight = False 
@@ -115,21 +129,25 @@ def control_loop(quad, stab):
             )
             thrust = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
             
-            # if count % 100 == 0:   # once per second
-            #     print(
-            #         f"thrust={thrust}, "
-            #         f"r1={r1}, "
-            #         f"killed={quad.killed}, "
-            #         f"test={quad.test_flight}"
-            #         f"z ={quad.position.z}"
-            #         )              
+            if print_count % 100 == 0:
+                print(
+                    # f"thrust={thrust}, "
+                    # f"r1={r1}, "
+                    # f"killed={quad.killed}, "
+                    # f"test={quad.test_flight}"
+                    f"x ={quad.position.x} "
+                    f"y ={quad.position.y} "
+                    f"z ={quad.position.z} "
+                    f"x setpoint = {current_x} "
+                    f"y setpoint = {current_y} "
+                    )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
             # print(thrust_raw)
-            pitch_cmd, roll_cmd = stab.hover(dt)
+            # pitch_cmd, roll_cmd = stab.hover(dt)
             quad.update_controls(
                 yaw_rate = u[0,0],
-                pitch = -pitch_cmd,
+                pitch = pitch_cmd,
                 roll = roll_cmd,
                 thrust = thrust
             )
@@ -153,6 +171,8 @@ def control_loop(quad, stab):
             time.sleep(0.00001)
             loop_time = time.time() - start_time
         # print(f"actual loop time = {time.time()-start_time}")
+
+        print_count += 1
 
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
