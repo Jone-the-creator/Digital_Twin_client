@@ -40,6 +40,8 @@ class Quadcopter:
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
+        self.pitch_trim = 0.0
+        self.roll_trim = 0.0
 
         self.max_thrust = 54000
         self.thrust = 0.0

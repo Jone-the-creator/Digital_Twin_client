@@ -28,6 +28,8 @@ def control_loop(quad, stab):
     current_x_sum = 0.0
     current_y = 0.75
     current_y_sum = 0.0
+    roll_sum = 0.0
+    pitch_sum = 0.0
 
     while running:
         start_time = time.time()
@@ -51,7 +53,7 @@ def control_loop(quad, stab):
                 u[0,0] = yaw_rate
                 u[1,0] = pitch
                 u[2,0] = roll
-                pitch_cmd, roll_cmd, thrust_raw = stab.hover(altitude_setpoint = altitude, x_setpoint = current_x, y_setpoint = current_y, dt = dt)
+                pitch_rate, roll_rate, thrust_raw = stab.hover(altitude_setpoint = altitude, dt = dt)
                 # print(f"thrust = {thrust_raw}")
             
 
@@ -64,26 +66,40 @@ def control_loop(quad, stab):
             elif cross:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
-                quad.altitude_integral = 0.0
-                quad.altitude_derivative = 0.0
-                quad.prev_altitude_error = 0.0
-                pitch_cmd = 0.0
-                roll_cmd = 0.0
+                stab.altitude_integral = 0.0
+                stab.altitude_derivative = 0.0
+                stab.prev_altitude_error = 0.0
+                pitch_rate = 0.0
+                roll_rate = 0.0
                 current_x_sum = 0.0
                 current_y_sum = 0.0
+                pitch_sum = 0.0
+                roll_sum = 0.0
                 for i in range(0,100):
-                    current_x_sum += quad.position.x
-                    current_y_sum += quad.position.y
-                    current_x = current_x_sum/100
-                    current_y = current_y_sum/100
+                    # current_x_sum += quad.position.x
+                    # current_y_sum += quad.position.y
+                    pitch_sum += quad.attitude.pitch
+                    roll_sum += quad.attitude.roll
+                    time.sleep(0.00001)
+                quad.pitch_trim = pitch_sum/100
+                quad.roll_trim = roll_sum/100
+                # current_x = current_x_sum/100
+                # current_y = current_y_sum/100
             else:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
-                quad.altitude_integral = 0.0
-                quad.altitude_derivative = 0.0
-                quad.prev_altitude_error = 0.0
-                pitch_cmd = 0.0
-                roll_cmd = 0.0
+                stab.altitude_integral = 0.0
+                stab.altitude_derivative = 0.0
+                stab.prev_altitude_error = 0.0
+                stab.pitch_integral = 0.0
+                stab.pitch_derivative = 0.0
+                stab.prev_pitch_error = 0.0
+                stab.roll_integral = 0.0
+                stab.roll_derivative = 0.0
+                stab.prev_roll_error = 0.0
+
+                pitch_rate = 0.0
+                roll_rate = 0.0
             
 
             # # Cancel test flight if circle pressed
@@ -135,11 +151,11 @@ def control_loop(quad, stab):
                     # f"r1={r1}, "
                     # f"killed={quad.killed}, "
                     # f"test={quad.test_flight}"
-                    f"x ={quad.position.x} "
-                    f"y ={quad.position.y} "
-                    f"z ={quad.position.z} "
-                    f"x setpoint = {current_x} "
-                    f"y setpoint = {current_y} "
+                    # f"x ={quad.position.x} "
+                    # f"y ={quad.position.y} "
+                    # f"z ={quad.position.z} "
+                    # f"x setpoint = {current_x} "
+                    # f"y setpoint = {current_y} "
                     )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
@@ -147,8 +163,8 @@ def control_loop(quad, stab):
             # pitch_cmd, roll_cmd = stab.hover(dt)
             quad.update_controls(
                 yaw_rate = u[0,0],
-                pitch = pitch_cmd,
-                roll = roll_cmd,
+                pitch = pitch_rate,
+                roll = roll_rate,
                 thrust = thrust
             )
             # quad.update_controls(
