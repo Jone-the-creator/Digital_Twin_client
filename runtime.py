@@ -129,6 +129,10 @@ def control_loop(quad, stab):
                     target_altitude = 0.05
                 else:
                     quad.test_flight = False
+                    stab.reset()
+                    if quad.recording_active:
+                        quad.viewer.stop_record_signal.emit()
+                        quad.recording_active = False
 
                 u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude, dt)
                 print(f"test flight altitude = {target_altitude}")
