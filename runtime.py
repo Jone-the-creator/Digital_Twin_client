@@ -45,7 +45,7 @@ def control_loop(quad, stab):
                 u[0,0] = yaw_rate
                 u[1,0] = pitch
                 u[2,0] = roll
-                thrust_raw = quad.altitude_control(altitude, dt)
+                thrust_raw = stab.altitude_control(altitude, dt)
                 # print(f"thrust = {thrust_raw}")
             
 
@@ -115,32 +115,32 @@ def control_loop(quad, stab):
             )
             thrust = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
             
-            if count % 100 == 0:   # once per second
-                print(
-                    f"thrust={thrust}, "
-                    f"r1={r1}, "
-                    f"killed={quad.killed}, "
-                    f"test={quad.test_flight}"
-                    f"z ={quad.position.z}"
-                    )              
+            # if count % 100 == 0:   # once per second
+            #     print(
+            #         f"thrust={thrust}, "
+            #         f"r1={r1}, "
+            #         f"killed={quad.killed}, "
+            #         f"test={quad.test_flight}"
+            #         f"z ={quad.position.z}"
+            #         )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
             # print(thrust_raw)
             pitch_cmd, roll_cmd = stab.hover(dt)
-            # quad.update_controls(
-            #     yaw_rate = u[0,0],
-            #     pitch = -pitch_cmd,
-            #     roll = roll_cmd,
-            #     thrust = thrust
-            # )
             quad.update_controls(
                 yaw_rate = u[0,0],
-                pitch = u[1,0],
-                roll = u[2,0],
+                pitch = -pitch_cmd,
+                roll = roll_cmd,
                 thrust = thrust
             )
+            # quad.update_controls(
+            #     yaw_rate = u[0,0],
+            #     pitch = u[1,0],
+            #     roll = u[2,0],
+            #     thrust = thrust
+            # )
 
-        # if quad.test_flight:
+        if quad.test_flight:
             count += 1
             # print(f"slept time = {count/500}")
 

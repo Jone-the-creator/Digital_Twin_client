@@ -163,8 +163,7 @@ class CRTP_logger:
         self.cf.param.set_value('flightmode.stabModeRoll', 0)
         self.cf.param.set_value('flightmode.stabModePitch', 0)
         self.cf.param.set_value('flightmode.stabModeYaw', 0)
-
-#        self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
+        self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
         while True:
             #send controls and use microsleeps to achieve the desired loop rate
             start_time = time.time()

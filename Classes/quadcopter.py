@@ -41,11 +41,6 @@ class Quadcopter:
         self.velocity = Position() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
 
-        # Altitude error variables
-        self.altitude_integral = 0.0
-        self.prev_altitude_error = 0.0
-        self.altitude_derivative = 0.0
-
         self.max_thrust = 54000
         self.thrust = 0.0
 
@@ -167,24 +162,7 @@ class Quadcopter:
                 yaw = np.rad2deg(self.KF.x[2,0])
             )
 
-    def altitude_control(self, altitude_setpoint, dt):
-        DC_gain = 13000.0
-        altitude = self.position.z
-        hover_thrust = DC_gain * self.mass * 9.81 
 
-        altitude_error = altitude_setpoint - altitude
-        self.altitude_integral += altitude_error * dt
-
-        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / dt
-        self.prev_altitude_error = altitude_error
-
-        Kp = DC_gain * 2
-        Ki = DC_gain * 0.1
-        Kd = DC_gain * 0.5
-
-        thrust = altitude_error * Kp + self.altitude_integral * Ki + self.altitude_derivative * Kd + hover_thrust
-    
-        return thrust
     
 
 
