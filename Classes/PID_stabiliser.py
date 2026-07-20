@@ -38,7 +38,7 @@ class PIDstabiliser():
         self.max_angle = 5 # in degrees
 
         # max integral term (limit integral windup)
-        self.max_int = 20 
+        self.max_int = 40
 
     # hover mode, will control attitude with 0 setpoints
     def hover(self, altitude_setpoint, dt):
@@ -53,16 +53,16 @@ class PIDstabiliser():
         self.altitude_derivative = (altitude_error - self.prev_altitude_error) / dt
         self.prev_altitude_error = altitude_error
 
-        Kp_z = DC_gain_z * 2
+        Kp_z = DC_gain_z * 2.0
         Ki_z = DC_gain_z * 0.1
         Kd_z = DC_gain_z * 0.5
 
         thrust = altitude_error * Kp_z + self.altitude_integral * Ki_z + self.altitude_derivative * Kd_z + hover_thrust
 
         # # --- ATTITUDE CONTROL ---
-        Kp_att = 2.0
-        Ki_att = 0.0
-        Kd_att = 0.0
+        Kp_att = 2.5
+        Ki_att = 0.2
+        Kd_att = 0.75
 
         # Calculate attitude errors
         pitch_error = -np.clip(self.pitch_setpoint - (self.quad.attitude.pitch - self.quad.pitch_trim), -self.max_angle, self.max_angle)
@@ -75,21 +75,19 @@ class PIDstabiliser():
 
         self.pitch_derivative = pitch_error - self.prev_pitch_error 
         self.roll_derivative = roll_error - self.prev_roll_error
+        self.prev_pitch_error = pitch_error
+        self.prev_roll_error = roll_error
 
         # Pitch and roll rate commands calculated with PID based on error in x and y (assuming constant yaw)
         pitch_rate = pitch_error * Kp_att + self.pitch_integral * Ki_att + self.pitch_derivative * Kd_att
         roll_rate = roll_error * Kp_att + self.roll_integral * Ki_att + self.roll_derivative * Kd_att
 
-        print(f"pitch_error = {pitch_error:.2f} "
-        f"pitch = {self.quad.attitude.pitch:.2f} "
-        f"pitch_rate = {pitch_rate:.2f}")
+        # print(f"pitch_error = {pitch_error:.2f} "
+        # f"pitch = {self.quad.attitude.pitch:.2f} "
+        # f"pitch_rate = {pitch_rate:.2f}")
 
         # print(f"pitch = {self.quad.attitude.pitch}, roll = {self.quad.attitude.roll}")
         # print(f"pitch rate = {pitch_cmd}, roll rate = {roll_cmd}")
-
-        # save previous error for next derivative error
-        # self.previous_roll_error = roll_error
-        # self.previous_pitch_error = pitch_error
 
         return pitch_rate, roll_rate, thrust
         
@@ -105,7 +103,7 @@ class PIDstabiliser():
         self.prev_altitude_error = altitude_error
 
         Kp = DC_gain * 2
-        Ki = DC_gain * 0.1
+        Ki = DC_gain * 0.
         Kd = DC_gain * 0.5
 
         thrust = altitude_error * Kp + self.altitude_integral * Ki + self.altitude_derivative * Kd + hover_thrust
@@ -113,15 +111,24 @@ class PIDstabiliser():
         return thrust
 
     def reset(self):
-        # reset integral errors
-        self.integral_pitch_error = 0.0
-        self.integral_roll_error = 0.0
-        self.integral_z_error = 0.0
+        # Reset integral errors
+        self.altitude_integral = 0.0
+        self.pitch_integral = 0.0
+        self.roll_integral = 0.0
 
-        # reset previous errors
-        self.previous_pitch_error = 0.0
-        self.previous_roll_error = 0.0
-        self.previous_z_error = 0.0
+        # Reset previous errors
+        self.prev_altitude_error = 0.0
+        self.prev_pitch_error = 0.0
+        self.prev_roll_error = 0.0
+    
+        # Reset derivative terms
+        self.altitude_derivative = 0.0
+        self.pitch_derivative = 0.0
+        self.roll_derivative = 0.0
+
+        # Reset setpoints
+        self.pitch_setpoint = 0.0
+        self.roll_setpoint = 0.0
 
     def zero(self):
         self.z_trim = 0.2
