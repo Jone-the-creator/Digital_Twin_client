@@ -91,9 +91,8 @@ class PIDstabiliser():
         return pitch_rate, roll_rate, thrust
         
     def altitude_control(self, altitude_setpoint, dt):
-        DC_gain = 13000.0
         altitude = self.position.z
-        hover_thrust = DC_gain * self.mass * 9.81 
+        hover_thrust = self.DC_gain_z * self.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
         self.altitude_integral += altitude_error * dt
@@ -101,7 +100,7 @@ class PIDstabiliser():
         self.altitude_derivative = (altitude_error - self.prev_altitude_error) / dt
         self.prev_altitude_error = altitude_error
 
-        thrust = altitude_error * self.Kp_z + self.altitude_integral * self.Ki_z + self.altitude_derivative * self.Kd_z + hover_thrust
+        thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
     
         return thrust
 

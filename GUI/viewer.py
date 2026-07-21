@@ -219,11 +219,11 @@ class DroneViewer(QWidget,):
     def handle_pid_change(self, controller, gain, delta):
         if controller == "altitude":
             if gain == "P":
-                self.stab.Kp_z += delta
+                self.stab.Kp_z += delta * self.stab.DC_gain_z
             elif gain == "I":
-                self.stab.Ki_z += delta
+                self.stab.Ki_z += delta * self.stab.DC_gain_z
             elif gain == "D":
-                self.stab.Kd_z += delta
+                self.stab.Kd_z += delta * self.stab.DC_gain_z
             print(
                 f"{controller}: "
                 f"P={self.stab.Kp_z:.2f} "
