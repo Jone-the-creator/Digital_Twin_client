@@ -144,7 +144,7 @@ class CRTP_logger:
         self.quadcopter.update_position(
             x = data['kalman.stateX'],
             y = data['kalman.stateY'],
-            z = data['kalman.stateZ'],
+            alt = data['kalman.stateZ'],
         )
         # print(f"z = {data['kalman.stateZ']}")
 

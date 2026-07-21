@@ -149,7 +149,7 @@ class ReadingPanel(QWidget):
         self.loop_rate.set_value(round(loop_rate, 1))
 
 class PIDControlPanel(QWidget):
-    gain_changed = pyqtSignal(str, str, float)
+    gain_changed = pyqtSignal(str, float)
     # controller, gain_name, delta
     # e.g. ("altitude", "P", 0.05)
 
@@ -189,8 +189,7 @@ class PIDControlPanel(QWidget):
         layout.addStretch()
 
     def change_gain(self, gain, delta):
-        controller = self.controller_select.currentText().lower()
-        self.gain_changed.emit(controller, gain, delta)
+        self.gain_changed.emit(gain, delta)
 
     def update_values(self, p, i, d):
         self.gain_labels["P"].setText(f"P: {p:.2f}")

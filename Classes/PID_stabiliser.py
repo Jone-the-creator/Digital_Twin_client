@@ -55,15 +55,15 @@ class PIDstabiliser():
 
 
     # hover mode, will control attitude with 0 setpoints
-    def hover(self, altitude_setpoint, dt):
+    def hover(self, altitude_setpoint):
         # --- ALTITUDE CONTROL ---
         altitude = self.quad.position.z
         hover_thrust = self.DC_gain_z * self.quad.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
-        self.altitude_integral += altitude_error * dt
+        self.altitude_integral += altitude_error * self.quad.dt
         self.altitude_integral = np.clip(self.altitude_integral, -self.max_int, self.max_int)
-        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / dt
+        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
         self.prev_altitude_error = altitude_error
 
         thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
@@ -74,8 +74,8 @@ class PIDstabiliser():
         pitch_error = -np.clip(self.pitch_setpoint - (self.quad.attitude.pitch - self.quad.pitch_trim), -self.max_angle, self.max_angle)
         roll_error = np.clip(self.roll_setpoint - (self.quad.attitude.roll - self.quad.roll_trim), -self.max_angle, self.max_angle)
 
-        self.pitch_integral += pitch_error * dt
-        self.roll_integral += roll_error * dt
+        self.pitch_integral += pitch_error * self.quad.dt
+        self.roll_integral += roll_error * self.quad.dt
         self.pitch_integral = np.clip(self.pitch_integral, -self.max_int, self.max_int)
         self.roll_integral = np.clip(self.roll_integral, -self.max_int, self.max_int)
 
@@ -90,14 +90,14 @@ class PIDstabiliser():
 
         return pitch_rate, roll_rate, thrust
         
-    def altitude_control(self, altitude_setpoint, dt):
+    def altitude_control(self, altitude_setpoint):
         altitude = self.position.z
         hover_thrust = self.DC_gain_z * self.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
-        self.altitude_integral += altitude_error * dt
+        self.altitude_integral += altitude_error * self.quad.dt
 
-        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / dt
+        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
         self.prev_altitude_error = altitude_error
 
         thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust

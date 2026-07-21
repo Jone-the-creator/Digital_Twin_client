@@ -167,21 +167,20 @@ class DroneViewer(QWidget,):
             target_altitude = self.quadcopter.controls.z,
             loop_rate = self.quadcopter.loop_rate
             )
-        
         controller = self.pid_panel.controller_select.currentText().lower()
 
         if controller == "altitude controller":
             self.pid_panel.update_values(
-            self.stab.Kp_z,
-            self.stab.Ki_z,
-            self.stab.Kd_z
-            )
+                self.stab.Kp_z,
+                self.stab.Ki_z,
+                self.stab.Kd_z
+                )
         else:
             self.pid_panel.update_values(
-            self.stab.Kp_att,
-            self.stab.Ki_att,
-            self.stab.Kd_att
-            )
+                self.stab.Kp_att,
+                self.stab.Ki_att,
+                self.stab.Kd_att
+                )
 
     def start_record(self):
         # if hasattr(self, "thread") and self.thread is not None:
@@ -216,19 +215,25 @@ class DroneViewer(QWidget,):
             self.thread.quit()
             self.thread.wait()
 
-    def handle_pid_change(self, controller, gain, delta):
-        if controller == "altitude":
+    def handle_pid_change(self, gain, delta):
+        controller = self.pid_panel.controller_select.currentText().lower()
+        if controller == "altitude controller":
             if gain == "P":
-                self.stab.Kp_z += delta * self.stab.DC_gain_z
+                self.stab.Kp_z += delta
             elif gain == "I":
-                self.stab.Ki_z += delta * self.stab.DC_gain_z
+                self.stab.Ki_z += delta
             elif gain == "D":
-                self.stab.Kd_z += delta * self.stab.DC_gain_z
+                self.stab.Kd_z += delta
             print(
                 f"{controller}: "
                 f"P={self.stab.Kp_z:.2f} "
                 f"I={self.stab.Ki_z:.2f} "
                 f"D={self.stab.Kd_z:.2f}"
+            )
+            self.pid_panel.update_values(
+            self.stab.Kp_z,
+            self.stab.Ki_z,
+            self.stab.Kd_z
             )
         else:
             if gain == "P":
@@ -242,4 +247,9 @@ class DroneViewer(QWidget,):
                 f"P={self.stab.Kp_att:.2f} "
                 f"I={self.stab.Ki_att:.2f} "
                 f"D={self.stab.Kd_att:.2f}"
+            )
+            self.pid_panel.update_values(
+            self.stab.Kp_att,
+            self.stab.Ki_att,
+            self.stab.Kd_att
             )

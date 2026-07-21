@@ -1,5 +1,6 @@
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
+from Classes.KalmanFilter import att_Kalmanfilter
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
@@ -43,10 +44,10 @@ def control_loop(quad, stab):
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
             if r1 and not quad.killed and not quad.test_flight:
                 roll, pitch, yaw_rate, altitude = \
-                functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)   
+                functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
                 stab.pitch_setpoint = -pitch
                 stab.roll_setpoint = roll
-                u[1,0], u[2,0], thrust_raw = stab.hover(altitude, dt)
+                u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -106,7 +107,7 @@ def control_loop(quad, stab):
                         quad.recording_active = False
                     target_altitude = 0.0
 
-                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude, dt)
+                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
                 print(f"test flight altitude = {target_altitude}")
 
             elif not r1:
@@ -169,6 +170,7 @@ def control_loop(quad, stab):
             loop_time = time.time() - start_time
 
         if print_count % (LOOP_RATE/2) == 0:
+            quad.dt = loop_time
             quad.loop_rate = 1/loop_time # save loop rate for client every 0.5s
 
         print_count += 1
