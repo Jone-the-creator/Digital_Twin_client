@@ -4,8 +4,8 @@ import time
 import numpy as np
 from Classes.KalmanFilter import att_Kalmanfilter, pos_Kalmanfilter
 
-ACC_PITCH_BIAS = 0.4 # BIAS in degrees (more negative steers more forward, more positive steers more backward)
-ACC_ROLL_BIAS = -0.2 # BIAS in degrees (more negative steers more right, more positive steers more left)
+ACC_PITCH_BIAS = 1.3 # BIAS in degrees (more negative steers more forward, more positive steers more backward)
+ACC_ROLL_BIAS = -0.625 # BIAS in degrees (more negative steers more right, more positive steers more left)
 PITCH_TRIM = 0.0
 ROLL_TRIM = 0.0
 
