@@ -21,7 +21,7 @@ def control_loop(quad, stab):
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
-    print_count = 0
+    eff_count = 0
     u = np.zeros((4,1))
     thrust_raw = 0
     altitude = 0.0
@@ -42,7 +42,7 @@ def control_loop(quad, stab):
             
             # --- MANUAL CONTROL MODE ---
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
-            if r1 and not quad.killed and not quad.test_flight:
+            if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
                 roll, pitch, yaw_rate, altitude = \
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
                 stab.pitch_setpoint = -pitch
@@ -60,17 +60,17 @@ def control_loop(quad, stab):
 
             
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
-            elif triangle and not quad.killed:
+            elif triangle and not quad.killed and eff_count % 2 == 0:
                 quad.test_flight = True
 
             # Reset altitude and thrust when r1 cross is pressed
-            elif cross:
+            elif cross and eff_count % 4 == 0:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
                 stab.reset()
                 u = np.zeros((4,1))
                 stab.zero() # Zeros the trim in the quadcopter object
-            elif not quad.test_flight:
+            elif not quad.test_flight and eff_count % 10 == 0:
                 thrust_raw = 0
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
@@ -169,11 +169,11 @@ def control_loop(quad, stab):
             time.sleep(0.00001)
             loop_time = time.time() - start_time
 
-        if print_count % (LOOP_RATE/2) == 0:
+        if eff_count % (LOOP_RATE/2) == 0:
             quad.dt = loop_time
             quad.loop_rate = 1/loop_time # save loop rate for client every 0.5s
 
-        print_count += 1
+        eff_count += 1
 
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----

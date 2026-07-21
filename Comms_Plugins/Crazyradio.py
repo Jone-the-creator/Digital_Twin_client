@@ -53,11 +53,11 @@ class CRTP_logger:
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
         self.logconf_gyro = LogConfig(
             name='Gyroscope', 
-            period_in_ms=10
+            period_in_ms=15
         )
         self.logconf_acc = LogConfig(
             name='Accelerometer', 
-            period_in_ms=10
+            period_in_ms=15
         )
         self.logconf_periph = LogConfig(
             name='Peripherals', 
@@ -65,7 +65,7 @@ class CRTP_logger:
         )
         self.logconf_pos = LogConfig(
             name='Position',
-            period_in_ms=50
+            period_in_ms=25
         )
         # choose logged variables here, can find in the following list:
         # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
