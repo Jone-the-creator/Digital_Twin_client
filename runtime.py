@@ -94,11 +94,11 @@ def control_loop(quad, stab):
                 if flight_time < 2.5:
                     target_altitude = 0.25 * flight_time
                 elif flight_time < 5.0:
-                    target_altitude = 0.625
+                    target_altitude = 0.7
                 elif flight_time < 6.0:
-                    target_altitude = 0.35
+                    target_altitude = 0.4
                 elif flight_time < 7.0:
-                    target_altitude = 0.1
+                    target_altitude = 0.2
                 else:
                     quad.test_flight = False
                     stab.reset()

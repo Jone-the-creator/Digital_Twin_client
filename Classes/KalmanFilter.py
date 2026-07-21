@@ -5,22 +5,22 @@ class att_Kalmanfilter():
     def __init__(self):
         # control noise
         self.Q = np.array([
-            [0.175, 0, 0],
-            [0, 0.175, 0],
+            [0.00015, 0, 0],
+            [0, 0.00044, 0],
             [0, 0, 0.025]
         ])
         # measurement noise
         self.R = np.array([
-            [1.8, 0],
-            [0, 1.8],
+            [0.1849, 0],
+            [0, 0.01],
         ])
         # initial state
         self.x = np.zeros((3,1)) 
 
         # initialise covariance
         self.P = np.array([
-            [0.05, 0, 0],
-            [0, 0.05, 0],
+            [0.0001, 0, 0],
+            [0, 0.0001, 0],
             [0, 0, 0.06]
         ])
     
@@ -78,8 +78,8 @@ class pos_Kalmanfilter():
 
         # initialise covariance, ALTITUDE TUNED
         self.P = np.array([
-            [0.05, 0, 0],
-            [0, 0.05, 0],
+            [0.025, 0, 0],
+            [0, 0.025, 0],
             [0, 0, 0.001]
         ])
     

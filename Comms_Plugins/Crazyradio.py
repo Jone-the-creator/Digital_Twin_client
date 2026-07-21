@@ -75,6 +75,7 @@ class CRTP_logger:
 
         self.logconf_acc.add_variable('acc.x', 'float')
         self.logconf_acc.add_variable('acc.y', 'float')
+        self.logconf_acc.add_variable('acc.z', 'float')
 
         self.logconf_periph.add_variable('pm.vbat', 'float')
 
@@ -137,6 +138,7 @@ class CRTP_logger:
         self.quadcopter.update_acc(
             a_x = data['acc.x'],
             a_y = data['acc.y'],
+            a_z = data['acc.z']
         )
 
     def _log_pos_data_received(self, timestamp, data, logconfig):

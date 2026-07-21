@@ -45,12 +45,12 @@ class PIDstabiliser():
 
         self.DC_gain_z = 13000.0
         self.Kp_z = 2.0
-        self.Ki_z = 0.1
-        self.Kd_z = 0.5
+        self.Ki_z = 0.4
+        self.Kd_z = 0.75
 
         self.Kp_att = 2.5
-        self.Ki_att = 0.2
-        self.Kd_att = 0.75
+        self.Ki_att = 0.0
+        self.Kd_att = 0.0
 
 
 
@@ -71,8 +71,8 @@ class PIDstabiliser():
         # # --- ATTITUDE CONTROL ---
 
         # Calculate attitude errors
-        pitch_error = -np.clip(self.pitch_setpoint - (self.quad.attitude.pitch - self.quad.pitch_trim), -self.max_angle, self.max_angle)
-        roll_error = np.clip(self.roll_setpoint - (self.quad.attitude.roll - self.quad.roll_trim), -self.max_angle, self.max_angle)
+        pitch_error = -np.clip(self.pitch_setpoint - (self.quad.attitude.pitch ), -self.max_angle, self.max_angle)
+        roll_error = np.clip(self.roll_setpoint - (self.quad.attitude.roll), -self.max_angle, self.max_angle)
 
         self.pitch_integral += pitch_error * self.quad.dt
         self.roll_integral += roll_error * self.quad.dt
