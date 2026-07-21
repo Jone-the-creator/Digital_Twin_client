@@ -1,30 +1,58 @@
 % Load CSV file
-filename = 'recording_2026-07-21_10-10-34.csv';  % change to your file name
+filename = 'recording_2026-07-21_11-28-07.csv';
 data = readtable(filename);
 
-% Extract columns (adjust names if MATLAB modifies them)
-time = data{:,1};       % time (s)
+% Extract columns
+time = data{:,1};
 yaw = data{:,2};
 pitch = data{:,3};
 roll = data{:,4};
 battery = data{:,5};
+altitude = data{:,6};
+loop_rate = data{:,7};
+target_altitude = data{:,8};
 
 % Display basic info
 fprintf('Loaded %d samples\n', length(time));
 
-% Plot orientation over time
+%% Attitude Plot
 figure;
-% plot(time, yaw, 'r', 'DisplayName','Yaw'); 
+
 hold on;
-plot(time, pitch, 'g', 'DisplayName','Pitch');
-plot(time, roll, 'b', 'DisplayName','Roll');
+plot(time, pitch, 'g', 'DisplayName', 'Pitch');
+plot(time, roll, 'b', 'DisplayName', 'Roll');
+% plot(time, yaw, 'r', 'DisplayName', 'Yaw');
+
 xlabel('Time (s)');
 ylabel('Angle (deg)');
 title('Attitude vs Time');
 legend;
 grid on;
 
-% Plot battery level
+%% Altitude Plot
+figure;
+
+plot(time, altitude, 'b', ...
+    'LineWidth', 1.5, ...
+    'DisplayName', 'Measured Altitude');
+
+hold on;
+
+plot(time, target_altitude, 'r--', ...
+    'LineWidth', 2, ...
+    'DisplayName', 'Target Altitude');
+
+error = target_altitude - altitude;
+
+plot(time, error, 'k', 'LineWidth', 1.5, 'DisplayName', 'Altitude Error');
+
+xlabel('Time (s)');
+ylabel('Altitude (m)');
+title('Altitude vs Time');
+legend('Location', 'best');
+grid on;
+
+%% Battery Level Plot
 % figure;
 % plot(time, battery, 'k');
 % xlabel('Time (s)');
@@ -32,8 +60,19 @@ grid on;
 % title('Battery Level');
 % grid on;
 
-% Example: compute statistics
+%% Loop Rate Plot
+% figure;
+% plot(time, loop_rate, 'k');
+% xlabel('Time (s)');
+% ylabel('Rate (Hz)');
+% title('Control Loop Rate');
+% grid on;
+
+%% Statistics
 fprintf('Yaw mean: %.2f deg\n', mean(yaw));
 fprintf('Pitch mean: %.2f deg\n', mean(pitch));
 fprintf('Roll mean: %.2f deg\n', mean(roll));
+fprintf('Altitude mean: %.3f m\n', mean(altitude));
+fprintf('Altitude min: %.3f m\n', min(altitude));
+fprintf('Altitude max: %.3f m\n', max(altitude));
 fprintf('Battery min: %.2f %%\n', min(battery));

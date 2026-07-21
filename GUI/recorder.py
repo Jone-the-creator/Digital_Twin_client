@@ -30,7 +30,7 @@ class RecorderWorker(QObject):
 
         with open(filepath, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["time (s)", "yaw", "pitch", "roll", "battery"])
+            writer.writerow(["time (s)", "yaw", "pitch", "roll", "battery", "altitude (m)", "loop rate (Hz)", "target altitude (m)"])
             start_time = time.time()
             while self.running and not QThread.currentThread().isInterruptionRequested():
                 #update this function when new variables desired
@@ -39,11 +39,14 @@ class RecorderWorker(QObject):
                     self.quadcopter.attitude.yaw,
                     self.quadcopter.attitude.pitch,
                     self.quadcopter.attitude.roll,
-                    self.quadcopter.battery_percent
+                    self.quadcopter.battery_percent,
+                    self.quadcopter.position.z,
+                    self.quadcopter.loop_rate,
+                    self.quadcopter.controls.z
                 ])
 
                 f.flush()
-                QThread.msleep(20)  # 50Hz
+                QThread.msleep(50)  # 20Hz
 
         self.finished.emit()
 
