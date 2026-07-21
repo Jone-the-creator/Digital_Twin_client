@@ -42,6 +42,7 @@ class Quadcopter:
         self.attitude = Attitude() # attitude angles in degrees
         self.pitch_trim = 0.0
         self.roll_trim = 0.0
+        self.loop_rate = 0.0
 
         self.max_thrust = 54000
         self.thrust = 0.0

@@ -23,12 +23,6 @@ def control_loop(quad, stab):
     print_count = 0
     u = np.zeros((4,1))
     thrust_raw = 0
-    current_x = 0.65
-    current_x_sum = 0.0
-    current_y = 0.75
-    current_y_sum = 0.0
-    roll_sum = 0.0
-    pitch_sum = 0.0
     altitude = 0.0
     target_altitude = 0.0
 
@@ -50,15 +44,19 @@ def control_loop(quad, stab):
             if r1 and not quad.killed and not quad.test_flight:
                 roll, pitch, yaw_rate, altitude = \
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)   
-                # print(f"altitude = {altitude}")
                 stab.pitch_setpoint = -pitch
                 stab.roll_setpoint = roll
-                # print(f"thrust = {thrust_raw}")
                 u[1,0], u[2,0], thrust_raw = stab.hover(altitude, dt)
 
             # Cancel test flight if circle pressed
             elif circle: 
-                quad.test_flight = False 
+                    quad.test_flight = False
+                    stab.reset()
+                    if quad.recording_active:
+                        quad.viewer.stop_record_signal.emit()
+                        quad.recording_active = False
+                    target_altitude = 0.0
+
             
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
             elif triangle and not quad.killed:
@@ -70,23 +68,10 @@ def control_loop(quad, stab):
                 functions.joystick_to_setpoint.altitude = 0.0
                 stab.reset()
                 u = np.zeros((4,1))
-                current_x_sum = 0.0
-                current_y_sum = 0.0
-                pitch_sum = 0.0
-                roll_sum = 0.0
-                for i in range(0,100):
-                    # current_x_sum += quad.position.x
-                    # current_y_sum += quad.position.y
-                    pitch_sum += quad.attitude.pitch
-                    roll_sum += quad.attitude.roll
-                    time.sleep(0.001)
-                quad.pitch_trim = np.clip(pitch_sum/100, -1, 1)
-                quad.roll_trim = np.clip(roll_sum/100, -1, 1)
-                # current_x = current_x_sum/100
-                # current_y = current_y_sum/100
+                stab.zero() # Zeros the trim in the quadcopter object
             elif not quad.test_flight:
                 thrust_raw = 0
-                altitude = 0
+                altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
                 stab.reset()
                 u = np.zeros((4,1))
@@ -98,41 +83,28 @@ def control_loop(quad, stab):
                     # Start Recording thread
                     quad.viewer.start_record_signal.emit()
                     quad.recording_active = True
-
-                    target_altitude = 0.0
-                    # thrust_raw = 0
-                    # functions.joystick_to_setpoint.altitude = 0.0
-                    # stab.reset()
-                    # u = np.zeros((4,1))
-                    pitch_sum = 0.0
-                    roll_sum = 0.0
-                    
+                    target_altitude = 0.0     
                     # Measure attitude trim before test flight
-                    for i in range(0,100):
-                        pitch_sum += quad.attitude.pitch
-                        roll_sum += quad.attitude.roll
-                        time.sleep(0.001)
-                    quad.pitch_trim = np.clip(pitch_sum/100, -1, 1)
-                    quad.roll_trim = np.clip(roll_sum/100, -1, 1)
+                    stab.zero() # Zeros the trim in the quadcopter object
                 
                 flight_time = count * dt
 
                 # -- TEST FLIGHT SEQUENCE --
                 if flight_time < 2.5:
-                    target_altitude = 0.2 * flight_time
-
+                    target_altitude = 0.25 * flight_time
                 elif flight_time < 5.0:
-                    target_altitude = 0.5
+                    target_altitude = 0.625
                 elif flight_time < 6.0:
-                    target_altitude = 0.25
+                    target_altitude = 0.35
                 elif flight_time < 7.0:
-                    target_altitude = 0.05
+                    target_altitude = 0.1
                 else:
                     quad.test_flight = False
                     stab.reset()
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
+                    target_altitude = 0.0
 
                 u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude, dt)
                 print(f"test flight altitude = {target_altitude}")
@@ -151,8 +123,8 @@ def control_loop(quad, stab):
             )
             u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
             
-            if print_count % 100 == 0:
-                print(
+            # if print_count % (LOOP_RATE/3) == 0:
+            #     print(
                     # f"altitude = {altitude} "
                     # f"thrust={thrust}, "
                     # f"r1={r1}, "
@@ -163,15 +135,25 @@ def control_loop(quad, stab):
                     # f"z ={quad.position.z} "
                     # f"x setpoint = {current_x} "
                     # f"y setpoint = {current_y} "
-                    )              
+                    # )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
-            quad.update_controls(
-                yaw_rate = u[0,0],
-                pitch = u[1,0],
-                roll = u[2,0],
-                thrust = u[3,0]
-            )
+            if target_altitude > 0.0:
+                quad.update_controls(
+                    yaw_rate = u[0,0],
+                    pitch = u[1,0],
+                    roll = u[2,0],
+                    thrust = u[3,0],
+                    z = target_altitude
+                )
+            else:
+                quad.update_controls(
+                    yaw_rate = u[0,0],
+                    pitch = u[1,0],
+                    roll = u[2,0],
+                    thrust = u[3,0],
+                    z = altitude
+                )
 
         if quad.test_flight:
             count += 1
@@ -185,6 +167,9 @@ def control_loop(quad, stab):
         while(loop_time < dt):
             time.sleep(0.00001)
             loop_time = time.time() - start_time
+
+        if print_count % (LOOP_RATE/2) == 0:
+            quad.loop_rate = 1/loop_time # save loop rate for client every 0.5s
 
         print_count += 1
 
@@ -225,7 +210,7 @@ def main():
     timer.timeout.connect(pump_pygame)
     timer.start(10)  # 100 Hz
 
-    quad.viewer = DroneViewer(quad)
+    quad.viewer = DroneViewer(quad, stab)
 
     # Explicit shutdown function
     def shutdown():

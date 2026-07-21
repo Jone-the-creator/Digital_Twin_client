@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 )
 import pyqtgraph.opengl as gl
 import os, trimesh
-from Classes.ModelClasses import ThrustPanel, ReadingPanel
+from Classes.ModelClasses import ThrustPanel, ReadingPanel, PIDControlPanel
 from GUI.recorder import RecorderWorker
 
 #importing quadcopter model (RELATIVE PATH)
@@ -26,18 +26,20 @@ md = gl.MeshData.sphere(rows=10,cols=10)
 class DroneViewer(QWidget,):
     start_record_signal = pyqtSignal()
     stop_record_signal = pyqtSignal()
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, stabiliser):
         super().__init__()
         self.quadcopter = quadcopter
+        self.stab = stabiliser
 
         # window settings 
         self.setWindowTitle("Quadcopter Client")
         self.resize(1200,800)
 
-        # create and add thrust panel
+        # create and add panels
         self.view = gl.GLViewWidget()
         self.thrust_panel = ThrustPanel()
         self.reading_panel = ReadingPanel()
+        self.pid_panel = PIDControlPanel()
         self.start_recording_btn = QPushButton("Start Recording")
         self.stop_recording_btn = QPushButton("Stop Recording")
 
@@ -46,11 +48,17 @@ class DroneViewer(QWidget,):
         self.recording.setStyleSheet("color: red; font-weight: bold;")
         self.recording.hide()  # hidden by default
 
+        right_panel = QWidget()
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.addWidget(self.reading_panel)
+        right_layout.addWidget(self.pid_panel)
+        right_layout.addStretch()
+
 
         layout = QHBoxLayout(self)
         layout.addWidget(self.view, stretch=3)
         layout.addWidget(self.thrust_panel)
-        layout.addWidget(self.reading_panel,stretch=1)
+        layout.addWidget(right_panel,stretch=1)
 
         # organises recording GUI
         recording_widget = QWidget()
@@ -115,6 +123,8 @@ class DroneViewer(QWidget,):
         self.start_record_signal.connect(self.start_record)
         self.stop_record_signal.connect(self.stop_record)
 
+        self.pid_panel.gain_changed.connect(self.handle_pid_change)
+
 
     # update model from quadcopter object
     def update_model(self):
@@ -153,8 +163,25 @@ class DroneViewer(QWidget,):
             yaw = self.quadcopter.attitude.yaw,
             pitch = self.quadcopter.attitude.pitch,
             roll = self.quadcopter.attitude.roll,
+            altitude = self.quadcopter.position.z,
+            target_altitude = self.quadcopter.controls.z,
+            loop_rate = self.quadcopter.loop_rate
             )
         
+        controller = self.pid_panel.controller_select.currentText().lower()
+
+        if controller == "altitude controller":
+            self.pid_panel.update_values(
+            self.stab.Kp_z,
+            self.stab.Ki_z,
+            self.stab.Kd_z
+            )
+        else:
+            self.pid_panel.update_values(
+            self.stab.Kp_att,
+            self.stab.Ki_att,
+            self.stab.Kd_att
+            )
 
     def start_record(self):
         # if hasattr(self, "thread") and self.thread is not None:
@@ -188,3 +215,31 @@ class DroneViewer(QWidget,):
             self.thread.requestInterruption() 
             self.thread.quit()
             self.thread.wait()
+
+    def handle_pid_change(self, controller, gain, delta):
+        if controller == "altitude":
+            if gain == "P":
+                self.stab.Kp_z += delta
+            elif gain == "I":
+                self.stab.Ki_z += delta
+            elif gain == "D":
+                self.stab.Kd_z += delta
+            print(
+                f"{controller}: "
+                f"P={self.stab.Kp_z:.2f} "
+                f"I={self.stab.Ki_z:.2f} "
+                f"D={self.stab.Kd_z:.2f}"
+            )
+        else:
+            if gain == "P":
+                self.stab.Kp_att += delta
+            elif gain == "I":
+                self.stab.Ki_att += delta
+            elif gain == "D":
+                self.stab.Kd_att += delta
+            print(
+                f"{controller}: "
+                f"P={self.stab.Kp_att:.2f} "
+                f"I={self.stab.Ki_att:.2f} "
+                f"D={self.stab.Kd_att:.2f}"
+            )

@@ -1,5 +1,5 @@
 % Load CSV file
-filename = 'recording_2026-06-24_12-41-31.csv';  % change to your file name
+filename = 'recording_2026-07-21_10-10-34.csv';  % change to your file name
 data = readtable(filename);
 
 % Extract columns (adjust names if MATLAB modifies them)
