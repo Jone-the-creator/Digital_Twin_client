@@ -2,8 +2,12 @@ from dataclasses import dataclass
 from typing import Optional
 import time
 import numpy as np
-from Classes.KalmanFilter import Kalmanfilter
+from Classes.KalmanFilter import att_Kalmanfilter, pos_Kalmanfilter
 
+ACC_PITCH_BIAS = 1.3 # BIAS in degrees (more negative steers more forward, more positive steers more backward)
+ACC_ROLL_BIAS = -0.625 # BIAS in degrees (more negative steers more right, more positive steers more left)
+PITCH_TRIM = 0.0
+ROLL_TRIM = 0.0
 
 @dataclass
 class Position:
@@ -43,6 +47,7 @@ class Quadcopter:
         self.pitch_trim = 0.0
         self.roll_trim = 0.0
         self.loop_rate = 0.0
+        self.dt = 0.033
 
         self.max_thrust = 54000
         self.thrust = 0.0
@@ -54,9 +59,10 @@ class Quadcopter:
 
         self.viewer = None
         if self.estimator == "Kalman Filter":
-            self.KF = Kalmanfilter()
+            self.att_KF = att_Kalmanfilter()
+            self.pos_KF = pos_Kalmanfilter()
         else:
-            self.KF = None
+            self.att_KF = None
         self.last_update_time: float = time.time()
 
         # System status
@@ -69,15 +75,30 @@ class Quadcopter:
 
 
     # Update functions to be utilised by comms plugins, must be input with keywords (USE THESE IN PLUGINS)
-    def update_position(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
+    def update_position(self, *, x=None, y=None, alt=None):
+        u = np.zeros((3,1))
+        if self.controls.thrust > 0:
+            u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
+        z = np.zeros((3,1))
         if x is not None:
-            self.position.x = x
+            z[0,0] = x
         if y is not None:
-            self.position.y = y
-        if z is not None:
-            self.position.z = z
+            z[1,0] = y
+        if alt is not None:
+            z[2,0] = alt
 
-        self._update_time(timestamp)
+        now = time.time()
+        dt = now - self.last_update_time
+        self.last_update_time = now
+        # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
+        if self.pos_KF is not None:
+             # predict states
+            self.pos_KF.predict(u, dt)
+            self.pos_KF.correct(z)
+
+        self.position.x = self.pos_KF.x[0,0]
+        self.position.y = self.pos_KF.x[1,0]
+        self.position.z = max(0.0, self.pos_KF.x[2,0])
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:
@@ -102,9 +123,9 @@ class Quadcopter:
 
     def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None, z=None):
         if roll is not None:
-            self.controls.roll = roll
+            self.controls.roll = roll - ROLL_TRIM / self.dt
         if pitch is not None:
-            self.controls.pitch = pitch
+            self.controls.pitch = pitch - PITCH_TRIM / self.dt
         if yaw_rate is not None:
             self.controls.yaw_rate = yaw_rate
         if thrust is not None:
@@ -132,37 +153,36 @@ class Quadcopter:
             u[2,0] = np.deg2rad(yaw_vel)
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.KF is not None:
+        if self.att_KF is not None:
              # predict states
-            self.KF.predict(u, dt)
-
+            self.att_KF.predict(u, dt)
             # update attitudes based on predicted states
-            self.update_attitude(
-                roll = np.rad2deg(self.KF.x[0,0]),
-                pitch = np.rad2deg(self.KF.x[1,0]),
-                yaw = np.rad2deg(self.KF.x[2,0])
-            )
+            # self.update_attitude(
+            #     roll = np.rad2deg(self.att_KF.x[0,0]),
+            #     pitch = np.rad2deg(self.att_KF.x[1,0]),
+            #     yaw = np.rad2deg(self.att_KF.x[2,0])
+            # )
 
     # correct currently predicted states based on accelerometer data
-    def update_acc(self, *, a_x = None, a_y = None):
+    def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         z = np.zeros((2,1))
 
         # fill measurement matrix with accelerometer readings
-        if a_x is not None:
-            z[1,0] = a_x
-        if a_y is not None:
-            z[0,0] = -a_y
+        if a_y is not None and a_z is not None:
+            z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
+        if a_y is not None and a_z is not None and a_x is not None:
+            z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.KF is not None:
+        if self.att_KF is not None:
             # correct states
-            self.KF.correct(z)
+            self.att_KF.correct(z)
 
             # update attitudes based on corrected states
             self.update_attitude(
-                roll = np.rad2deg(self.KF.x[0,0]),
-                pitch = np.rad2deg(self.KF.x[1,0]),
-                yaw = np.rad2deg(self.KF.x[2,0])
+                roll = np.rad2deg(self.att_KF.x[0,0]),
+                pitch = np.rad2deg(self.att_KF.x[1,0]),
+                yaw = np.rad2deg(self.att_KF.x[2,0])
             )
 
 

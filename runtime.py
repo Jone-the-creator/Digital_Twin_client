@@ -1,5 +1,6 @@
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
+from Classes.KalmanFilter import att_Kalmanfilter
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
@@ -20,7 +21,7 @@ def control_loop(quad, stab):
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
-    print_count = 0
+    eff_count = 0
     u = np.zeros((4,1))
     thrust_raw = 0
     altitude = 0.0
@@ -41,12 +42,12 @@ def control_loop(quad, stab):
             
             # --- MANUAL CONTROL MODE ---
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
-            if r1 and not quad.killed and not quad.test_flight:
+            if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
                 roll, pitch, yaw_rate, altitude = \
-                functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt)   
+                functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
                 stab.pitch_setpoint = -pitch
                 stab.roll_setpoint = roll
-                u[1,0], u[2,0], thrust_raw = stab.hover(altitude, dt)
+                u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -59,17 +60,17 @@ def control_loop(quad, stab):
 
             
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
-            elif triangle and not quad.killed:
+            elif triangle and not quad.killed and eff_count % 2 == 0:
                 quad.test_flight = True
 
             # Reset altitude and thrust when r1 cross is pressed
-            elif cross:
+            elif cross and eff_count % 4 == 0:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
                 stab.reset()
                 u = np.zeros((4,1))
                 stab.zero() # Zeros the trim in the quadcopter object
-            elif not quad.test_flight:
+            elif not quad.test_flight and eff_count % 10 == 0:
                 thrust_raw = 0
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
@@ -91,13 +92,19 @@ def control_loop(quad, stab):
 
                 # -- TEST FLIGHT SEQUENCE --
                 if flight_time < 2.5:
-                    target_altitude = 0.25 * flight_time
-                elif flight_time < 5.0:
-                    target_altitude = 0.625
-                elif flight_time < 6.0:
-                    target_altitude = 0.35
-                elif flight_time < 7.0:
-                    target_altitude = 0.1
+                    target_altitude = 0.25 * flight_time # slowly increase to 0.625
+                elif flight_time < 3.5:
+                    target_altitude = 0.625 # hold at altitude for 1 second
+                elif flight_time < 5:
+                    target_altitude += 0.25 * dt # slowly increase to 1m
+                elif flight_time < 6:
+                    target_altitude = 1.0 # hold at altitude for 1 second                   
+                elif flight_time < 8:
+                    target_altitude -= 0.25 * dt # slowly decrease to 0.5m
+                elif flight_time < 9:
+                    target_altitude = 0.5 # hold at altitude for 1 second
+                elif flight_time < 11:
+                    target_altitude -= 0.25 * dt # slowly decrease to 0m
                 else:
                     quad.test_flight = False
                     stab.reset()
@@ -106,7 +113,7 @@ def control_loop(quad, stab):
                         quad.recording_active = False
                     target_altitude = 0.0
 
-                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude, dt)
+                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
                 print(f"test flight altitude = {target_altitude}")
 
             elif not r1:
@@ -168,10 +175,11 @@ def control_loop(quad, stab):
             time.sleep(0.00001)
             loop_time = time.time() - start_time
 
-        if print_count % (LOOP_RATE/2) == 0:
+        if eff_count % (LOOP_RATE/2) == 0:
+            quad.dt = loop_time
             quad.loop_rate = 1/loop_time # save loop rate for client every 0.5s
 
-        print_count += 1
+        eff_count += 1
 
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----

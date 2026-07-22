@@ -53,11 +53,11 @@ class CRTP_logger:
         # add log variables that are desired, if unsure check by connecting to client and look at log TOC tab
         self.logconf_gyro = LogConfig(
             name='Gyroscope', 
-            period_in_ms=10
+            period_in_ms=15
         )
         self.logconf_acc = LogConfig(
             name='Accelerometer', 
-            period_in_ms=10
+            period_in_ms=15
         )
         self.logconf_periph = LogConfig(
             name='Peripherals', 
@@ -65,7 +65,7 @@ class CRTP_logger:
         )
         self.logconf_pos = LogConfig(
             name='Position',
-            period_in_ms=50
+            period_in_ms=25
         )
         # choose logged variables here, can find in the following list:
         # https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs/
@@ -75,6 +75,7 @@ class CRTP_logger:
 
         self.logconf_acc.add_variable('acc.x', 'float')
         self.logconf_acc.add_variable('acc.y', 'float')
+        self.logconf_acc.add_variable('acc.z', 'float')
 
         self.logconf_periph.add_variable('pm.vbat', 'float')
 
@@ -137,6 +138,7 @@ class CRTP_logger:
         self.quadcopter.update_acc(
             a_x = data['acc.x'],
             a_y = data['acc.y'],
+            a_z = data['acc.z']
         )
 
     def _log_pos_data_received(self, timestamp, data, logconfig):
@@ -144,7 +146,7 @@ class CRTP_logger:
         self.quadcopter.update_position(
             x = data['kalman.stateX'],
             y = data['kalman.stateY'],
-            z = data['kalman.stateZ'],
+            alt = data['kalman.stateZ'],
         )
         # print(f"z = {data['kalman.stateZ']}")
 
