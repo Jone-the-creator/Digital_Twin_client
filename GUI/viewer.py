@@ -87,8 +87,6 @@ class DroneViewer(QWidget,):
         self.base_transform.rotate(180, 0, 0, 1)
         self.base_transform.rotate(90, 1, 0, 0)
         
-
-
         #create quadcopter model
         self.model = gl.GLMeshItem(
             vertexes = vertices,
@@ -107,14 +105,20 @@ class DroneViewer(QWidget,):
             shader='balloon'
         )
 
-        #add models
+        # add models
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
 
-        #render loop
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_model)
-        self.timer.start(16)  # ~60 FPS
+        # render loop
+        self.render_timer = QTimer()
+        self.render_timer.timeout.connect(self.update_model)
+        self.render_timer.start(16)  # ~60 FPS
+
+        # data update loop
+        self.data_timer = QTimer()
+        self.data_timer.timeout.connect(self.update_GUI)
+        self.data_timer.start(50)  # ~20 FPS
+
 
         # record data when start recording button pressed
         self.start_recording_btn.clicked.connect(self.start_record)
@@ -152,21 +156,20 @@ class DroneViewer(QWidget,):
         world = self.model.transform() * local
         self.front_marker.setTransform(world)
 
+    def update_GUI(self):
         # update thrust in model
         thrust = self.quadcopter.controls.thrust
-        self.thrust_panel.update(thrust / 40000 * 100)
+        self.thrust_panel.update_thrust((thrust / self.quadcopter.max_thrust) * 100)
 
         # update readings
-        self.reading_panel.update(
-            battery=self.quadcopter.battery_percent,
-            battvolt=self.quadcopter.battery_voltage,
-            yaw = self.quadcopter.attitude.yaw,
-            pitch = self.quadcopter.attitude.pitch,
-            roll = self.quadcopter.attitude.roll,
-            altitude = self.quadcopter.position.z,
-            target_altitude = self.quadcopter.controls.z,
-            loop_rate = self.quadcopter.loop_rate
-            )
+        self.reading_panel.update_readings({
+            "battery_percent": self.quadcopter.battery_percent,
+            "yaw": round(self.quadcopter.attitude.yaw, 2),
+            "pitch": round(self.quadcopter.attitude.pitch, 2),
+            "roll": round(self.quadcopter.attitude.roll, 2),
+            "altitude": round(self.quadcopter.position.z, 2),
+            "loop_rate": round(self.quadcopter.loop_rate, 1)
+        })
         controller = self.pid_panel.controller_select.currentText().lower()
 
         if controller == "altitude controller":
@@ -224,12 +227,6 @@ class DroneViewer(QWidget,):
                 self.stab.Ki_z += delta
             elif gain == "D":
                 self.stab.Kd_z += delta
-            print(
-                f"{controller}: "
-                f"P={self.stab.Kp_z:.2f} "
-                f"I={self.stab.Ki_z:.2f} "
-                f"D={self.stab.Kd_z:.2f}"
-            )
             self.pid_panel.update_values(
             self.stab.Kp_z,
             self.stab.Ki_z,
@@ -242,12 +239,6 @@ class DroneViewer(QWidget,):
                 self.stab.Ki_att += delta
             elif gain == "D":
                 self.stab.Kd_att += delta
-            print(
-                f"{controller}: "
-                f"P={self.stab.Kp_att:.2f} "
-                f"I={self.stab.Ki_att:.2f} "
-                f"D={self.stab.Kd_att:.2f}"
-            )
             self.pid_panel.update_values(
             self.stab.Kp_att,
             self.stab.Ki_att,

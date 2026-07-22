@@ -38,36 +38,19 @@ class ThrustPanel(QWidget):
         super().__init__()
 
         self.total = ThrustBar("Thrust")
-        """
-        self.m1 = ThrustBar("M1")
-        self.m2 = ThrustBar("M2")
-        self.m3 = ThrustBar("M3")
-        self.m4 = ThrustBar("M4")
-        """
 
         layout = QHBoxLayout(self)
         layout.addWidget(self.total)
-        """
-        layout.addWidget(self.m1)
-        layout.addWidget(self.m2)
-        layout.addWidget(self.m3)
-        layout.addWidget(self.m4)
-        """
         
-    def update(self, thrust):
+    def update_thrust(self, thrust):
         self.total.set_value(thrust)
-        """
-        self.m1.set_value(m1)
-        self.m2.set_value(m2)
-        self.m3.set_value(m3)
-        self.m4.set_value(m4)
-        """
 
 class Reading(QWidget):
-    def __init__(self, name = "Reading", hasProgressBar = False):
+    def __init__(self, name = "Reading", unit = "", hasProgressBar = False):
         super().__init__()
 
         self.name = name
+        self.unit = unit
         self.hasProgressBar = hasProgressBar
         self.bar = None
 
@@ -86,7 +69,7 @@ class Reading(QWidget):
             
             layout.addWidget(self.bar)
 
-    def set_value(self, value, suffix = ""): # If progress bar already set, suffix will automatically be %
+    def set_value(self, value): # If progress bar already set, suffix will automatically be %
         # Clamp value to 0–100
         if value is None:
             # Show placeholder instead of crashing
@@ -105,48 +88,36 @@ class Reading(QWidget):
                 color = "orange"
             else:
                 color = "green"
-                self.bar.setStyleSheet(f"QProgressBar::chunk {{ background: {color}; }}")
+            self.bar.setStyleSheet(f"QProgressBar::chunk {{ background: {color}; }}")
 
         else:
-            self.label.setText(f"{self.name}: {value} {suffix}")
+            self.label.setText(f"{self.name}: {value} {self.unit}")
 
 class ReadingPanel(QWidget):
     def __init__(self):
         super().__init__()
         # instantiate readings here
-        self.battery = Reading(name = "Battery", hasProgressBar= True)
-        self.battvolt = Reading(name = "Battery Voltage")
-        self.yaw = Reading(name = "Yaw")
-        self.pitch = Reading(name = "Pitch")
-        self.roll = Reading(name = "Roll")
-        self.altitude = Reading(name = "Current Altitude")
-        self.target_altitude = Reading(name = "Target Altitude")
-        self.loop_rate = Reading(name = "Loop Rate")
+        self.readings = {
+            "battery_percent": Reading("Battery", hasProgressBar=True),
+            "yaw": Reading("Yaw", "°"),
+            "pitch": Reading("Pitch", "°"),
+            "roll": Reading("Roll", "°"),
+            "altitude": Reading("Current Altitude", "m"),
+            "loop_rate": Reading("Loop Rate", "Hz")
+        }
 
         layout = QVBoxLayout(self)
 
         # add reading widgets here
-        layout.addWidget(self.battery)
-        layout.addWidget(self.battvolt)
-        layout.addWidget(self.yaw)
-        layout.addWidget(self.pitch)
-        layout.addWidget(self.roll)
-        layout.addWidget(self.altitude)
-        layout.addWidget(self.target_altitude)
-        layout.addWidget(self.loop_rate)
+        for reading in self.readings.values():
+            layout.addWidget(reading)
 
         layout.addStretch()
 
-    def update(self, battery, battvolt, yaw, pitch, roll, altitude, target_altitude, loop_rate):
-        # add update functionality to readings (adjust change in viewer.py)
-        self.battery.set_value(battery)
-        self.battvolt.set_value(battvolt)
-        self.yaw.set_value(round(yaw, 2))
-        self.pitch.set_value(round(pitch, 2))
-        self.roll.set_value(round(roll, 2))
-        self.altitude.set_value(round(altitude, 2))
-        self.target_altitude.set_value(round(target_altitude, 2))
-        self.loop_rate.set_value(round(loop_rate, 1))
+    def update_readings(self, data):
+        for name, value in data.items():
+            if name in self.readings:
+                self.readings[name].set_value(value)
 
 class PIDControlPanel(QWidget):
     gain_changed = pyqtSignal(str, float)
