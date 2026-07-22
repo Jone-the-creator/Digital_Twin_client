@@ -61,13 +61,13 @@ class pos_Kalmanfilter():
         self.Q = np.array([
             [0.175, 0, 0],
             [0, 0.175, 0],
-            [0, 0, 0.02]
+            [0, 0, 0.0001]
         ])
         # measurement noise, ALTITUDE TUNED
         self.R = np.array([
             [0.05, 0, 0],
             [0, 0.05, 0],
-            [0, 0, 0.03]
+            [0, 0, 0.001]
         ])
         # initial state (0.65, 0.75, 0.0 for home - x, y, 0.0 for FFoF)
         self.x = np.array([
@@ -80,7 +80,7 @@ class pos_Kalmanfilter():
         self.P = np.array([
             [0.025, 0, 0],
             [0, 0.025, 0],
-            [0, 0, 0.001]
+            [0, 0, 0.01]
         ])
     
     # prediction step based on previous state and control, u for altitude is g * (T/Thover - 1)
