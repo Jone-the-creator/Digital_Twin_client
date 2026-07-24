@@ -103,6 +103,7 @@ class ReadingPanel(QWidget):
             "pitch": Reading("Pitch", "°"),
             "roll": Reading("Roll", "°"),
             "altitude": Reading("Current Altitude", "m"),
+            "altitude setpoint": Reading("Altitude Setpoint", "m"),
             "loop_rate": Reading("Loop Rate", "Hz")
         }
 
