@@ -140,6 +140,9 @@ class CRTP_logger:
             a_y = data['acc.y'],
             a_z = data['acc.z']
         )
+        self.quadcopter.acc_x = data['acc.x']
+        self.quadcopter.acc_y = data['acc.y']
+        self.quadcopter.acc_z = data['acc.z']
 
     def _log_pos_data_received(self, timestamp, data, logconfig):
         # updates values in quadcopter object based on readings from crazyflie

@@ -52,6 +52,25 @@ class PIDstabiliser():
         self.Ki_att = 0.0
         self.Kd_att = 0.5
 
+    def pos_control(self, x_setpoint, y_setpoint, altitude_setpoint):
+        # --- ALTITUDE CONTROL ---
+        altitude = self.quad.position.z
+        hover_thrust = self.DC_gain_z * self.quad.mass * 9.81 
+
+        altitude_error = altitude_setpoint - altitude
+        self.altitude_integral += altitude_error * self.quad.dt
+        self.altitude_integral = np.clip(self.altitude_integral, -self.max_int, self.max_int)
+        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
+        self.prev_altitude_error = altitude_error
+
+        thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
+
+        # --- ATTITUDE CONTROL ---     
+        current_x = self.quad.position.x
+        current_y = self.quad.position.y
+
+        x_error = x_setpoint - self.quad.position.x
+        y_error = y_setpoint - self.quad.position.y
 
 
     # hover mode, will control attitude with 0 setpoints

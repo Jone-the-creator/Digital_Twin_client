@@ -52,6 +52,10 @@ class Quadcopter:
         self.max_thrust = 54000
         self.thrust = 0.0
 
+        self.acc_x = 0.0
+        self.acc_y = 0.0
+        self.acc_z = 0.0
+
         # Conditions
         self.killed = False
         self.test_flight = False
@@ -77,8 +81,23 @@ class Quadcopter:
     # Update functions to be utilised by comms plugins, must be input with keywords (USE THESE IN PLUGINS)
     def update_position(self, *, x=None, y=None, alt=None):
         u = np.zeros((3,1))
-        if self.controls.thrust > 0:
-            u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
+        # if self.controls.thrust > 0:
+        pitch = np.radians(self.attitude.pitch)
+        roll = np.radians(self.attitude.roll)
+
+        R = np.array([
+            [ np.cos(pitch), np.sin(roll)*np.sin(pitch), np.cos(roll)*np.sin(pitch)],
+            [ 0,             np.cos(roll),              -np.sin(roll)],
+            [-np.sin(pitch), np.sin(roll)*np.cos(pitch), np.cos(roll)*np.cos(pitch)]
+        ])
+
+        a_body = np.array([[self.acc_x * 9.81], [self.acc_y * 9.81], [self.acc_z * 9.81]])
+        a_world = R @ a_body
+        a_world[2,0] -= 9.81
+
+        u[0,0] = a_world[0,0]
+        u[1,0] = a_world[1,0]
+        u[2,0] = a_world[2,0]
         z = np.zeros((3,1))
         if x is not None:
             z[0,0] = x
