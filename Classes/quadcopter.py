@@ -98,7 +98,10 @@ class Quadcopter:
 
         self.position.x = self.pos_KF.x[0,0]
         self.position.y = self.pos_KF.x[1,0]
-        self.position.z = max(0.0, self.pos_KF.x[2,0])
+        if self.pos_KF.x[2,0] < 0.35:
+            self.position.z = max(0.0, self.pos_KF.x[2,0] - 0.3)
+        else:
+            self.position.z = max(0.0, self.pos_KF.x[2,0])
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:

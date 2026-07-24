@@ -61,13 +61,13 @@ class pos_Kalmanfilter():
         self.Q = np.array([
             [0.175, 0, 0],
             [0, 0.175, 0],
-            [0, 0, 0.0001]
+            [0, 0, 0.15]
         ])
         # measurement noise, ALTITUDE TUNED
         self.R = np.array([
             [0.05, 0, 0],
             [0, 0.05, 0],
-            [0, 0, 0.001]
+            [0, 0, 0.025]
         ])
         # initial state (0.65, 0.75, 0.0 for home - x, y, 0.0 for FFoF)
         self.x = np.array([

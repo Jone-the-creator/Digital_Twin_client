@@ -36,6 +36,7 @@ class SetupWindow(QDialog):
 
         self.save_button = QPushButton("Save as defaults")
         self.enter_button = QPushButton("Enter")
+        self.enter_button.setDefault(True)
 
         # --- Layout ---
         layout = QVBoxLayout()
