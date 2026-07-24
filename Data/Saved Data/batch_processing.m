@@ -1,7 +1,7 @@
 %% Load first file as reference time base
-numFiles = 10;
+numFiles = 1;
 
-data = readtable('Validation_result_1.csv');
+data = readtable('practice_result_1.csv');
 
 time_ref = data{:,1};
 
@@ -17,7 +17,7 @@ target_altitude = data{:,8};
 %% Load and interpolate remaining files
 for k = 1:numFiles
 
-    filename = sprintf('Validation_result_%d.csv', k);
+    filename = sprintf('practice_result_%d.csv', k);
     data = readtable(filename);
 
     time = data{:,1};

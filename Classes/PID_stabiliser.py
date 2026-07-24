@@ -44,13 +44,13 @@ class PIDstabiliser():
         self.max_int = 40
 
         self.DC_gain_z = 13000.0
-        self.Kp_z = 3.25
-        self.Ki_z = 0.35
-        self.Kd_z = 0.55
+        self.Kp_z = 2.5
+        self.Ki_z = 1.05
+        self.Kd_z = 0.35
 
-        self.Kp_att = 2.5
+        self.Kp_att = 2.0
         self.Ki_att = 0.0
-        self.Kd_att = 0.15
+        self.Kd_att = 0.5
 
 
 
@@ -123,6 +123,9 @@ class PIDstabiliser():
         # Reset setpoints
         self.pitch_setpoint = 0.0
         self.roll_setpoint = 0.0
+
+        # Set current yaw to target
+        self.yaw_setpoint = self.quad.attitude.yaw
 
     def zero(self):
         self._pitch_sum = 0.0

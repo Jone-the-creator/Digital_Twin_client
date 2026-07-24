@@ -5,14 +5,14 @@ class att_Kalmanfilter():
     def __init__(self):
         # control noise
         self.Q = np.array([
-            [0.00015, 0, 0],
-            [0, 0.00044, 0],
+            [0.25, 0, 0],
+            [0, 0.25, 0],
             [0, 0, 0.025]
         ])
         # measurement noise
         self.R = np.array([
-            [0.1849, 0],
-            [0, 0.01],
+            [0.025, 0],
+            [0, 0.025],
         ])
         # initial state
         self.x = np.zeros((3,1)) 
