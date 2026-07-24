@@ -10,8 +10,8 @@ class PIDstabiliser():
         # initialise setpoints, adjust these directly for control
         self.roll_setpoint = 0.0
         self.pitch_setpoint = 0.0
-        self.x_setpoint = 0.65
-        self.y_setpoint = 0.75
+        self.x_setpoint = self.quad.position.x
+        self.y_setpoint = self.quad.position.y
 #        self.yaw_setpoint = 0.0
 
         # Altitude error variables
@@ -59,13 +59,13 @@ class PIDstabiliser():
         self.Ki_z = 1.05
         self.Kd_z = 0.35
 
-        self.Kp_x = 1.0
+        self.Kp_x = 2.5
         self.Ki_x = 0.0
-        self.Kd_x = 0.0
+        self.Kd_x = 0.35
 
-        self.Kp_y = 1.0
+        self.Kp_y = 2.5
         self.Ki_y = 0.0
-        self.Kd_y = 0.0
+        self.Kd_y = 0.35
 
         self.Kp_att = 2.0
         self.Ki_att = 0.0
@@ -84,7 +84,7 @@ class PIDstabiliser():
 
         thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
 
-        # --- X and Y CONTROL ---     
+        # --- X AND Y CONTROL ---     
         current_x = self.quad.position.x
         current_y = self.quad.position.y
 
@@ -92,26 +92,57 @@ class PIDstabiliser():
         self.quad.controls.y = self.y_setpoint
 
         x_error = self.x_setpoint - current_x
-        self.x_integral += x_error * self.quad.dt
-        self.x_integral = np.clip(self.x_integral, -self.max_int, self.max_int)
-        self.x_derivative = (x_error - self.prev_x_error) / self.quad.dt
-        self.prev_x_error = x_error
-
-        pitch = x_error * self.Kp_x + self.x_integral * self.Ki_x + self.x_derivative * self.Kd_x
-
         y_error = self.y_setpoint - current_y
-        self.y_integral += y_error * self.quad.dt
+
+        yaw = np.radians(self.quad.attitude.yaw)
+
+        x_body_error = (
+            np.cos(yaw) * x_error +
+            np.sin(yaw) * y_error
+        )
+
+        y_body_error = (
+        -np.sin(yaw) * x_error +
+            np.cos(yaw) * y_error
+        )
+
+        self.x_integral += x_body_error * self.quad.dt
+        self.y_integral += y_body_error * self.quad.dt
+
+        self.x_integral = np.clip(self.x_integral, -self.max_int, self.max_int)
         self.y_integral = np.clip(self.y_integral, -self.max_int, self.max_int)
-        self.y_derivative = (y_error - self.prev_y_error) / self.quad.dt
-        self.prev_y_error = y_error
 
-        roll = y_error * self.Kp_y + self.y_integral * self.Ki_y + self.y_derivative * self.Kd_y
+        self.x_derivative = (
+            x_body_error - self.prev_x_error
+        ) / self.quad.dt
 
+        self.y_derivative = (
+            y_body_error - self.prev_y_error
+        ) / self.quad.dt
+
+        self.prev_x_error = x_body_error
+        self.prev_y_error = y_body_error
+
+        pitch = (
+            self.Kp_x * x_body_error +
+            self.Ki_x * self.x_integral +
+            self.Kd_x * self.x_derivative
+        )
+
+        roll = (
+            self.Kp_y * y_body_error +
+            self.Ki_y * self.y_integral +
+            self.Kd_y * self.y_derivative
+        )
+
+        pitch = np.clip(pitch, -self.max_angle, self.max_angle)
+        roll = np.clip(roll, -self.max_angle, self.max_angle)
+        
         # # --- ATTITUDE CONTROL ---
 
         # Calculate attitude errors
-        pitch_error = -np.clip(pitch - (self.quad.attitude.pitch ), -self.max_angle, self.max_angle)
-        roll_error = np.clip(roll - (self.quad.attitude.roll), -self.max_angle, self.max_angle)
+        pitch_error = pitch - self.quad.attitude.pitch
+        roll_error = roll - self.quad.attitude.roll
 
         self.pitch_integral += pitch_error * self.quad.dt
         self.roll_integral += roll_error * self.quad.dt
@@ -127,6 +158,16 @@ class PIDstabiliser():
         pitch_rate = pitch_error * self.Kp_att + self.pitch_integral * self.Ki_att + self.pitch_derivative * self.Kd_att
         roll_rate = roll_error * self.Kp_att + self.roll_integral * self.Ki_att + self.roll_derivative * self.Kd_att
 
+        if np.random.randint(0,10) == 0:
+            print(
+                f"x={current_x:.2f} "
+                f"y={current_y:.2f} "
+                f"x_sp={self.x_setpoint:.2f} "
+                f"y_sp={self.y_setpoint:.2f} "
+                f"pitch_cmd={pitch:.2f} "
+                f"roll_cmd={roll:.2f} "
+                f"yaw={self.quad.attitude.yaw:.1f}"
+            )
         return pitch_rate, roll_rate, thrust
 
 
@@ -206,8 +247,8 @@ class PIDstabiliser():
         # Reset setpoints
         self.pitch_setpoint = 0.0
         self.roll_setpoint = 0.0
-        self.x_setpoint = 0.0
-        self.y_setpoint = 0.0
+        self.x_setpoint = self.quad.position.x
+        self.y_setpoint = self.quad.position.y
 
         # Set current yaw to target
         self.yaw_setpoint = self.quad.attitude.yaw
