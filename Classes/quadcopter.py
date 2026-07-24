@@ -29,6 +29,8 @@ class ControlInputs:
     yaw_rate: float = 0.0
     thrust: float = 0.0
     z: float = 0.0
+    x: float = 0.0
+    y: float = 0.0
 
 
 # quadcopter class containing generic data requirements

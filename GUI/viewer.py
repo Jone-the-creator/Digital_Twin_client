@@ -169,6 +169,10 @@ class DroneViewer(QWidget,):
             "roll": round(self.quadcopter.attitude.roll, 2),
             "altitude": round(self.quadcopter.position.z, 2),
             "altitude setpoint": round(self.quadcopter.controls.z, 2),
+            "x": round(self.quadcopter.position.x, 2),
+            "x setpoint": round(self.quadcopter.controls.x, 2),
+            "y": round(self.quadcopter.position.y, 2),
+            "y setpoint": round(self.quadcopter.controls.y, 2),
             "loop_rate": round(self.quadcopter.loop_rate, 1)
         })
         controller = self.pid_panel.controller_select.currentText().lower()
