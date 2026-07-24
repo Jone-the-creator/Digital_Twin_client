@@ -59,11 +59,11 @@ class PIDstabiliser():
         self.Ki_z = 1.05
         self.Kd_z = 0.35
 
-        self.Kp_x = 0.0
+        self.Kp_x = 1.0
         self.Ki_x = 0.0
         self.Kd_x = 0.0
 
-        self.Kp_y = 0.0
+        self.Kp_y = 1.0
         self.Ki_y = 0.0
         self.Kd_y = 0.0
 

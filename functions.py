@@ -32,6 +32,8 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt):
 
     lx, ly, rx, ry = map(dz, (lx, ly, rx, ry))
 
+    x_delta = ly * 0.01
+    y_delta = lx * 0.01
     roll = rx * 10.0
     pitch = -ry * 10.0
     yaw_rate = lx * 100.0
@@ -69,5 +71,5 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt):
 
     altitude = joystick_to_setpoint.altitude
 
-    return roll, pitch, yaw_rate, altitude
+    return x_delta, y_delta, roll, pitch, yaw_rate, altitude
 

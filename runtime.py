@@ -43,11 +43,11 @@ def control_loop(quad, stab):
             # --- MANUAL CONTROL MODE ---
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
             if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
-                roll, pitch, yaw_rate, altitude = \
+                y_delta, x_delta, pitch, roll, yaw_rate, altitude = \
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
-                stab.pitch_setpoint = -pitch
-                stab.roll_setpoint = roll
-                u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
+                stab.x_setpoint += x_delta
+                stab.y_setpoint += y_delta
+                u[1,0], u[2,0], thrust_raw = stab.pos_control(altitude)
 
             # Cancel test flight if circle pressed
             elif circle: 
