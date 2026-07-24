@@ -98,10 +98,14 @@ class Quadcopter:
 
         self.position.x = self.pos_KF.x[0,0]
         self.position.y = self.pos_KF.x[1,0]
-        if self.pos_KF.x[2,0] < 0.35:
-            self.position.z = max(0.0, self.pos_KF.x[2,0] - 0.3)
+
+        # Loco positioning system has a bias near-ground of about 0.3, this logic accounts for that smoothly
+        z = self.pos_KF.x[2,0]
+        if z < 0.5:
+            correction = 0.3 * (1.0 - z / 0.5)
         else:
-            self.position.z = max(0.0, self.pos_KF.x[2,0])
+            correction = 0.0
+        self.position.z = max(0.0, z - correction)
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if x is not None:
