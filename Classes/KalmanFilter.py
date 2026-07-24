@@ -59,14 +59,14 @@ class pos_Kalmanfilter():
     def __init__(self):
         # control noise, ALTITUDE TUNED
         self.Q = np.array([
-            [0.175, 0, 0],
-            [0, 0.175, 0],
-            [0, 0, 0.15]
+            [0.1, 0, 0],
+            [0, 0.1, 0],
+            [0, 0, 0.1]
         ])
         # measurement noise, ALTITUDE TUNED
         self.R = np.array([
-            [0.05, 0, 0],
-            [0, 0.05, 0],
+            [0.025, 0, 0],
+            [0, 0.025, 0],
             [0, 0, 0.025]
         ])
         # initial state (0.65, 0.75, 0.0 for home - x, y, 0.0 for FFoF)
@@ -78,8 +78,8 @@ class pos_Kalmanfilter():
 
         # initialise covariance, ALTITUDE TUNED
         self.P = np.array([
-            [0.025, 0, 0],
-            [0, 0.025, 0],
+            [0.05, 0, 0],
+            [0, 0.05, 0],
             [0, 0, 0.01]
         ])
     
