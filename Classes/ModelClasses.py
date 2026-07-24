@@ -1,3 +1,8 @@
+# Written by Jonah Habel 2026
+# Flinders University
+#
+# with assistance from Microsoft Copilot
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,

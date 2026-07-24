@@ -1,4 +1,7 @@
-# setup.py
+# Written by Jonah Habel 2026
+# Flinders University
+#
+# with assistance from Microsoft Copilot
 
 import sys
 from PyQt6.QtWidgets import (

@@ -1,3 +1,8 @@
+# Written by Jonah Habel 2026
+# Flinders University
+#
+# with assistance from Microsoft Copilot
+
 import numpy as np
 import time
 

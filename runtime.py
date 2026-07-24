@@ -1,3 +1,6 @@
+# Written by Jonah Habel 2026
+# Flinders University
+
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
 from Classes.KalmanFilter import att_Kalmanfilter

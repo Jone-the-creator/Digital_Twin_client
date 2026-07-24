@@ -1,3 +1,6 @@
+# Written by Jonah Habel 2026
+# Flinders University
+
 from dataclasses import dataclass
 from typing import Optional
 import time

@@ -1,3 +1,6 @@
+# Written by Jonah Habel 2026
+# Flinders University
+
 import numpy as np
 
 # only good for attitudes up to 45 degrees, numpy does algebra in radians

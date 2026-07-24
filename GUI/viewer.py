@@ -1,3 +1,8 @@
+# Written by Jonah Habel 2026
+# Flinders University
+#
+# with assistance from Microsoft Copilot
+
 from PyQt6 import QtGui
 from PyQt6.QtCore import (
     QTimer, QThread, pyqtSignal
