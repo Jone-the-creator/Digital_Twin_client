@@ -80,7 +80,7 @@ class pos_Kalmanfilter():
         self.P = np.array([
             [0.025, 0, 0],
             [0, 0.025, 0],
-            [0, 0, 0.001]
+            [0, 0, 0.01]
         ])
     
     # prediction step based on previous state and control, u for altitude is g * (T/Thover - 1)

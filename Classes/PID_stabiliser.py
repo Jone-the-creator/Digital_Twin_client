@@ -44,13 +44,13 @@ class PIDstabiliser():
         self.max_int = 40
 
         self.DC_gain_z = 13000.0
-        self.Kp_z = 2.0
-        self.Ki_z = 0.4
-        self.Kd_z = 0.75
+        self.Kp_z = 3.25
+        self.Ki_z = 0.35
+        self.Kd_z = 0.55
 
         self.Kp_att = 2.5
         self.Ki_att = 0.0
-        self.Kd_att = 0.0
+        self.Kd_att = 0.15
 
 
 
