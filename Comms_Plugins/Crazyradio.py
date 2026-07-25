@@ -167,7 +167,7 @@ class CRTP_logger:
         # set attitude flight mode to rate
         self.cf.param.set_value('flightmode.stabModeRoll', 0)
         self.cf.param.set_value('flightmode.stabModePitch', 0)
-        self.cf.param.set_value('flightmode.stabModeYaw', 2) # sets yaw mode to cross (Carefree(0), plusmode(1), xmode(2))
+        self.cf.param.set_value('flightmode.stabModeYaw', 0) # sets yaw mode to carefree (Carefree(0), plusmode(1), xmode(2))
         self.cf.param.set_value('stabilizer.controller', 0) # disables built-in on-board stabiliser
         while True:
             #send controls and use microsleeps to achieve the desired loop rate

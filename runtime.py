@@ -50,6 +50,7 @@ def control_loop(quad, stab):
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
                 stab.pitch_setpoint = -pitch
                 stab.roll_setpoint = roll
+                u[0,0] = yaw_rate
                 u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
 
             # Cancel test flight if circle pressed
@@ -150,7 +151,7 @@ def control_loop(quad, stab):
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if target_altitude > 0.0:
                 quad.update_controls(
-                    yaw_rate = stab.yaw_setpoint,
+                    yaw_rate = u[0,0],
                     pitch = u[1,0],
                     roll = u[2,0],
                     thrust = u[3,0],
@@ -158,7 +159,7 @@ def control_loop(quad, stab):
                 )
             else:
                 quad.update_controls(
-                    yaw_rate = stab.yaw_setpoint,
+                    yaw_rate = u[0,0],
                     pitch = u[1,0],
                     roll = u[2,0],
                     thrust = u[3,0],
