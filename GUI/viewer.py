@@ -183,12 +183,24 @@ class DroneViewer(QWidget,):
                 self.stab.Ki_z,
                 self.stab.Kd_z
                 )
-        else:
+        elif controller == "attitude controller":
             self.pid_panel.update_values(
                 self.stab.Kp_att,
                 self.stab.Ki_att,
                 self.stab.Kd_att
                 )
+        elif controller == "x position controller":
+            self.pid_panel.update_values(
+            self.stab.Kp_x,
+            self.stab.Ki_x,
+            self.stab.Kd_x
+            )
+        elif controller == "y position controller":
+            self.pid_panel.update_values(
+            self.stab.Kp_y,
+            self.stab.Ki_y,
+            self.stab.Kd_y
+            )
 
     def start_record(self):
         # if hasattr(self, "thread") and self.thread is not None:
@@ -237,7 +249,7 @@ class DroneViewer(QWidget,):
             self.stab.Ki_z,
             self.stab.Kd_z
             )
-        else:
+        elif controller == "attitude controller":
             if gain == "P":
                 self.stab.Kp_att += delta
             elif gain == "I":
@@ -248,4 +260,28 @@ class DroneViewer(QWidget,):
             self.stab.Kp_att,
             self.stab.Ki_att,
             self.stab.Kd_att
+            )
+        elif controller == "x position controller":
+            if gain == "P":
+                self.stab.Kp_x += delta
+            elif gain == "I":
+                self.stab.Ki_x += delta
+            elif gain == "D":
+                self.stab.Kd_x += delta
+            self.pid_panel.update_values(
+            self.stab.Kp_x,
+            self.stab.Ki_x,
+            self.stab.Kd_x
+            )
+        elif controller == "y position controller":
+            if gain == "P":
+                self.stab.Kp_y += delta
+            elif gain == "I":
+                self.stab.Ki_y += delta
+            elif gain == "D":
+                self.stab.Kd_y += delta
+            self.pid_panel.update_values(
+            self.stab.Kp_y,
+            self.stab.Ki_y,
+            self.stab.Kd_y
             )

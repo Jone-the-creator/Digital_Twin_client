@@ -138,7 +138,7 @@ class PIDControlPanel(QWidget):
         layout.addWidget(title)
 
         self.controller_select = QComboBox()
-        self.controller_select.addItems(["Altitude Controller", "Attitude Controller"])
+        self.controller_select.addItems(["Altitude Controller", "Attitude Controller", "X Position Controller", "Y Position Controller"])
         layout.addWidget(self.controller_select)
 
         self.gain_labels = {}
