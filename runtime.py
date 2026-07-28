@@ -83,39 +83,50 @@ def control_loop(quad, stab):
 
             # --- TEST FLIGHT MODE (AUTOMATIC) ---
             if quad.test_flight is True:
-                # Only start a recording thread if one hasn't started
-                if not quad.recording_active:
-                    # Start Recording thread
-                    quad.viewer.start_record_signal.emit()
-                    quad.recording_active = True
+                if count == 0:
                     target_altitude = 0.0     
-                    # Measure attitude trim before test flight
-                    stab.zero() # Zeros the trim in the quadcopter object
-                
+                    stab.zero() # Zeros the setpoints
                 flight_time = count * dt
 
                 # -- TEST FLIGHT SEQUENCE --
                 if flight_time < 2:
                     target_altitude = 0.25 * flight_time # slowly increase to 0.5
-                elif flight_time < 5:
-                    target_altitude = 0.5 # hold at altitude for 2.5 seconds
-                elif flight_time < 7:
+
+                elif flight_time < 6:
+                    target_altitude = 0.5 # hold at altitude for 4 seconds
+
+                elif flight_time < 8:
+                    # Only start a recording thread if one hasn't started
+                    if not quad.recording_active:
+                        # Start Recording thread
+                        quad.viewer.start_record_signal.emit()
+                        quad.recording_active = True
                     target_altitude += 0.25 * dt # slowly increase to 1m
-                elif flight_time < 10:
-                    target_altitude = 1.0 # hold at altitude for 2.5 seconds                   
-                elif flight_time < 12:
-                    target_altitude -= 0.25 * dt # slowly decrease to 0.5m
-                elif flight_time < 15:
-                    target_altitude = 0.5 # hold at altitude for 2.5 seconds
-                elif flight_time < 17:
+
+                elif flight_time < 16:
+                    target_altitude = 1.0 # hold at altitude for 8 seconds   
+
+                elif flight_time < 18:
+                    target_altitude += 0.25 * dt # slowly increase to 1.5m
+
+                elif flight_time < 26:
+                    target_altitude = 1.5 # hold at altitude for 8 seconds
+                    
+                elif flight_time < 32:
                     target_altitude -= 0.25 * dt # slowly decrease to 0m
+                    if target_altitude < 0.5: # stop recording at 0.5m
+                        if quad.recording_active:
+                            quad.viewer.stop_record_signal.emit()
+                            quad.recording_active = False
+
                 else:
                     quad.test_flight = False
                     stab.reset()
+                    target_altitude = 0.0
+                    # stop recording if still recording
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
-                    target_altitude = 0.0
 
                 u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
                 print(f"test flight altitude = {target_altitude}")
