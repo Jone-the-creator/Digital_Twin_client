@@ -97,17 +97,17 @@ def control_loop(quad, stab):
                 # -- TEST FLIGHT SEQUENCE --
                 if flight_time < 2:
                     target_altitude = 0.25 * flight_time # slowly increase to 0.5
-                elif flight_time < 4:
-                    target_altitude = 0.5 # hold at altitude for 2 seconds
-                elif flight_time < 6:
+                elif flight_time < 5:
+                    target_altitude = 0.5 # hold at altitude for 2.5 seconds
+                elif flight_time < 7:
                     target_altitude += 0.25 * dt # slowly increase to 1m
-                elif flight_time < 8:
-                    target_altitude = 1.0 # hold at altitude for 2 seconds                   
                 elif flight_time < 10:
-                    target_altitude -= 0.25 * dt # slowly decrease to 0.5m
+                    target_altitude = 1.0 # hold at altitude for 2.5 seconds                   
                 elif flight_time < 12:
-                    target_altitude = 0.5 # hold at altitude for 1 second
-                elif flight_time < 14:
+                    target_altitude -= 0.25 * dt # slowly decrease to 0.5m
+                elif flight_time < 15:
+                    target_altitude = 0.5 # hold at altitude for 2.5 seconds
+                elif flight_time < 17:
                     target_altitude -= 0.25 * dt # slowly decrease to 0m
                 else:
                     quad.test_flight = False
