@@ -105,14 +105,8 @@ def control_loop(quad, stab):
 
                 elif flight_time < 16:
                     target_altitude = 1.0 # hold at altitude for 8 seconds   
-
-                elif flight_time < 18:
-                    target_altitude += 0.25 * dt # slowly increase to 1.5m
-
-                elif flight_time < 26:
-                    target_altitude = 1.5 # hold at altitude for 8 seconds
                     
-                elif flight_time < 32:
+                elif flight_time < 20:
                     target_altitude -= 0.25 * dt # slowly decrease to 0m
                     if target_altitude < 0.5: # stop recording at 0.5m
                         if quad.recording_active:
