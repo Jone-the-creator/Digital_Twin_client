@@ -1,0 +1,23 @@
+# Environment variables and secrets (NEVER commit these)
+.env
+.env.local
+*.env
+
+# Dependencies (can be reinstaled via package managers)
+node_modules/
+vendor/
+
+# Build outputs and cache
+dist/
+build/
+*.pyc
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+
+# Operating System temporary files
+.DS_Store
+Thumbs.db
