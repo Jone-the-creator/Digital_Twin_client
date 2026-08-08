@@ -1,4 +1,0 @@
-ID=Crazyflie
-comms=Crazyradio
-control system=PID
-state estimator=Kalman Filter
