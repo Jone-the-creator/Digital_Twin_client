@@ -38,7 +38,7 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt):
     lx, ly, rx, ry = map(dz, (lx, ly, rx, ry))
 
     roll = rx * 10.0
-    pitch = -ry * 10.0
+    pitch = ry * 10.0
     yaw_rate = lx * 100.0
 
     # Trigger values usually range from -1 released to +1 fully pressed

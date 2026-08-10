@@ -40,6 +40,12 @@ class DroneViewer(QWidget,):
         self.setWindowTitle("Quadcopter Client")
         self.resize(1200,800)
 
+        # grid settings
+        self.grid = gl.GLGridItem()
+        self.grid.scale(1, 1, 1)
+        self.grid.setSize(10, 10)
+        self.grid.setSpacing(0.5, 0.5)
+
         # create and add panels
         self.view = gl.GLViewWidget()
         self.thrust_panel = ThrustPanel()
@@ -113,6 +119,7 @@ class DroneViewer(QWidget,):
         )
 
         # add models
+        self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
 
@@ -145,16 +152,23 @@ class DroneViewer(QWidget,):
         roll = self.quadcopter.attitude.roll
         pitch = self.quadcopter.attitude.pitch
         yaw = self.quadcopter.attitude.yaw
+        x = self.quadcopter.position.x
+        y = self.quadcopter.position.y
+        z = self.quadcopter.position.z
 
+        self.view.opts["center"].setX(x)
+        self.view.opts["center"].setY(y)
+        self.view.opts["center"].setZ(z)
                 
         transform = QtGui.QMatrix4x4()
 
-        transform.rotate(yaw, 0, 0, 1)
+        transform.translate(x, y, z)
 
-        transform.rotate(pitch, 0, 1, 0)
+        transform.rotate(yaw, 0, 0, 1)
+        transform.rotate(-pitch, 0, 1, 0)
         transform.rotate(-roll, 1, 0, 0)
 
-        transform = transform * self.base_transform
+        transform *= self.base_transform
 
         self.model.setTransform(transform)
 
