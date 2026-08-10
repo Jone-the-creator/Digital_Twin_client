@@ -45,9 +45,12 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str, MASS:float, comms: str, controller, estimator, control_system):
+    def __init__(self, ID: str, MASS:float, I_xx:float, I_yy:float, I_zz:float, comms: str, controller, estimator, control_system):
         self.ID: str = ID 
         self.mass: float = MASS
+        self.I_xx: float = I_xx
+        self.I_yy: float = I_yy
+        self.I_zz: float = I_zz
         self.comms: str = comms
         self.controller = controller
         self.control_system = control_system
