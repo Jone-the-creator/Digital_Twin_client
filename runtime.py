@@ -20,6 +20,13 @@ dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
 def update_active(quad, sim, u, altitude, dt):
+    quad.update_controls(
+            yaw_rate = u[0,0],
+            pitch = u[1,0],
+            roll = u[2,0],
+            thrust = u[3,0],
+            z = altitude
+        )
     if quad.simulation_mode:
         sim.model.update(np.array([
             [u[1,0]], # pitch rate
@@ -28,14 +35,7 @@ def update_active(quad, sim, u, altitude, dt):
             [u[3,0]]]), # thrust
             dt
         )
-    else:
-        quad.update_controls(
-            yaw_rate = u[0,0],
-            pitch = u[1,0],
-            roll = u[2,0],
-            thrust = u[3,0],
-            z = altitude
-        )
+
 
     # ---- CONTROL LOOP ----
 def control_loop(quad, stab, sim):
@@ -143,7 +143,6 @@ def control_loop(quad, stab, sim):
                         quad.recording_active = False
 
                 u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
-                print(f"test flight altitude = {target_altitude}")
 
             elif not r1:
                 # If no test flight started reset stabiliser and disable recording

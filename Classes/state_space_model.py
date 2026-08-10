@@ -91,6 +91,7 @@ class Model:
             [self.quad.attitude.yaw],
         ])
 
+        u[3,0] = (float(u[3,0]) / 34000.0 - 1.0)
         x_dot = self.A @ self.x + self.B @ u 
 
         self.x += x_dot * dt

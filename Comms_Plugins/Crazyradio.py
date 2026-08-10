@@ -182,7 +182,7 @@ class CRTP_logger:
 
     # controls that will be sent to the crazyflie 
     def send_controls(self):
-        if not self.is_connected:
+        if not self.is_connected or self.quadcopter.simulation_mode:
             return
         
         #kill switch
