@@ -18,6 +18,15 @@ class Position:
     y: float = 0.0
     z: float = 0.0
 
+@dataclass
+class Velocity:
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    roll: float = 0.0   
+    pitch: float = 0.0
+    yaw: float = 0.0
+
 
 @dataclass
 class Attitude:
@@ -36,13 +45,13 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str, comms: str, controller, estimator, control_system):
+    def __init__(self, ID: str, MASS:float, comms: str, controller, estimator, control_system):
         self.ID: str = ID 
+        self.mass: float = MASS
         self.comms: str = comms
         self.controller = controller
         self.control_system = control_system
         self.estimator = estimator
-        self.mass = 0.27
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
         self.velocity = Position() # velocity readings in m/s

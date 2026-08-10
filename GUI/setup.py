@@ -24,6 +24,7 @@ class SetupWindow(QDialog):
 
         # --- Widgets ---
         self.id_input = QLineEdit(defaults.get("ID", ""))
+        self.mass_input = QLineEdit(defaults.get("MASS", ""))
 
         self.comms_dropdown = QComboBox()
         self.comms_dropdown.addItems(comms_options)
@@ -46,6 +47,8 @@ class SetupWindow(QDialog):
 
         layout.addWidget(QLabel("Enter your quadcopter ID:"))
         layout.addWidget(self.id_input)
+        layout.addWidget(QLabel("Enter your quadcopter's mass (kg):"))
+        layout.addWidget(self.mass_input)
 
         layout.addWidget(QLabel("Select supported communications system:"))
         layout.addWidget(self.comms_dropdown)
@@ -73,6 +76,7 @@ class SetupWindow(QDialog):
     def save_defaults(self):
         values = {
             "ID": self.id_input.text().strip(),
+            'MASS' : float(self.mass_input.text().strip()),
             "comms": self.comms_dropdown.currentText(),
             "control system": self.controlsystem_dropdown.currentText(),
             "state estimator": self.estimator_dropdown.currentText()
@@ -83,6 +87,7 @@ class SetupWindow(QDialog):
     def enter_pressed(self):
         self.quad = Quadcopter(
             ID=self.id_input.text().strip(),
+            MASS=float(self.mass_input.text().strip()),
             comms=self.comms_dropdown.currentText(),
             controller=None,
             estimator=self.estimator_dropdown.currentText(),

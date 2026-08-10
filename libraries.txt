@@ -5,3 +5,4 @@ PyQt6
 pyqtgraph
 PyOpenGL
 trimesh
+state_space
