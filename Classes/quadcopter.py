@@ -67,6 +67,7 @@ class Quadcopter:
         self.max_thrust = 54000
         self.thrust = 0.0
         self.PWM_thrust_gain = 13000.0
+        self.kd = 0.05 # drag coefficient
 
         # Conditions
         self.killed = False
