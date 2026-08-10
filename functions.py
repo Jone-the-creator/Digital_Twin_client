@@ -10,7 +10,7 @@ thrust_set = 0.0
 
 # save dictionary keys and values into a file
 def save_settings(filename, settings):
-    with open(os.path.join("cache",filename), "w") as file:
+    with open(os.path.join("GUI",filename), "w") as file:
         for key, value in settings.items():
             file.write(f"{key}={value}\n")
 
@@ -19,7 +19,7 @@ def load_settings(filename):
     settings = {}
 
     try:
-        with open(os.path.join("cache",filename), "r") as file:
+        with open(os.path.join("GUI",filename), "r") as file:
             for line in file:
                 key, value = line.strip().split("=", 1)
                 settings[key] = value
@@ -38,7 +38,7 @@ def joystick_to_setpoint(lx, ly, lt, rx, ry, rt, dt):
     lx, ly, rx, ry = map(dz, (lx, ly, rx, ry))
 
     roll = rx * 10.0
-    pitch = -ry * 10.0
+    pitch = ry * 10.0
     yaw_rate = lx * 100.0
 
     # Trigger values usually range from -1 released to +1 fully pressed

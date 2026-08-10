@@ -3,7 +3,7 @@
 
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
-from Classes.KalmanFilter import att_Kalmanfilter
+from GUI.simulation import QuadSimulation
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
@@ -18,8 +18,27 @@ viewer_exists = False
 LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
+# -- FUNCTION TO UPDATE THE ACTIVE PLANT --
+def update_active(quad, sim, u, altitude, dt):
+    quad.update_controls(
+            yaw_rate = u[0,0],
+            pitch = u[1,0],
+            roll = u[2,0],
+            thrust = u[3,0],
+            z = altitude
+        )
+    if quad.simulation_mode:
+        sim.model.update(np.array([
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+
+
     # ---- CONTROL LOOP ----
-def control_loop(quad, stab):
+def control_loop(quad, stab, sim):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -29,6 +48,7 @@ def control_loop(quad, stab):
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
+    
 
     while running:
         start_time = time.time()
@@ -123,7 +143,6 @@ def control_loop(quad, stab):
                         quad.recording_active = False
 
                 u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
-                print(f"test flight altitude = {target_altitude}")
 
             elif not r1:
                 # If no test flight started reset stabiliser and disable recording
@@ -139,8 +158,8 @@ def control_loop(quad, stab):
             )
             u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
             
-            # if print_count % (LOOP_RATE/3) == 0:
-            #     print(
+            if eff_count % (LOOP_RATE/3) == 0:
+                print(
                     # f"altitude = {altitude} "
                     # f"thrust={thrust}, "
                     # f"r1={r1}, "
@@ -151,25 +170,15 @@ def control_loop(quad, stab):
                     # f"z ={quad.position.z} "
                     # f"x setpoint = {current_x} "
                     # f"y setpoint = {current_y} "
-                    # )              
+                    f"pitch rate cmd = {u[1,0]}, "
+                    f"roll rate cmd = {u[2,0]}, "
+                    f"pitch setpoint = {stab.pitch_setpoint}, "
+                    f"roll setpoint = {stab.roll_setpoint} "
+                    )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
-            if target_altitude > 0.0:
-                quad.update_controls(
-                    yaw_rate = u[0,0],
-                    pitch = u[1,0],
-                    roll = u[2,0],
-                    thrust = u[3,0],
-                    z = target_altitude
-                )
-            else:
-                quad.update_controls(
-                    yaw_rate = u[0,0],
-                    pitch = u[1,0],
-                    roll = u[2,0],
-                    thrust = u[3,0],
-                    z = altitude
-                )
+            update_active(quad, sim, u, altitude, dt)
+                
 
         if quad.test_flight:
             count += 1
@@ -193,6 +202,7 @@ def control_loop(quad, stab):
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
+    sim = QuadSimulation(quad)
     stab = PIDstabiliser(quad)
 
     if quad is None:
@@ -208,7 +218,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,stab)).start()
+    threading.Thread(target=control_loop, args=(quad,stab,sim)).start()
 
     # ---- COMMS ----
     comms = None
@@ -248,5 +258,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

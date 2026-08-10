@@ -18,6 +18,15 @@ class Position:
     y: float = 0.0
     z: float = 0.0
 
+@dataclass
+class Velocity:
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    roll: float = 0.0   
+    pitch: float = 0.0
+    yaw: float = 0.0
+
 
 @dataclass
 class Attitude:
@@ -36,16 +45,19 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, ID: str, comms: str, controller, estimator, control_system):
+    def __init__(self, ID: str, MASS:float, I_xx:float, I_yy:float, I_zz:float, comms: str, controller, estimator, control_system):
         self.ID: str = ID 
+        self.mass: float = MASS
+        self.I_xx: float = I_xx
+        self.I_yy: float = I_yy
+        self.I_zz: float = I_zz
         self.comms: str = comms
         self.controller = controller
         self.control_system = control_system
         self.estimator = estimator
-        self.mass = 0.27
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
-        self.velocity = Position() # velocity readings in m/s
+        self.velocity = Velocity() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
         self.pitch_trim = 0.0
         self.roll_trim = 0.0
@@ -54,11 +66,14 @@ class Quadcopter:
 
         self.max_thrust = 54000
         self.thrust = 0.0
+        self.PWM_thrust_gain = 13000.0
+        self.kd = 0.05 # drag coefficient
 
         # Conditions
         self.killed = False
         self.test_flight = False
         self.recording_active = False      
+        self.simulation_mode = False
 
         self.viewer = None
         if self.estimator == "Kalman Filter":
@@ -79,6 +94,8 @@ class Quadcopter:
 
     # Update functions to be utilised by comms plugins, must be input with keywords (USE THESE IN PLUGINS)
     def update_position(self, *, x=None, y=None, alt=None):
+        if self.simulation_mode:
+            return
         u = np.zeros((3,1))
         if self.controls.thrust > 0:
             u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
@@ -88,7 +105,7 @@ class Quadcopter:
         if y is not None:
             z[1,0] = y
         if alt is not None:
-            z[2,0] = alt
+            z[2,0] = max(alt, 0.0)
 
         now = time.time()
         dt = now - self.last_update_time
@@ -111,6 +128,8 @@ class Quadcopter:
         self.position.z = max(0.0, z - correction)
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
+        if self.simulation_mode:
+            return
         if x is not None:
             self.velocity.x = x
         if y is not None:
@@ -121,6 +140,8 @@ class Quadcopter:
         self._update_time(timestamp)
 
     def update_attitude(self, *, roll=None, pitch=None, yaw=None, timestamp: Optional[float] = None):
+        if self.simulation_mode:
+            return
         if roll is not None:
             self.attitude.roll = roll
         if pitch is not None:
@@ -132,19 +153,24 @@ class Quadcopter:
 
 
     def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None, z=None):
+        if z is not None:
+            self.controls.z = z
+        if self.simulation_mode:
+            return
         if roll is not None:
             self.controls.roll = roll - ROLL_TRIM / self.dt
         if pitch is not None:
-            self.controls.pitch = pitch - PITCH_TRIM / self.dt
+            self.controls.pitch = -(pitch - PITCH_TRIM / self.dt)
         if yaw_rate is not None:
             self.controls.yaw_rate = yaw_rate
         if thrust is not None:
             self.controls.thrust = thrust
-        if z is not None:
-            self.controls.z = z
+
 
     # predict states based on received gyro data
     def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):
+        if self.simulation_mode:
+            return
         # calculate change in time
         now = time.time()
         dt = now - self.last_update_time
@@ -175,6 +201,8 @@ class Quadcopter:
 
     # correct currently predicted states based on accelerometer data
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
+        if self.simulation_mode:
+            return
         z = np.zeros((2,1))
 
         # fill measurement matrix with accelerometer readings

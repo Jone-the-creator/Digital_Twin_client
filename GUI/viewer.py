@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 )
 import pyqtgraph.opengl as gl
 import os, trimesh
+import numpy as np
 from Classes.ModelClasses import ThrustPanel, ReadingPanel, PIDControlPanel
 from GUI.recorder import RecorderWorker
 
@@ -40,6 +41,31 @@ class DroneViewer(QWidget,):
         self.setWindowTitle("Quadcopter Client")
         self.resize(1200,800)
 
+        # grid settings
+        self.grid = gl.GLGridItem()
+        self.grid.scale(1, 1, 1)
+        self.grid.setSize(10, 10)
+        self.grid.setSpacing(0.5, 0.5)
+
+        # axes
+        self.x_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[2,0,0]]),
+            color=(1,0,0,1),
+            width=3
+        )
+
+        self.y_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[0,2,0]]),
+            color=(0,1,0,1),
+            width=3
+        )
+
+        self.z_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[0,0,2]]),
+            color=(0,0,1,1),
+            width=3
+        )
+
         # create and add panels
         self.view = gl.GLViewWidget()
         self.thrust_panel = ThrustPanel()
@@ -47,6 +73,7 @@ class DroneViewer(QWidget,):
         self.pid_panel = PIDControlPanel()
         self.start_recording_btn = QPushButton("Start Recording")
         self.stop_recording_btn = QPushButton("Stop Recording")
+        self.sim_btn = QPushButton("Simulation: OFF")
 
         # recording label, shown and hidden based on recording state
         self.recording = QLabel("● Recording")
@@ -70,6 +97,7 @@ class DroneViewer(QWidget,):
         recording_layout = QVBoxLayout(recording_widget)
         recording_layout.addStretch()
         recording_layout.addWidget(self.recording)
+        recording_layout.addWidget(self.sim_btn)
 
         button_layout = QHBoxLayout(self)
         button_layout.addWidget(self.start_recording_btn)
@@ -88,7 +116,8 @@ class DroneViewer(QWidget,):
 
 
         self.base_transform = QtGui.QMatrix4x4()
-        self.base_transform.scale(0.01, 0.01, 0.01)
+        self.base_transform.translate(0, 0, 0.2) # STL units
+        self.base_transform.scale(0.005, 0.005, 0.005)
         self.base_transform.rotate(180, 0, 0, 1)
         self.base_transform.rotate(90, 1, 0, 0)
         
@@ -111,8 +140,12 @@ class DroneViewer(QWidget,):
         )
 
         # add models
+        self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
+        self.view.addItem(self.x_axis)
+        self.view.addItem(self.y_axis)
+        self.view.addItem(self.z_axis)
 
         # render loop
         self.render_timer = QTimer()
@@ -124,7 +157,6 @@ class DroneViewer(QWidget,):
         self.data_timer.timeout.connect(self.update_GUI)
         self.data_timer.start(50)  # ~20 FPS
 
-
         # record data when start recording button pressed
         self.start_recording_btn.clicked.connect(self.start_record)
         self.stop_recording_btn.clicked.connect(self.stop_record)
@@ -132,7 +164,11 @@ class DroneViewer(QWidget,):
         self.start_record_signal.connect(self.start_record)
         self.stop_record_signal.connect(self.stop_record)
 
+        # change PID gains when change buttons pressed
         self.pid_panel.gain_changed.connect(self.handle_pid_change)
+
+        # switch between simulation and real plant when simulation button pressed
+        self.sim_btn.clicked.connect(self.toggle_simulation)
 
 
     # update model from quadcopter object
@@ -140,16 +176,23 @@ class DroneViewer(QWidget,):
         roll = self.quadcopter.attitude.roll
         pitch = self.quadcopter.attitude.pitch
         yaw = self.quadcopter.attitude.yaw
+        x = self.quadcopter.position.x
+        y = self.quadcopter.position.y
+        z = self.quadcopter.position.z
 
+        self.view.opts["center"].setX(x)
+        self.view.opts["center"].setY(y)
+        self.view.opts["center"].setZ(z)
                 
         transform = QtGui.QMatrix4x4()
 
-        transform.rotate(yaw, 0, 0, 1)
+        transform.translate(x, y, z)
 
-        transform.rotate(pitch, 0, 1, 0)
+        transform.rotate(yaw, 0, 0, 1)
+        transform.rotate(-pitch, 0, 1, 0)
         transform.rotate(-roll, 1, 0, 0)
 
-        transform = transform * self.base_transform
+        transform *= self.base_transform
 
         self.model.setTransform(transform)
 
@@ -250,3 +293,17 @@ class DroneViewer(QWidget,):
             self.stab.Ki_att,
             self.stab.Kd_att
             )
+
+    def toggle_simulation(self):
+        self.quadcopter.simulation_mode = (
+            not self.quadcopter.simulation_mode
+        )
+
+        if self.quadcopter.simulation_mode:
+            self.sim_btn.setText("Simulation: ON")
+            # reset all attitudes for simulation
+            self.quadcopter.attitude.yaw = 0.0
+            self.quadcopter.attitude.pitch = 0.0
+            self.quadcopter.attitude.roll = 0.0
+        else:
+            self.sim_btn.setText("Simulation: OFF")

@@ -24,6 +24,10 @@ class SetupWindow(QDialog):
 
         # --- Widgets ---
         self.id_input = QLineEdit(defaults.get("ID", ""))
+        self.mass_input = QLineEdit(defaults.get("MASS", ""))
+        self.I_xx_input = QLineEdit(defaults.get("I_xx", ""))
+        self.I_yy_input = QLineEdit(defaults.get("I_yy", ""))
+        self.I_zz_input = QLineEdit(defaults.get("I_zz", ""))
 
         self.comms_dropdown = QComboBox()
         self.comms_dropdown.addItems(comms_options)
@@ -46,6 +50,14 @@ class SetupWindow(QDialog):
 
         layout.addWidget(QLabel("Enter your quadcopter ID:"))
         layout.addWidget(self.id_input)
+        layout.addWidget(QLabel("Enter your quadcopter's mass (kg):"))
+        layout.addWidget(self.mass_input)
+        layout.addWidget(QLabel("Enter your quadcopter's x-axis moment of inertia (kg * m^2):"))
+        layout.addWidget(self.I_xx_input)
+        layout.addWidget(QLabel("Enter your quadcopter's y-axis moment of inertia (kg * m^2):"))
+        layout.addWidget(self.I_yy_input)
+        layout.addWidget(QLabel("Enter your quadcopter's z-axis moment of inertia (kg * m^2):"))
+        layout.addWidget(self.I_zz_input)
 
         layout.addWidget(QLabel("Select supported communications system:"))
         layout.addWidget(self.comms_dropdown)
@@ -73,6 +85,10 @@ class SetupWindow(QDialog):
     def save_defaults(self):
         values = {
             "ID": self.id_input.text().strip(),
+            'MASS' : float(self.mass_input.text().strip()),
+            'I_xx' : float(self.I_xx_input.text().strip()),
+            'I_yy' : float(self.I_yy_input.text().strip()),
+            'I_zz' : float(self.I_zz_input.text().strip()),
             "comms": self.comms_dropdown.currentText(),
             "control system": self.controlsystem_dropdown.currentText(),
             "state estimator": self.estimator_dropdown.currentText()
@@ -83,6 +99,10 @@ class SetupWindow(QDialog):
     def enter_pressed(self):
         self.quad = Quadcopter(
             ID=self.id_input.text().strip(),
+            MASS=float(self.mass_input.text().strip()),
+            I_xx=float(self.I_xx_input.text().strip()),
+            I_yy=float(self.I_xx_input.text().strip()),
+            I_zz=float(self.I_xx_input.text().strip()),
             comms=self.comms_dropdown.currentText(),
             controller=None,
             estimator=self.estimator_dropdown.currentText(),

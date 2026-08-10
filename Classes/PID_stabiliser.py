@@ -43,7 +43,7 @@ class PIDstabiliser():
         self._roll_sum = 0.0
 
         # maximum angle change to remain within linear approximation (small angle change)
-        self.max_angle = 5 # in degrees
+        self.max_angle = 10 # in degrees
 
         # max integral term (limit integral windup)
         self.max_int = 40
