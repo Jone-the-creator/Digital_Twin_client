@@ -177,7 +177,10 @@ def control_loop(quad, stab, sim):
                     )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
-            update_active(quad, sim, u, altitude, dt)
+            if quad.test_flight:
+                update_active(quad, sim, u, target_altitude, dt)
+            else:
+                update_active(quad, sim, u, altitude, dt)
                 
 
         if quad.test_flight:
