@@ -18,6 +18,25 @@ viewer_exists = False
 LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
+# -- FUNCTION TO UPDATE THE ACTIVE PLANT --
+def update_active(quad, sim, u, altitude, dt):
+    if quad.simulation_mode:
+        sim.model.update(np.array([
+            [u[1,0]], # pitch rate
+            [u[2,0]], # roll rate
+            [u[0,0]], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+    else:
+        quad.update_controls(
+            yaw_rate = u[0,0],
+            pitch = u[1,0],
+            roll = u[2,0],
+            thrust = u[3,0],
+            z = altitude
+        )
+
     # ---- CONTROL LOOP ----
 def control_loop(quad, stab, sim):
     # -- CONTROL VARIABLES --
@@ -236,23 +255,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# -- FUNCTION TO UPDATE THE ACTIVE PLANT --
-def update_active(quad, sim, u, altitude, dt):
-    if quad.simulation_mode:
-        sim.model.update(np.array([
-            [u[3,0]],
-            [u[2,0]],
-            [u[1,0]],
-            [u[0,0]]]),
-            dt
-        )
-    else:
-        quad.update_controls(
-            yaw_rate = u[0,0],
-            pitch = u[1,0],
-            roll = u[2,0],
-            thrust = u[3,0],
-            z = altitude
-        )
 

@@ -19,49 +19,39 @@ class Model:
             [self.quad.attitude.roll],
             [self.quad.attitude.pitch],
             [self.quad.attitude.yaw],
-            [self.quad.velocity.roll],
-            [self.quad.velocity.pitch],
-            [self.quad.velocity.yaw]
         ])
 
         self.A = np.array([
-            [0, 0, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, -g, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, g,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0]
+            [0, 0, 0, 1, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 1, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 1, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0, -g, 0],
+            [0, 0, 0, 0, 0, 0, g,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
         ])
 
         self.B = np.array([
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [1/self.quad.mass, 0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                0,                0,                0               ],
-            [0,                1/self.quad.I_xx, 0,                0               ],
-            [0,                0,                1/self.quad.I_yy, 0               ],
-            [0,                0,                0,                1/self.quad.I_zz],
-
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1/self.quad.mass],
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
         ])
 
         self.C = np.array([
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+            [1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1]
         ])
 
         self.D = np.array([
@@ -73,6 +63,7 @@ class Model:
             [0, 0, 0, 0]
         ])
 
+    # write states to quadcopter object
     def _write_back(self): 
         self.quad.position.x = float(self.x[0,0])
         self.quad.position.y = float(self.x[1,0])
@@ -86,10 +77,6 @@ class Model:
         self.quad.attitude.pitch = float(self.x[7,0])
         self.quad.attitude.yaw = float(self.x[8,0])
 
-        self.quad.velocity.roll = float(self.x[9,0])
-        self.quad.velocity.pitch = float(self.x[10,0])
-        self.quad.velocity.yaw = float(self.x[11,0])
-
     def update(self, u, dt):
         # update state matrix
         self.x = np.array([
@@ -102,9 +89,6 @@ class Model:
             [self.quad.attitude.roll],
             [self.quad.attitude.pitch],
             [self.quad.attitude.yaw],
-            [self.quad.velocity.roll],
-            [self.quad.velocity.pitch],
-            [self.quad.velocity.yaw]
         ])
 
         x_dot = self.A @ self.x + self.B @ u 
