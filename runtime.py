@@ -3,7 +3,7 @@
 
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
-from Classes.KalmanFilter import att_Kalmanfilter
+from GUI.simulation import QuadSimulation
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PyQt6.QtWidgets import QApplication
@@ -19,7 +19,7 @@ LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
     # ---- CONTROL LOOP ----
-def control_loop(quad, stab):
+def control_loop(quad, stab, sim):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -29,6 +29,7 @@ def control_loop(quad, stab):
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
+    
 
     while running:
         start_time = time.time()
@@ -154,22 +155,8 @@ def control_loop(quad, stab):
                     # )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
-            if target_altitude > 0.0:
-                quad.update_controls(
-                    yaw_rate = u[0,0],
-                    pitch = u[1,0],
-                    roll = u[2,0],
-                    thrust = u[3,0],
-                    z = target_altitude
-                )
-            else:
-                quad.update_controls(
-                    yaw_rate = u[0,0],
-                    pitch = u[1,0],
-                    roll = u[2,0],
-                    thrust = u[3,0],
-                    z = altitude
-                )
+            update_active(quad, sim, u, altitude, dt)
+                
 
         if quad.test_flight:
             count += 1
@@ -193,6 +180,7 @@ def control_loop(quad, stab):
 def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
+    sim = QuadSimulation(quad)
     stab = PIDstabiliser(quad)
 
     if quad is None:
@@ -208,7 +196,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,stab)).start()
+    threading.Thread(target=control_loop, args=(quad,stab,sim)).start()
 
     # ---- COMMS ----
     comms = None
@@ -249,4 +237,22 @@ def main():
 if __name__ == "__main__":
     main()
 
+# -- FUNCTION TO UPDATE THE ACTIVE PLANT --
+def update_active(quad, sim, u, altitude, dt):
+    if quad.simulation_mode:
+        sim.model.update(np.array([
+            [u[3,0]],
+            [u[2,0]],
+            [u[1,0]],
+            [u[0,0]]]),
+            dt
+        )
+    else:
+        quad.update_controls(
+            yaw_rate = u[0,0],
+            pitch = u[1,0],
+            roll = u[2,0],
+            thrust = u[3,0],
+            z = altitude
+        )
 

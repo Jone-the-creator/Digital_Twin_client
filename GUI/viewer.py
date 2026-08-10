@@ -47,6 +47,7 @@ class DroneViewer(QWidget,):
         self.pid_panel = PIDControlPanel()
         self.start_recording_btn = QPushButton("Start Recording")
         self.stop_recording_btn = QPushButton("Stop Recording")
+        self.sim_btn = QPushButton("Simulation: OFF")
 
         # recording label, shown and hidden based on recording state
         self.recording = QLabel("● Recording")
@@ -70,6 +71,7 @@ class DroneViewer(QWidget,):
         recording_layout = QVBoxLayout(recording_widget)
         recording_layout.addStretch()
         recording_layout.addWidget(self.recording)
+        recording_layout.addWidget(self.sim_btn)
 
         button_layout = QHBoxLayout(self)
         button_layout.addWidget(self.start_recording_btn)
@@ -124,7 +126,6 @@ class DroneViewer(QWidget,):
         self.data_timer.timeout.connect(self.update_GUI)
         self.data_timer.start(50)  # ~20 FPS
 
-
         # record data when start recording button pressed
         self.start_recording_btn.clicked.connect(self.start_record)
         self.stop_recording_btn.clicked.connect(self.stop_record)
@@ -132,7 +133,11 @@ class DroneViewer(QWidget,):
         self.start_record_signal.connect(self.start_record)
         self.stop_record_signal.connect(self.stop_record)
 
+        # change PID gains when change buttons pressed
         self.pid_panel.gain_changed.connect(self.handle_pid_change)
+
+        # switch between simulation and real plant when simulation button pressed
+        self.sim_btn.clicked.connect(self.toggle_simulation)
 
 
     # update model from quadcopter object
@@ -250,3 +255,13 @@ class DroneViewer(QWidget,):
             self.stab.Ki_att,
             self.stab.Kd_att
             )
+
+    def toggle_simulation(self):
+        self.quadcopter.simulation_mode = (
+            not self.quadcopter.simulation_mode
+        )
+
+        if self.quadcopter.simulation_mode:
+            self.sim_btn.setText("Simulation: ON")
+        else:
+            self.sim_btn.setText("Simulation: OFF")

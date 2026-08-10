@@ -57,7 +57,7 @@ class Quadcopter:
         self.estimator = estimator
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
-        self.velocity = Position() # velocity readings in m/s
+        self.velocity = Velocity() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
         self.pitch_trim = 0.0
         self.roll_trim = 0.0
@@ -71,6 +71,7 @@ class Quadcopter:
         self.killed = False
         self.test_flight = False
         self.recording_active = False      
+        self.simulation_mode = False
 
         self.viewer = None
         if self.estimator == "Kalman Filter":
