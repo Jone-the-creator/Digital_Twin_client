@@ -66,6 +66,7 @@ class Quadcopter:
 
         self.max_thrust = 54000
         self.thrust = 0.0
+        self.PWM_thrust_gain = 13000.0
 
         # Conditions
         self.killed = False
@@ -101,7 +102,7 @@ class Quadcopter:
         if y is not None:
             z[1,0] = y
         if alt is not None:
-            z[2,0] = alt
+            z[2,0] = max(alt, 0.0)
 
         now = time.time()
         dt = now - self.last_update_time

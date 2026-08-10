@@ -29,9 +29,9 @@ def update_active(quad, sim, u, altitude, dt):
         )
     if quad.simulation_mode:
         sim.model.update(np.array([
-            [u[1,0]], # pitch rate
-            [u[2,0]], # roll rate
-            [u[0,0]], # yaw rate
+            [np.deg2rad(u[1,0])], # pitch rate
+            [np.deg2rad(u[2,0])], # roll rate
+            [np.deg2rad(u[0,0])], # yaw rate
             [u[3,0]]]), # thrust
             dt
         )
