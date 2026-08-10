@@ -94,6 +94,8 @@ class Quadcopter:
 
     # Update functions to be utilised by comms plugins, must be input with keywords (USE THESE IN PLUGINS)
     def update_position(self, *, x=None, y=None, alt=None):
+        if self.simulation_mode:
+            return
         u = np.zeros((3,1))
         if self.controls.thrust > 0:
             u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
@@ -126,6 +128,8 @@ class Quadcopter:
         self.position.z = max(0.0, z - correction)
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
+        if self.simulation_mode:
+            return
         if x is not None:
             self.velocity.x = x
         if y is not None:
@@ -136,6 +140,8 @@ class Quadcopter:
         self._update_time(timestamp)
 
     def update_attitude(self, *, roll=None, pitch=None, yaw=None, timestamp: Optional[float] = None):
+        if self.simulation_mode:
+            return
         if roll is not None:
             self.attitude.roll = roll
         if pitch is not None:
@@ -147,19 +153,24 @@ class Quadcopter:
 
 
     def update_controls(self, *, roll=None, pitch=None, yaw_rate=None, thrust=None, z=None):
+        if z is not None:
+            self.controls.z = z
+        if self.simulation_mode:
+            return
         if roll is not None:
             self.controls.roll = roll - ROLL_TRIM / self.dt
         if pitch is not None:
-            self.controls.pitch = pitch - PITCH_TRIM / self.dt
+            self.controls.pitch = -(pitch - PITCH_TRIM / self.dt)
         if yaw_rate is not None:
             self.controls.yaw_rate = yaw_rate
         if thrust is not None:
             self.controls.thrust = thrust
-        if z is not None:
-            self.controls.z = z
+
 
     # predict states based on received gyro data
     def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):
+        if self.simulation_mode:
+            return
         # calculate change in time
         now = time.time()
         dt = now - self.last_update_time
@@ -190,6 +201,8 @@ class Quadcopter:
 
     # correct currently predicted states based on accelerometer data
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
+        if self.simulation_mode:
+            return
         z = np.zeros((2,1))
 
         # fill measurement matrix with accelerometer readings

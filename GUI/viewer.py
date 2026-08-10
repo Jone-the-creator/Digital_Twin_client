@@ -301,5 +301,9 @@ class DroneViewer(QWidget,):
 
         if self.quadcopter.simulation_mode:
             self.sim_btn.setText("Simulation: ON")
+            # reset all attitudes for simulation
+            self.quadcopter.attitude.yaw = 0.0
+            self.quadcopter.attitude.pitch = 0.0
+            self.quadcopter.attitude.roll = 0.0
         else:
             self.sim_btn.setText("Simulation: OFF")
