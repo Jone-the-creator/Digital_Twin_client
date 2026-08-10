@@ -12,6 +12,7 @@ from PyQt6.QtWidgets import (
 )
 import pyqtgraph.opengl as gl
 import os, trimesh
+import numpy as np
 from Classes.ModelClasses import ThrustPanel, ReadingPanel, PIDControlPanel
 from GUI.recorder import RecorderWorker
 
@@ -45,6 +46,25 @@ class DroneViewer(QWidget,):
         self.grid.scale(1, 1, 1)
         self.grid.setSize(10, 10)
         self.grid.setSpacing(0.5, 0.5)
+
+        # axes
+        self.x_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[2,0,0]]),
+            color=(1,0,0,1),
+            width=3
+        )
+
+        self.y_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[0,2,0]]),
+            color=(0,1,0,1),
+            width=3
+        )
+
+        self.z_axis = gl.GLLinePlotItem(
+            pos=np.array([[0,0,0],[0,0,2]]),
+            color=(0,0,1,1),
+            width=3
+        )
 
         # create and add panels
         self.view = gl.GLViewWidget()
@@ -96,7 +116,8 @@ class DroneViewer(QWidget,):
 
 
         self.base_transform = QtGui.QMatrix4x4()
-        self.base_transform.scale(0.01, 0.01, 0.01)
+        self.base_transform.translate(0, 0, 0.2) # STL units
+        self.base_transform.scale(0.005, 0.005, 0.005)
         self.base_transform.rotate(180, 0, 0, 1)
         self.base_transform.rotate(90, 1, 0, 0)
         
@@ -122,6 +143,9 @@ class DroneViewer(QWidget,):
         self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
+        self.view.addItem(self.x_axis)
+        self.view.addItem(self.y_axis)
+        self.view.addItem(self.z_axis)
 
         # render loop
         self.render_timer = QTimer()
