@@ -158,8 +158,8 @@ def control_loop(quad, stab, sim):
             )
             u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
             
-            if eff_count % (LOOP_RATE/3) == 0:
-                print(
+            #if eff_count % (LOOP_RATE/3) == 0:
+                #print(
                     # f"altitude = {altitude} "
                     # f"thrust={thrust}, "
                     # f"r1={r1}, "
@@ -170,11 +170,11 @@ def control_loop(quad, stab, sim):
                     # f"z ={quad.position.z} "
                     # f"x setpoint = {current_x} "
                     # f"y setpoint = {current_y} "
-                    f"pitch rate cmd = {u[1,0]}, "
-                    f"roll rate cmd = {u[2,0]}, "
-                    f"pitch setpoint = {stab.pitch_setpoint}, "
-                    f"roll setpoint = {stab.roll_setpoint} "
-                    )              
+                    # f"pitch rate cmd = {u[1,0]}, "
+                    # f"roll rate cmd = {u[2,0]}, "
+                    # f"pitch setpoint = {stab.pitch_setpoint}, "
+                    # f"roll setpoint = {stab.roll_setpoint} "
+                    # )              
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
