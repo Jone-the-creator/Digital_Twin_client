@@ -3,7 +3,7 @@
 #
 # with assistance from Microsoft Copilot
 
-from PyQt6.QtCore import ( 
+from PySide6.QtCore import ( 
     QObject, pyqtSignal, QThread
 )
 

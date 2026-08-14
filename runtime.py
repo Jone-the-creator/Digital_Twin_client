@@ -6,12 +6,12 @@ from Classes.PID_stabiliser import PIDstabiliser
 from GUI.simulation import QuadSimulation
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import QTimer, QThread
+from PySide6.QtWidgets import QApplication
+from PySide6.QtCore import QTimer, QThread
 import pygame
 import numpy as np
-from GUI.setup import run_setup
-from GUI.viewer import DroneViewer
+from GUI.windows.setup_window import run_setup
+# from GUI.viewer import DroneViewer
 
 running = True
 viewer_exists = False
