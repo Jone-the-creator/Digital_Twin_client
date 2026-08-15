@@ -82,10 +82,6 @@ def run_setup():
 
     defaults = functions.load_settings("init_defaults.txt")
 
-    app = QApplication.instance()
-    if not app:
-        app = QApplication(sys.argv)
-
     window = SetupWindow(
         defaults,
         comms_options,

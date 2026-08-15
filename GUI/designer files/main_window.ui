@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="recording_label">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>720</y>
+      <width>67</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 0, 0);
+font: 700 9pt &quot;Segoe UI&quot;;</string>
+    </property>
+    <property name="text">
+     <string>● Recording</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="gl_container" native="true">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>601</width>
+      <height>691</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>40</y>
+      <width>551</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>Live Readings</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>601</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="battery_label">
+       <property name="text">
+        <string>Battery:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QProgressBar" name="battery_bar">
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <number>0</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>691</y>
+      <width>204</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QPushButton" name="sim_btn">
+       <property name="text">
+        <string>Simulation: OFF</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="start_recording_btn">
+         <property name="text">
+          <string>Start Recording</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="stop_recording_btn">
+         <property name="text">
+          <string>Stop Recording</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>400</y>
+      <width>561</width>
+      <height>221</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QLabel" name="title">
+       <property name="text">
+        <string>PID Tuning</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="controller_select"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="P_label">
+       <property name="text">
+        <string>P:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="p_sub_large">
+         <property name="text">
+          <string>-0.25</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="p_sub_small">
+         <property name="text">
+          <string>-0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="p_add_small">
+         <property name="text">
+          <string>+0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="p_add_large">
+         <property name="text">
+          <string>+0.25</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="I_label">
+       <property name="text">
+        <string>I:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="i_sub_large">
+         <property name="text">
+          <string>-0.25</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="i_sub_small">
+         <property name="text">
+          <string>-0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="i_add_small">
+         <property name="text">
+          <string>+0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="i_add_large">
+         <property name="text">
+          <string>+0.25</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="D_label">
+       <property name="text">
+        <string>D:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QPushButton" name="d_sub_large">
+         <property name="text">
+          <string>-0.25</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="d_sub_small">
+         <property name="text">
+          <string>-0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="d_add_small">
+         <property name="text">
+          <string>+0.05</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="d_add_large">
+         <property name="text">
+          <string>+0.25</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>60</y>
+      <width>561</width>
+      <height>171</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QLabel" name="yaw_reading">
+       <property name="text">
+        <string>Yaw: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="pitch_reading">
+       <property name="text">
+        <string>Pitch:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="roll_reading">
+       <property name="text">
+        <string>Roll:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="altitude_reading">
+       <property name="text">
+        <string>Current Altitude:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="altitude_sp_reading">
+       <property name="text">
+        <string>Altitude Setpoint:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="loop_rate_reading">
+       <property name="text">
+        <string>Loop Rate:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>33</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

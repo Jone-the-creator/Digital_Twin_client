@@ -3,7 +3,6 @@
 
 from Classes import PS5Controller
 from Classes.PID_stabiliser import PIDstabiliser
-from GUI.simulation import QuadSimulation
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PySide6.QtWidgets import QApplication
@@ -11,7 +10,9 @@ from PySide6.QtCore import QTimer, QThread
 import pygame
 import numpy as np
 from GUI.windows.setup_window import run_setup
-# from GUI.viewer import DroneViewer
+from GUI.windows.main_window import MainWindow
+from GUI.simulation import QuadSimulation
+from Classes.PID_stabiliser import PIDstabiliser
 
 running = True
 viewer_exists = False
@@ -203,6 +204,10 @@ def control_loop(quad, stab, sim):
         eff_count += 1
 
 def main():
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
+        
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
     sim = QuadSimulation(quad)
@@ -231,7 +236,7 @@ def main():
         print("Started Crazyradio logging")
 
     # ---- QT VIEWER ----
-    app = QApplication(sys.argv)
+    # app = QApplication(sys.argv)
 
     def pump_pygame():
         pygame.event.pump()
@@ -240,7 +245,7 @@ def main():
     timer.timeout.connect(pump_pygame)
     timer.start(10)  # 100 Hz
 
-    quad.viewer = DroneViewer(quad, stab)
+    quad.viewer = MainWindow(quad, stab)
 
     # Explicit shutdown function
     def shutdown():

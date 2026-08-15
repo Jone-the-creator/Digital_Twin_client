@@ -4,7 +4,7 @@
 # with assistance from Microsoft Copilot
 
 from PySide6.QtCore import ( 
-    QObject, pyqtSignal, QThread
+    QObject, Signal, QThread
 )
 
 import time, csv, os
@@ -13,7 +13,7 @@ from datetime import datetime
 # this worker class will be ran as a separate thread so that the recording
 # can happen in the background
 class RecorderWorker(QObject):
-    finished = pyqtSignal()
+    finished = Signal()
 
     def __init__(self, quadcopter):
         super().__init__()
