@@ -11,7 +11,7 @@ import pygame
 import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
-from GUI.simulation import QuadSimulation
+from Classes.simulation import QuadSimulation
 from Classes.PID_stabiliser import PIDstabiliser
 
 running = True
@@ -207,7 +207,7 @@ def main():
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
-        
+
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
     sim = QuadSimulation(quad)

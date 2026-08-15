@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 import pyqtgraph.opengl as gl
 import os, trimesh
 import numpy as np
-from GUI.recorder import RecorderWorker
+from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
 from GUI.ui.ui_setup import Ui_Dialog
 
