@@ -3,22 +3,23 @@
 #
 # with assistance from Microsoft Copilot
 
-from PyQt6 import QtGui
-from PyQt6.QtCore import (
-    QTimer, QThread, pyqtSignal
+from PySide6 import QtGui
+from PySide6.QtCore import (
+    QTimer, QThread, Signal
 )
-from PyQt6.QtWidgets import (
-    QPushButton, QHBoxLayout, QWidget, QLabel, QVBoxLayout
+from PySide6.QtWidgets import (
+    QPushButton, QHBoxLayout, QMainWindow, QLabel, QVBoxLayout
 )
 import pyqtgraph.opengl as gl
 import os, trimesh
 import numpy as np
-from Classes.ModelClasses import ThrustPanel, ReadingPanel, PIDControlPanel
-from GUI.recorder import RecorderWorker
+from Classes.recorder import RecorderWorker
+from GUI.ui.ui_main import Ui_MainWindow
+from GUI.ui.ui_setup import Ui_Dialog
 
 #importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
-model_path = os.path.join(base_dir,"Classes", "Models", "Quadcopter.stl")
+model_path = os.path.join(base_dir, "Models", "Quadcopter.stl")
 
 #load model and ensure centered
 mesh = trimesh.load(model_path)
@@ -29,17 +30,29 @@ vertices -= center
 
 md = gl.MeshData.sphere(rows=10,cols=10)
 
-class DroneViewer(QWidget,):
-    start_record_signal = pyqtSignal()
-    stop_record_signal = pyqtSignal()
+class MainWindow(QMainWindow):
+    start_record_signal = Signal()
+    stop_record_signal = Signal()
     def __init__(self, quadcopter, stabiliser):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
+        
+        # instantiate ui
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
 
-        # window settings 
-        self.setWindowTitle("Quadcopter Client")
-        self.resize(1200,800)
+        # OpenGL view inside placeholder
+        self.view = gl.GLViewWidget()
+
+        layout = QVBoxLayout(self.ui.gl_container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.view)
+        self.ui.controller_select.addItems([
+            "Attitude Controller",
+            "Altitude Controller"
+        ])
+
 
         # grid settings
         self.grid = gl.GLGridItem()
@@ -66,47 +79,7 @@ class DroneViewer(QWidget,):
             width=3
         )
 
-        # create and add panels
-        self.view = gl.GLViewWidget()
-        self.thrust_panel = ThrustPanel()
-        self.reading_panel = ReadingPanel()
-        self.pid_panel = PIDControlPanel()
-        self.start_recording_btn = QPushButton("Start Recording")
-        self.stop_recording_btn = QPushButton("Stop Recording")
-        self.sim_btn = QPushButton("Simulation: OFF")
-
-        # recording label, shown and hidden based on recording state
-        self.recording = QLabel("● Recording")
-        self.recording.setStyleSheet("color: red; font-weight: bold;")
-        self.recording.hide()  # hidden by default
-
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.addWidget(self.reading_panel)
-        right_layout.addWidget(self.pid_panel)
-        right_layout.addStretch()
-
-
-        layout = QHBoxLayout(self)
-        layout.addWidget(self.view, stretch=3)
-        layout.addWidget(self.thrust_panel)
-        layout.addWidget(right_panel,stretch=1)
-
-        # organises recording GUI
-        recording_widget = QWidget()
-        recording_layout = QVBoxLayout(recording_widget)
-        recording_layout.addStretch()
-        recording_layout.addWidget(self.recording)
-        recording_layout.addWidget(self.sim_btn)
-
-        button_layout = QHBoxLayout(self)
-        button_layout.addWidget(self.start_recording_btn)
-        button_layout.addWidget(self.stop_recording_btn)
-
-        recording_layout.addLayout(button_layout)
-
-
-        layout.addWidget(recording_widget)
+        self.ui.recording_label.hide()  # hidden by default
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(
@@ -147,6 +120,12 @@ class DroneViewer(QWidget,):
         self.view.addItem(self.y_axis)
         self.view.addItem(self.z_axis)
 
+        self.update_pid_labels(
+            self.stab.Kp_att,
+            self.stab.Ki_att,
+            self.stab.Kd_att
+        )
+
         # render loop
         self.render_timer = QTimer()
         self.render_timer.timeout.connect(self.update_model)
@@ -158,17 +137,66 @@ class DroneViewer(QWidget,):
         self.data_timer.start(50)  # ~20 FPS
 
         # record data when start recording button pressed
-        self.start_recording_btn.clicked.connect(self.start_record)
-        self.stop_recording_btn.clicked.connect(self.stop_record)
+        self.ui.start_recording_btn.clicked.connect(self.start_record)
+        self.ui.stop_recording_btn.clicked.connect(self.stop_record)
+
+        # connect buttons to change gains
+        # P gains
+        self.ui.p_sub_large.clicked.connect(
+            lambda: self.handle_pid_change("P", -0.25)
+        )
+
+        self.ui.p_sub_small.clicked.connect(
+            lambda: self.handle_pid_change("P", -0.05)
+        )
+
+        self.ui.p_add_small.clicked.connect(
+            lambda: self.handle_pid_change("P", 0.05)
+        )
+
+        self.ui.p_add_large.clicked.connect(
+            lambda: self.handle_pid_change("P", 0.25)
+        )
+
+        # I gains
+        self.ui.i_sub_large.clicked.connect(
+            lambda: self.handle_pid_change("I", -0.25)
+        )
+
+        self.ui.i_sub_small.clicked.connect(
+            lambda: self.handle_pid_change("I", -0.05)
+        )
+
+        self.ui.i_add_small.clicked.connect(
+            lambda: self.handle_pid_change("I", 0.05)
+        )
+
+        self.ui.i_add_large.clicked.connect(
+            lambda: self.handle_pid_change("I", 0.25)
+        )
+
+        # D gains
+        self.ui.d_sub_large.clicked.connect(
+            lambda: self.handle_pid_change("D", -0.25)
+        )
+
+        self.ui.d_sub_small.clicked.connect(
+            lambda: self.handle_pid_change("D", -0.05)
+        )
+
+        self.ui.d_add_small.clicked.connect(
+            lambda: self.handle_pid_change("D", 0.05)
+        )
+
+        self.ui.d_add_large.clicked.connect(
+            lambda: self.handle_pid_change("D", 0.25)
+        )
 
         self.start_record_signal.connect(self.start_record)
         self.stop_record_signal.connect(self.stop_record)
 
-        # change PID gains when change buttons pressed
-        self.pid_panel.gain_changed.connect(self.handle_pid_change)
-
         # switch between simulation and real plant when simulation button pressed
-        self.sim_btn.clicked.connect(self.toggle_simulation)
+        self.ui.sim_btn.clicked.connect(self.toggle_simulation)
 
 
     # update model from quadcopter object
@@ -205,34 +233,53 @@ class DroneViewer(QWidget,):
         self.front_marker.setTransform(world)
 
     def update_GUI(self):
-        # update thrust in model
-        thrust = self.quadcopter.controls.thrust
-        self.thrust_panel.update_thrust((thrust / self.quadcopter.max_thrust) * 100)
+        # update thrust variable (currently unused)
+        thrust = ((self.quadcopter.controls.thrust / self.quadcopter.max_thrust) * 100)
+        
+        if self.quadcopter.battery_percent is not None:
+            self.ui.battery_bar.setValue(
+                int(self.quadcopter.battery_percent)
+            )
 
         # update readings
-        self.reading_panel.update_readings({
-            "battery_percent": self.quadcopter.battery_percent,
-            "yaw": round(self.quadcopter.attitude.yaw, 2),
-            "pitch": round(self.quadcopter.attitude.pitch, 2),
-            "roll": round(self.quadcopter.attitude.roll, 2),
-            "altitude": round(self.quadcopter.position.z, 2),
-            "altitude setpoint": round(self.quadcopter.controls.z, 2),
-            "loop_rate": round(self.quadcopter.loop_rate, 1)
-        })
-        controller = self.pid_panel.controller_select.currentText().lower()
+        self.ui.yaw_reading.setText(
+            f"Yaw: {self.quadcopter.attitude.yaw:.2f} °"
+        )
+
+        self.ui.pitch_reading.setText(
+            f"Pitch: {self.quadcopter.attitude.pitch:.2f} °"
+        )
+
+        self.ui.roll_reading.setText(
+            f"Roll: {self.quadcopter.attitude.roll:.2f} °"
+        )
+
+        self.ui.altitude_reading.setText(
+            f"Current Altitude: {self.quadcopter.position.z:.2f} m"
+        )
+
+        self.ui.altitude_sp_reading.setText(
+            f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m"
+        )
+
+        self.ui.loop_rate_reading.setText(
+            f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz"
+        )
+        
+        controller = self.ui.controller_select.currentText().lower()
 
         if controller == "altitude controller":
-            self.pid_panel.update_values(
+            self.update_pid_labels(
                 self.stab.Kp_z,
                 self.stab.Ki_z,
                 self.stab.Kd_z
-                )
+            )
         else:
-            self.pid_panel.update_values(
+            self.update_pid_labels(
                 self.stab.Kp_att,
                 self.stab.Ki_att,
                 self.stab.Kd_att
-                )
+            )
 
     def start_record(self):
         # if hasattr(self, "thread") and self.thread is not None:
@@ -240,7 +287,7 @@ class DroneViewer(QWidget,):
         #        return  # already recording
 
         # shows recording status
-        self.recording.show()
+        self.ui.recording_label.show()
 
         # creates thread
         self.thread = QThread()
@@ -259,7 +306,7 @@ class DroneViewer(QWidget,):
 
     def stop_record(self):
         if hasattr(self, "worker"):
-            self.recording.hide()
+            self.ui.recording_label.hide()
             self.worker.stop()
 
         if hasattr(self, "thread"):
@@ -268,7 +315,7 @@ class DroneViewer(QWidget,):
             self.thread.wait()
 
     def handle_pid_change(self, gain, delta):
-        controller = self.pid_panel.controller_select.currentText().lower()
+        controller = self.ui.controller_select.currentText().lower()
         if controller == "altitude controller":
             if gain == "P":
                 self.stab.Kp_z += delta
@@ -276,10 +323,10 @@ class DroneViewer(QWidget,):
                 self.stab.Ki_z += delta
             elif gain == "D":
                 self.stab.Kd_z += delta
-            self.pid_panel.update_values(
-            self.stab.Kp_z,
-            self.stab.Ki_z,
-            self.stab.Kd_z
+            self.update_pid_labels(
+                self.stab.Kp_z,
+                self.stab.Ki_z,
+                self.stab.Kd_z
             )
         else:
             if gain == "P":
@@ -288,10 +335,10 @@ class DroneViewer(QWidget,):
                 self.stab.Ki_att += delta
             elif gain == "D":
                 self.stab.Kd_att += delta
-            self.pid_panel.update_values(
-            self.stab.Kp_att,
-            self.stab.Ki_att,
-            self.stab.Kd_att
+            self.update_pid_labels(
+                self.stab.Kp_att,
+                self.stab.Ki_att,
+                self.stab.Kd_att
             )
 
     def toggle_simulation(self):
@@ -300,10 +347,15 @@ class DroneViewer(QWidget,):
         )
 
         if self.quadcopter.simulation_mode:
-            self.sim_btn.setText("Simulation: ON")
+            self.ui.sim_btn.setText("Simulation: ON")
             # reset all attitudes for simulation
             self.quadcopter.attitude.yaw = 0.0
             self.quadcopter.attitude.pitch = 0.0
             self.quadcopter.attitude.roll = 0.0
         else:
-            self.sim_btn.setText("Simulation: OFF")
+            self.ui.sim_btn.setText("Simulation: OFF")
+
+    def update_pid_labels(self, kp, ki, kd):
+        self.ui.P_label.setText(f"P: {kp:.2f}")
+        self.ui.I_label.setText(f"I: {ki:.2f}")
+        self.ui.D_label.setText(f"D: {kd:.2f}")
