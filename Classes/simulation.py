@@ -3,13 +3,13 @@
 #
 # with assistance from Microsoft Copilot
 
-from Classes.state_space_model import Model
+from Classes.state_space_model import Nonlinear_Model
 import numpy as np
 
 class QuadSimulation:
     def __init__(self, quad):
         self.quad = quad
-        self.model = Model(quad)
+        self.model = Nonlinear_Model(quad)
 
         self.Kp_roll = 0.01
         self.Kp_pitch = 0.01

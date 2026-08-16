@@ -2,11 +2,10 @@
 # Flinders University
 
 import numpy as np
-import state_space as ss
 
 g = 9.81 # m/s^2
 
-class Nonlinear_Model:
+class Observer:
     def __init__(self, quadcopter):
         self.quad = quadcopter
         self.x = np.array([
@@ -19,6 +18,48 @@ class Nonlinear_Model:
             [0.0],
             [0.0],
             [0.0],
+        ])
+
+        self.A = np.array([
+            [0, 0, 0, 1, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 1, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 1, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  -g, 0],
+            [0, 0, 0, 0, 0, 0, g,  0, 0],
+            [0, 0, 0, 0, 0, -self.quad.c[0,0], 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  0, 0],
+        ])
+
+        self.B = np.array([
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1/self.quad.mass],
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+        ])
+
+        self.C = np.array([
+            [1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1]
+        ])
+
+        self.D = np.array([
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0]
         ])
 
     # write states to quadcopter object
@@ -49,23 +90,8 @@ class Nonlinear_Model:
             [np.deg2rad(self.quad.attitude.yaw)]
         ])
 
-        # convert thrust as PWM to force (N)
-        u[3,0] = float(u[3,0]) / self.quad.PWM_thrust_gain
-
-        x_dot = np.array([
-            [self.x[3,0]],
-            [self.x[4,0]],
-            [self.x[5,0]],
-            [-((u[3,0]/self.quad.mass)\
-            *(np.cos(self.x[8,0])*np.sin(self.x[7,0])*np.cos(self.x[6,0]) + np.sin(self.x[8,0])*np.sin(self.x[6,0])))], # rotate positional movements from body to navigational frame
-            [-((u[3,0]/self.quad.mass)\
-            *(np.sin(self.x[8,0])*np.sin(self.x[7,0])*np.cos(self.x[6,0]) - np.cos(self.x[8,0])*np.sin(self.x[6,0])))], # rotate positional movements from body to navigational frame
-            [(u[3,0]/self.quad.mass)*(np.cos(self.x[6,0])*np.cos(self.x[7,0])) - g # rotate thrust to earth frame z axis, and subtract gravity
-            - (self.quad.c[0,0] * self.x[5,0]) - (self.quad.c[1,0] * self.x[5,0] * np.abs(self.x[5,0]))], # altitude linear and non-linear aerodynamic damping
-            [u[0,0]],
-            [u[1,0]],
-            [u[2,0]]
-        ])
+        u[3,0] = float(u[3,0]) / (self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0
+        x_dot = self.A @ self.x + self.B @ u 
 
         self.x += x_dot * dt
 
