@@ -97,8 +97,14 @@ class Nonlinear_Model:
         ])
 
         # convert thrust as PWM to force (N)
-        # divides by gravity (in PWM) and removes gravitational force
-        u[3,0] = float(u[3,0]) / (self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0 
+        u[3,0] = float(u[3,0]) / self.quad.PWM_thrust_gain
+
+        # rotate body frame thrust to navigational frame (multiply by cosine(pitch/roll))
+        u[3,0] *= np.cos(self.x[6,0])*np.cos(self.x[7,0])
+
+        # subtract gravity
+        u[3,0] -= self.quad.mass * g
+
 
         x_dot = self.A @ self.x + self.B @ u 
 

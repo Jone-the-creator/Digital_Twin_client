@@ -12,7 +12,7 @@ minLength = inf;
 
 for k = 1:numFiles
 
-    filename = sprintf('III_Simulation_Validation_%d.csv', k);
+    filename = sprintf('IV_Simulation_Validation_%d.csv', k);
     data = readtable(filename);
 
     minLength = min(minLength, height(data));
@@ -33,7 +33,7 @@ altitude_all = zeros(minLength, numFiles);
 %% ==========================
 for k = 1:numFiles
 
-    filename = sprintf('III_Simulation_Validation_%d.csv', k);
+    filename = sprintf('IV_Simulation_Validation_%d.csv', k);
     data = readtable(filename);
 
     % Trim to shortest run
