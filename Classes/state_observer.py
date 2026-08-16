@@ -2,11 +2,10 @@
 # Flinders University
 
 import numpy as np
-import state_space as ss
 
 g = 9.81 # m/s^2
 
-class Nonlinear_Model:
+class Observer:
     def __init__(self, quadcopter):
         self.quad = quadcopter
         self.x = np.array([
@@ -91,11 +90,8 @@ class Nonlinear_Model:
             [np.deg2rad(self.quad.attitude.yaw)]
         ])
 
-        u[3,0] = float(u[3,0]) / self.quad.PWM_thrust_gain * self.quad.mass * g - 1
+        u[3,0] = float(u[3,0]) / (self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0
         x_dot = self.A @ self.x + self.B @ u 
-
-        x_dot[5,0] -= (0.1 * x_dot[2,0]) # linear aerodynamic damping
-
 
         self.x += x_dot * dt
 
