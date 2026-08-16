@@ -21,6 +21,11 @@ class Nonlinear_Model:
             [self.quad.attitude.yaw],
         ])
 
+        self.c = np.array([
+            [0.5],  # linear aerodynamic damping coefficient
+            [0.25]   # non-linear aerodynamic damping coefficient
+        ])
+
         self.A = np.array([
             [0, 0, 0, 1, 0, 0, 0,  0, 0],
             [0, 0, 0, 0, 1, 0, 0,  0, 0],
@@ -93,12 +98,12 @@ class Nonlinear_Model:
 
         # convert thrust as PWM to force (N)
         # divides by gravity (in PWM) and removes gravitational force
-        u[3,0] = (float(u[3,0]) / self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0 
+        u[3,0] = float(u[3,0]) / (self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0 
 
         x_dot = self.A @ self.x + self.B @ u 
 
-        x_dot[5,0] -= (0.1 * x_dot[2,0]) # linear aerodynamic damping
-        x_dot[5,0] -= (0.5 * x_dot[2,0] * np.abs(x_dot[2,0])) # non-linear aerodynamic damping
+        x_dot[5,0] -= (self.c[0,0] * x_dot[2,0]) # linear aerodynamic damping
+        x_dot[5,0] -= (self.c[1,0] * x_dot[2,0] * np.abs(x_dot[2,0])) # non-linear aerodynamic damping
 
 
         self.x += x_dot * dt
