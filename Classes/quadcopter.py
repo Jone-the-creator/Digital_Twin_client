@@ -63,6 +63,11 @@ class Quadcopter:
         self.loop_rate = 0.0
         self.dt = 0.033
 
+        self.c = np.array([
+            [0.5],  # linear aerodynamic damping coefficient
+            [0.25]   # non-linear aerodynamic damping coefficient
+        ])
+
         self.max_thrust = 54000
         self.thrust = 0.0
         self.PWM_thrust_gain = 34000 / (self.mass * 9.81) # approximate thrust gain based on gravitational force

@@ -3,28 +3,30 @@
 
 import numpy as np
 
+g = 9.81 # m/s^2
+
 class Observer:
     def __init__(self, quadcopter):
         self.quad = quadcopter
         self.x = np.array([
-            [self.quad.position.x],
-            [self.quad.position.y],
-            [max(self.quad.position.z, 0.0)],
-            [self.quad.velocity.x],
-            [self.quad.velocity.y],
-            [self.quad.velocity.z],
-            [self.quad.attitude.roll],
-            [self.quad.attitude.pitch],
-            [self.quad.attitude.yaw],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
+            [0.0],
         ])
 
         self.A = np.array([
             [0, 0, 0, 1, 0, 0, 0,  0, 0],
             [0, 0, 0, 0, 1, 0, 0,  0, 0],
             [0, 0, 0, 0, 0, 1, 0,  0, 0],
-            [0, 0, 0, -self.quad.kd / self.quad.mass, 0, 0, 0, -g, 0],
-            [0, 0, 0, 0, -self.quad.kd / self.quad.mass, 0, g,  0, 0],
-            [0, 0, 0, 0, 0, -self.quad.kd / self.quad.mass, 0,  0, 0],
+            [0, 0, 0, 0, 0, 0, 0,  -g, 0],
+            [0, 0, 0, 0, 0, 0, g,  0, 0],
+            [0, 0, 0, 0, 0, -self.quad.c[0,0], 0,  0, 0],
             [0, 0, 0, 0, 0, 0, 0,  0, 0],
             [0, 0, 0, 0, 0, 0, 0,  0, 0],
             [0, 0, 0, 0, 0, 0, 0,  0, 0],

@@ -21,11 +21,6 @@ class Nonlinear_Model:
             [0.0],
         ])
 
-        self.c = np.array([
-            [0.5],  # linear aerodynamic damping coefficient
-            [0.25]   # non-linear aerodynamic damping coefficient
-        ])
-
     # write states to quadcopter object
     def _write_back(self): 
         self.quad.position.x = float(self.x[0,0])
@@ -66,7 +61,7 @@ class Nonlinear_Model:
             [-((u[3,0]/self.quad.mass)\
             *(np.sin(self.x[8,0])*np.sin(self.x[7,0])*np.cos(self.x[6,0]) - np.cos(self.x[8,0])*np.sin(self.x[6,0])))], # rotate positional movements from body to navigational frame
             [(u[3,0]/self.quad.mass)*(np.cos(self.x[6,0])*np.cos(self.x[7,0])) - g # rotate thrust to earth frame z axis, and subtract gravity
-            - (self.c[0,0] * self.x[5,0]) - (self.c[1,0] * self.x[5,0] * np.abs(self.x[5,0]))], # altitude linear and non-linear aerodynamic damping
+            - (self.quad.c[0,0] * self.x[5,0]) - (self.quad.c[1,0] * self.x[5,0] * np.abs(self.x[5,0]))], # altitude linear and non-linear aerodynamic damping
             [u[0,0]],
             [u[1,0]],
             [u[2,0]]
