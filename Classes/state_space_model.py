@@ -91,10 +91,14 @@ class Nonlinear_Model:
             [np.deg2rad(self.quad.attitude.yaw)]
         ])
 
-        u[3,0] = float(u[3,0]) / self.quad.PWM_thrust_gain * self.quad.mass * g - 1
+        # convert thrust as PWM to force (N)
+        # divides by gravity (in PWM) and removes gravitational force
+        u[3,0] = (float(u[3,0]) / self.quad.PWM_thrust_gain * self.quad.mass * g) - 1.0 
+
         x_dot = self.A @ self.x + self.B @ u 
 
         x_dot[5,0] -= (0.1 * x_dot[2,0]) # linear aerodynamic damping
+        x_dot[5,0] -= (0.5 * x_dot[2,0] * np.abs(x_dot[2,0])) # non-linear aerodynamic damping
 
 
         self.x += x_dot * dt
