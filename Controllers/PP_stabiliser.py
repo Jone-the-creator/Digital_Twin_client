@@ -6,6 +6,7 @@
 
 import numpy as np
 from scipy.signal import place_poles
+from control import ctrb
 
 g = 9.81 # m/s^2
 
@@ -16,23 +17,22 @@ class PPstabiliser():
         # initialise setpoints, adjust these directly for control
         self.roll_setpoint = 0.0
         self.pitch_setpoint = 0.0
-        self.yaw_rate_setpoint = 0.0
+        self.yaw_setpoint = 0.0
 
         # integrated error terms
         self.integrated_z_error = 0 
-        self.integrated_yaw_error = 0
 
         # adjustable altitude specifications
         self.settling_time_z = 1.25 # seconds
         self.overshoot_z = 10 # %
 
         # adjustable attitude specifications
-        self.settling_time_att = 0.5 # seconds
-        self.overshoot_att = 5 # %
+        self.settling_time_att = 4 # seconds
+        self.overshoot_att = 20 # %
 
 
         # maximum angle change to remain within linear approximation (small angle change)
-        self.max_angle = 10 # in degrees
+        self.max_angle = 5 # in degrees
 
         # -- MATRICES FOR ALTITUDE --
         self.A_z = np.array([
@@ -51,23 +51,21 @@ class PPstabiliser():
 
         # -- MATRICES FOR ATTITUDE --
         self.A_att = np.array([
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0],
-            [-1, 0, 0, 0, 0],
-            [0, -1, 0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
         ])
 
         self.B_att = np.array([
             [1, 0, 0],
             [0, 1, 0],
             [0, 0, 1],
-            [0, 0, 0],
-            [0, 0, 0],
         ])
 
         self.K_att = self.attitude_spec_update()
         print(self.K_att)
+
+        print(np.linalg.matrix_rank(ctrb(self.A_att,self.B_att)))
 
     def hover():
         return None
@@ -88,20 +86,21 @@ class PPstabiliser():
 
         return u[0,0]
 
-    def attitude_control():
-        return None
+    def attitude_control(self):
+        roll_error = self.obs.quad.attitude.roll - self.roll_setpoint
 
-    # def _pitch_control(self, pitch_setpoint, dt):
-    #     x = 
+        pitch_error = self.obs.quad.attitude.pitch - self.pitch_setpoint
 
+        yaw_error = self.obs.quad.attitude.yaw - self.yaw_setpoint
 
-    # def _yaw_control(self, yaw_setpoint, dt):
-    #     x = np.array([
-    #         []
-    #     ])
+        x = np.array([
+            [np.clip(roll_error, -self.max_angle, self.max_angle)],
+            [np.clip(pitch_error, -self.max_angle, self.max_angle)],
+            [np.clip(yaw_error, -self.max_angle, self.max_angle)],
+        ])
 
-        u = 0.0
-
+        u = -self.K_att @ x
+        print(u)
         return u
 
     def reset(self):
@@ -133,11 +132,9 @@ class PPstabiliser():
      
         # calculate poles based on adjustable specifications
         self.desired_poles_att = np.array([
-                                -self.zeta_z*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
-                                -self.zeta_z*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
-                                -self.zeta_z*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
-                                -self.zeta_z*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
-                                -2                                 
+                                -self.zeta_att*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
+                                -self.zeta_att*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
+                                -self.zeta_att*self.omega_att * 10                                
                                 ])
 
 

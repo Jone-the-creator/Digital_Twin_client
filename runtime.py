@@ -59,6 +59,7 @@ def control_loop(obs, quad, PID, sim, PP):
     count = 0
     eff_count = 0
     u = np.zeros((4,1))
+    att_u = np.zeros((3,1))
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
@@ -86,9 +87,15 @@ def control_loop(obs, quad, PID, sim, PP):
                 PID.roll_setpoint = roll
                 u[0,0] = yaw_rate
                 if quad.control_system == "PID":
+                    PID.pitch_setpoint = -pitch
+                    PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
-                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporary until full control is ready for pole-placement
+                    PP.pitch_setpoint = -pitch
+                    PP.roll_setpoint = roll
+                    PP.yaw_setpoint = yaw_rate
+                    att_u = PP.attitude_control()
+                    u = np.vstack([att_u, np.zeros((1,1))])
                     thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
