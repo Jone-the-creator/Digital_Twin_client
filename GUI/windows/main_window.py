@@ -17,13 +17,13 @@ import os, trimesh
 import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
-from GUI.ui.ui_setup import Ui_Dialog
+from scipy.signal import place_poles
 
-#importing quadcopter model (RELATIVE PATH)
+# importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
 model_path = os.path.join(base_dir, "Models", "Quadcopter.stl")
 
-#load model and ensure centered
+# load model and ensure centered
 mesh = trimesh.load(model_path)
 vertices = mesh.vertices
 faces = mesh.faces
@@ -134,10 +134,14 @@ class MainWindow(QMainWindow):
             self.ui.d_sub_small.hide()
 
             # change buttons for PP
-            self.ui.i_add_large.setText("1.0")
-            self.ui.i_add_small.setText("0.25")
-            self.ui.i_sub_large.setText("-1.0")
-            self.ui.i_sub_small.setText("-0.25")
+            self.ui.p_add_large.setText("+0.25s")
+            self.ui.p_add_small.setText("+0.05s")
+            self.ui.p_sub_large.setText("-0.25s")
+            self.ui.p_sub_small.setText("-0.05s")
+            self.ui.i_add_large.setText("+1.0%")
+            self.ui.i_add_small.setText("+0.25%")
+            self.ui.i_sub_large.setText("-1.0%")
+            self.ui.i_sub_small.setText("-0.25%")
 
             self.update_PP_labels(
                 self.stab.settling_time_z,
@@ -186,6 +190,7 @@ class MainWindow(QMainWindow):
             self.ui.d_sub_small.clicked.connect(lambda: self.handle_pid_change("D", -0.05))
             self.ui.d_add_small.clicked.connect(lambda: self.handle_pid_change("D", 0.05))
             self.ui.d_add_large.clicked.connect(lambda: self.handle_pid_change("D", 0.25))
+
         elif self.quadcopter.control_system == "Pole-placement":
             # connect buttons to change specs
             # Settling time
@@ -251,17 +256,11 @@ class MainWindow(QMainWindow):
 
         # update readings
         self.ui.yaw_reading.setText(f"Yaw: {self.quadcopter.attitude.yaw:.2f} °")
-
         self.ui.pitch_reading.setText(f"Pitch: {self.quadcopter.attitude.pitch:.2f} °")
-
         self.ui.roll_reading.setText(f"Roll: {self.quadcopter.attitude.roll:.2f} °")
-
         self.ui.altitude_reading.setText(f"Current Altitude: {self.quadcopter.position.z:.2f} m")
-
         self.ui.altitude_sp_reading.setText(f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m")
-
         self.ui.loop_rate_reading.setText(f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz")
-        
         controller = self.ui.controller_select.currentText().lower()
 
         if self.quadcopter.control_system == "Pole-placement":
@@ -285,10 +284,6 @@ class MainWindow(QMainWindow):
                 )
 
     def start_record(self):
-        # if hasattr(self, "thread") and self.thread is not None:
-        #    if self.thread.isRunning():
-        #        return  # already recording
-
         # shows recording status
         self.ui.recording_label.show()
 
@@ -355,6 +350,20 @@ class MainWindow(QMainWindow):
                 self.stab.settling_time_z,
                 self.stab.overshoot_z
             )
+
+        # -- adjust poles/gains based on new specifications --
+        self.stab.zeta_z = np.sqrt(((np.log(self.stab.overshoot_z/100))**2)/(np.pi**2+(np.log(self.stab.overshoot_z/100))**2))
+        self.stab.omega_z = 4/(self.stab.zeta_z*self.stab.settling_time_z)
+     
+        # calculate poles based on adjustable specifications
+        self.stab.desired_poles = np.array([-self.stab.zeta_z*self.stab.omega_z * 100, 
+                                -self.stab.zeta_z*self.stab.omega_z + (self.stab.omega_z*np.sqrt(1-self.stab.zeta_z**2))*1j, 
+                                -self.stab.zeta_z*self.stab.omega_z - (self.stab.omega_z*np.sqrt(1-self.stab.zeta_z**2))*1j 
+                                ])
+
+
+        self.stab.K_z = place_poles(self.stab.A, self.stab.B, self.stab.desired_poles).gain_matrix
+        print(self.stab.K_z)
 
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (

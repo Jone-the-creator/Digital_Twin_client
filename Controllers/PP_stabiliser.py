@@ -5,7 +5,6 @@
 # -- defines the pole-placement stabiliser class stabilising the quadcopter with state-space control about hover --
 
 import numpy as np
-import time
 from scipy.signal import place_poles
 
 class PPstabiliser():
@@ -22,33 +21,38 @@ class PPstabiliser():
         self.integrated_yaw_error = 0
 
         # adjustable specifications
-        self.settling_time_z = 1.25
-        self.overshoot_z = 10
+        self.settling_time_z = 1.25 # seconds
+        self.overshoot_z = 10 # %
 
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 10 # in degrees
 
         # temporary calculation of pole-placement gains
-        A = np.array([
+        self.A = np.array([
             [0,         1,             0],
             [0, -self.obs.quad.c[0,0], 0],
             [-1,        0,             0]
         ])
 
-        B = np.array([
+        self.B = np.array([
             [0],
             [1/self.obs.quad.mass],
             [0]
         ])
 
-        desired_poles = np.array([
-            -32,
-            -3.2 + 4.38j,
-            -3.2 - 4.38j
-        ])
+        # poles that adjust based on specifications
+        self.zeta_z = np.sqrt(((np.log(self.overshoot_z/100))**2)/(np.pi**2+(np.log(self.overshoot_z/100))**2))
+        self.omega_z = 4/(self.zeta_z*self.settling_time_z)
+     
+        # calculate poles based on adjustable specifications
+        self.desired_poles = np.array([-self.zeta_z*self.omega_z * 100, 
+                                -self.zeta_z*self.omega_z + (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j, 
+                                -self.zeta_z*self.omega_z - (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j 
+                                ])
 
-        self.K_z = place_poles(A,B,desired_poles).gain_matrix
+
+        self.K_z = place_poles(self.A,self.B,self.desired_poles).gain_matrix
         print(self.K_z)
 
     def hover():
