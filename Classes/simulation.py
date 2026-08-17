@@ -3,7 +3,7 @@
 #
 # with assistance from Microsoft Copilot
 
-from Classes.state_space_model import Nonlinear_Model
+from Models.state_space_model import Nonlinear_Model
 import numpy as np
 
 class QuadSimulation:

@@ -2,7 +2,7 @@
 # Flinders University
 
 from Classes import PS5Controller
-from Classes.PID_stabiliser import PIDstabiliser
+from Controllers.PID_stabiliser import PIDstabiliser
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PySide6.QtWidgets import QApplication
@@ -12,7 +12,9 @@ import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
 from Classes.simulation import QuadSimulation
-from Classes.PID_stabiliser import PIDstabiliser
+from Controllers.PID_stabiliser import PIDstabiliser
+from Controllers.PP_stabiliser import PPstabiliser
+from Models.state_observer import Observer
 
 running = True
 viewer_exists = False
@@ -39,7 +41,7 @@ def update_active(quad, sim, u, altitude, dt):
 
 
     # ---- CONTROL LOOP ----
-def control_loop(quad, stab, sim):
+def control_loop(quad, stab, sim, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -73,6 +75,7 @@ def control_loop(quad, stab, sim):
                 stab.roll_setpoint = roll
                 u[0,0] = yaw_rate
                 u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
+                thrust_raw = PP.altitude_control(altitude)
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -157,25 +160,7 @@ def control_loop(quad, stab, sim):
             quad._thrust_smoothed = (
                 (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
             )
-            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
-            
-            #if eff_count % (LOOP_RATE/3) == 0:
-                #print(
-                    # f"altitude = {altitude} "
-                    # f"thrust={thrust}, "
-                    # f"r1={r1}, "
-                    # f"killed={quad.killed}, "
-                    # f"test={quad.test_flight}"
-                    # f"x ={quad.position.x} "
-                    # f"y ={quad.position.y} "
-                    # f"z ={quad.position.z} "
-                    # f"x setpoint = {current_x} "
-                    # f"y setpoint = {current_y} "
-                    # f"pitch rate cmd = {u[1,0]}, "
-                    # f"roll rate cmd = {u[2,0]}, "
-                    # f"pitch setpoint = {stab.pitch_setpoint}, "
-                    # f"roll setpoint = {stab.roll_setpoint} "
-                    # )              
+            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)                         
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
@@ -210,8 +195,10 @@ def main():
 
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
+    obs = Observer(quad)
     sim = QuadSimulation(quad)
     stab = PIDstabiliser(quad)
+    PP = PPstabiliser(obs)
 
     if quad is None:
         print("User cancelled startup.")
@@ -226,7 +213,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,stab,sim)).start()
+    threading.Thread(target=control_loop, args=(quad,stab,sim,PP)).start()
 
     # ---- COMMS ----
     comms = None
