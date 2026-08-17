@@ -353,7 +353,6 @@ class MainWindow(QMainWindow):
 
         # -- APPLY UPDATE TO POLES --
         self.stab.K_z = self.stab.altitude_spec_update()
-        print(self.stab.K_z)
 
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (
@@ -377,3 +376,4 @@ class MainWindow(QMainWindow):
     def update_PP_labels(self, Tss, Mp):
         self.ui.P_label.setText(f"Settling time: {Tss:.2f} s")
         self.ui.I_label.setText(f"Overshoot: {Mp:.2f} %")
+        self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")

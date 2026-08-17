@@ -5,6 +5,8 @@
 # runtime.py
 # -- collates all objects and functions to run the digital twin program --
 
+# -- IMPORTS --
+
 from Classes import PS5Controller
 from Controllers.PID_stabiliser import PIDstabiliser
 from Comms_Plugins import CRTP_logger
@@ -20,8 +22,9 @@ from Controllers.PID_stabiliser import PIDstabiliser
 from Controllers.PP_stabiliser import PPstabiliser
 from Models.state_observer import Observer
 
+# -- VARIABLES --
+
 running = True
-viewer_exists = False
 LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
@@ -91,9 +94,9 @@ def control_loop(obs, quad, PID, sim, PP):
                     PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
-                    PP.pitch_setpoint = -pitch
-                    PP.roll_setpoint = roll
-                    PP.yaw_setpoint = yaw_rate
+                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
+                    # PP.pitch_setpoint = -pitch 
+                    # PP.roll_setpoint = roll
                     att_u = PP.attitude_control()
                     u = np.vstack([att_u, np.zeros((1,1))])
                     thrust_raw = PP.altitude_control(altitude, dt)
@@ -181,21 +184,23 @@ def control_loop(obs, quad, PID, sim, PP):
             quad._thrust_smoothed = (
                 (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
             )
-            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)                         
-            
+            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)                    
+                 
+            # --- UPDATE CONTROLS ---
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
                 update_active(obs, quad, sim, u, target_altitude, dt)
             else:
                 update_active(obs, quad, sim, u, altitude, dt)
                 
-
         if quad.test_flight:
             count += 1
 
         # --- KILL SWITCH EFFECT ---
         if quad.killed: 
             u = np.zeros((4,1))
+
+
 
         # --- CONTROL LOOP TIMING ---
         loop_time = time.time() - start_time
