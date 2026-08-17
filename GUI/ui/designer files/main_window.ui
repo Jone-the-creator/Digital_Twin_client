@@ -52,7 +52,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <rect>
       <x>640</x>
       <y>40</y>
-      <width>551</width>
+      <width>201</width>
       <height>16</height>
      </rect>
     </property>
@@ -141,7 +141,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <rect>
       <x>630</x>
       <y>60</y>
-      <width>561</width>
+      <width>211</width>
       <height>171</height>
      </rect>
     </property>
@@ -189,6 +189,39 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QLabel" name="Response_title">
+    <property name="geometry">
+     <rect>
+      <x>930</x>
+      <y>40</y>
+      <width>201</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <bold>true</bold>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>Step Response</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>860</x>
+      <y>60</y>
+      <width>331</width>
+      <height>281</height>
+     </rect>
+    </property>
    </widget>
    <widget class="QWidget" name="">
     <property name="geometry">

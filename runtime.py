@@ -97,8 +97,8 @@ def control_loop(obs, quad, PID, sim, PP):
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
                     # PP.pitch_setpoint = -pitch 
                     # PP.roll_setpoint = roll
-                    att_u = PP.attitude_control()
-                    u = np.vstack([att_u, np.zeros((1,1))])
+                    # att_u = PP.attitude_control()
+                    # u = np.vstack([att_u, np.zeros((1,1))])
                     thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
@@ -114,6 +114,7 @@ def control_loop(obs, quad, PID, sim, PP):
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
             elif triangle and not quad.killed and eff_count % 2 == 0:
                 quad.test_flight = True
+                quad.viewer.reset_step_response()
 
             # Reset altitude and thrust when r1 cross is pressed
             elif cross and eff_count % 4 == 0:
@@ -148,6 +149,9 @@ def control_loop(obs, quad, PID, sim, PP):
                     quad.test_flight = False
                     PID.reset()
                     target_altitude = 0.0
+
+                    quad.viewer.stop_step_response()
+
                     # stop recording if still recording
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()

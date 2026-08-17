@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowPwMFop.ui'
+## Form generated from reading UI file 'main_windowjMpMDV.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -41,7 +41,7 @@ class Ui_MainWindow(object):
         self.gl_container.setSizePolicy(sizePolicy)
         self.Readings_title = QLabel(self.centralwidget)
         self.Readings_title.setObjectName(u"Readings_title")
-        self.Readings_title.setGeometry(QRect(640, 40, 551, 16))
+        self.Readings_title.setGeometry(QRect(640, 40, 201, 16))
         font = QFont()
         font.setPointSize(11)
         font.setBold(True)
@@ -94,7 +94,7 @@ class Ui_MainWindow(object):
 
         self.layoutWidget2 = QWidget(self.centralwidget)
         self.layoutWidget2.setObjectName(u"layoutWidget2")
-        self.layoutWidget2.setGeometry(QRect(630, 60, 561, 171))
+        self.layoutWidget2.setGeometry(QRect(630, 60, 211, 171))
         self.verticalLayout_3 = QVBoxLayout(self.layoutWidget2)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
@@ -128,47 +128,55 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addWidget(self.loop_rate_reading)
 
+        self.Response_title = QLabel(self.centralwidget)
+        self.Response_title.setObjectName(u"Response_title")
+        self.Response_title.setGeometry(QRect(930, 40, 201, 16))
+        self.Response_title.setFont(font)
+        self.Response_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.widget = QWidget(self.centralwidget)
         self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(630, 400, 561, 242))
-        self.verticalLayout_4 = QVBoxLayout(self.widget)
+        self.widget.setGeometry(QRect(860, 60, 331, 281))
+        self.widget1 = QWidget(self.centralwidget)
+        self.widget1.setObjectName(u"widget1")
+        self.widget1.setGeometry(QRect(630, 400, 561, 242))
+        self.verticalLayout_4 = QVBoxLayout(self.widget1)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.title = QLabel(self.widget)
+        self.title = QLabel(self.widget1)
         self.title.setObjectName(u"title")
 
         self.verticalLayout_2.addWidget(self.title)
 
-        self.controller_select = QComboBox(self.widget)
+        self.controller_select = QComboBox(self.widget1)
         self.controller_select.setObjectName(u"controller_select")
 
         self.verticalLayout_2.addWidget(self.controller_select)
 
-        self.P_label = QLabel(self.widget)
+        self.P_label = QLabel(self.widget1)
         self.P_label.setObjectName(u"P_label")
 
         self.verticalLayout_2.addWidget(self.P_label)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.p_sub_large = QPushButton(self.widget)
+        self.p_sub_large = QPushButton(self.widget1)
         self.p_sub_large.setObjectName(u"p_sub_large")
 
         self.horizontalLayout_3.addWidget(self.p_sub_large)
 
-        self.p_sub_small = QPushButton(self.widget)
+        self.p_sub_small = QPushButton(self.widget1)
         self.p_sub_small.setObjectName(u"p_sub_small")
 
         self.horizontalLayout_3.addWidget(self.p_sub_small)
 
-        self.p_add_small = QPushButton(self.widget)
+        self.p_add_small = QPushButton(self.widget1)
         self.p_add_small.setObjectName(u"p_add_small")
 
         self.horizontalLayout_3.addWidget(self.p_add_small)
 
-        self.p_add_large = QPushButton(self.widget)
+        self.p_add_large = QPushButton(self.widget1)
         self.p_add_large.setObjectName(u"p_add_large")
 
         self.horizontalLayout_3.addWidget(self.p_add_large)
@@ -176,29 +184,29 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
-        self.I_label = QLabel(self.widget)
+        self.I_label = QLabel(self.widget1)
         self.I_label.setObjectName(u"I_label")
 
         self.verticalLayout_2.addWidget(self.I_label)
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.i_sub_large = QPushButton(self.widget)
+        self.i_sub_large = QPushButton(self.widget1)
         self.i_sub_large.setObjectName(u"i_sub_large")
 
         self.horizontalLayout_4.addWidget(self.i_sub_large)
 
-        self.i_sub_small = QPushButton(self.widget)
+        self.i_sub_small = QPushButton(self.widget1)
         self.i_sub_small.setObjectName(u"i_sub_small")
 
         self.horizontalLayout_4.addWidget(self.i_sub_small)
 
-        self.i_add_small = QPushButton(self.widget)
+        self.i_add_small = QPushButton(self.widget1)
         self.i_add_small.setObjectName(u"i_add_small")
 
         self.horizontalLayout_4.addWidget(self.i_add_small)
 
-        self.i_add_large = QPushButton(self.widget)
+        self.i_add_large = QPushButton(self.widget1)
         self.i_add_large.setObjectName(u"i_add_large")
 
         self.horizontalLayout_4.addWidget(self.i_add_large)
@@ -206,29 +214,29 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
-        self.D_label = QLabel(self.widget)
+        self.D_label = QLabel(self.widget1)
         self.D_label.setObjectName(u"D_label")
 
         self.verticalLayout_2.addWidget(self.D_label)
 
         self.horizontalLayout_5 = QHBoxLayout()
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.d_sub_large = QPushButton(self.widget)
+        self.d_sub_large = QPushButton(self.widget1)
         self.d_sub_large.setObjectName(u"d_sub_large")
 
         self.horizontalLayout_5.addWidget(self.d_sub_large)
 
-        self.d_sub_small = QPushButton(self.widget)
+        self.d_sub_small = QPushButton(self.widget1)
         self.d_sub_small.setObjectName(u"d_sub_small")
 
         self.horizontalLayout_5.addWidget(self.d_sub_small)
 
-        self.d_add_small = QPushButton(self.widget)
+        self.d_add_small = QPushButton(self.widget1)
         self.d_add_small.setObjectName(u"d_add_small")
 
         self.horizontalLayout_5.addWidget(self.d_add_small)
 
-        self.d_add_large = QPushButton(self.widget)
+        self.d_add_large = QPushButton(self.widget1)
         self.d_add_large.setObjectName(u"d_add_large")
 
         self.horizontalLayout_5.addWidget(self.d_add_large)
@@ -239,7 +247,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
 
-        self.PP_k_label = QLabel(self.widget)
+        self.PP_k_label = QLabel(self.widget1)
         self.PP_k_label.setObjectName(u"PP_k_label")
 
         self.verticalLayout_4.addWidget(self.PP_k_label)
@@ -272,6 +280,7 @@ class Ui_MainWindow(object):
         self.altitude_reading.setText(QCoreApplication.translate("MainWindow", u"Current Altitude:", None))
         self.altitude_sp_reading.setText(QCoreApplication.translate("MainWindow", u"Altitude Setpoint:", None))
         self.loop_rate_reading.setText(QCoreApplication.translate("MainWindow", u"Loop Rate:", None))
+        self.Response_title.setText(QCoreApplication.translate("MainWindow", u"Step Response", None))
         self.title.setText(QCoreApplication.translate("MainWindow", u"PID Tuning", None))
         self.P_label.setText(QCoreApplication.translate("MainWindow", u"P:", None))
         self.p_sub_large.setText(QCoreApplication.translate("MainWindow", u"-0.25", None))

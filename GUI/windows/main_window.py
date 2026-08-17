@@ -12,8 +12,9 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QPushButton, QHBoxLayout, QMainWindow, QLabel, QVBoxLayout
 )
+import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import os, trimesh
+import os, trimesh, time, collections
 import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
@@ -39,10 +40,39 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
+
+        self.response_time = []
+        self.response_altitude = []
+        self.response_setpoint = []
+        self.logging_response = False
+
+        self.step_start_time = time.time()
         
         # instantiate ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # Step response plot
+        self.response_plot = pg.PlotWidget()
+
+        self.response_plot.setLabel('left', 'Altitude (m)')
+        self.response_plot.setLabel('bottom', 'Time (s)')
+        self.response_plot.showGrid(x=True, y=True)
+        self.response_plot.addLegend()
+
+        layout = QVBoxLayout(self.ui.widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.response_plot)
+
+        self.alt_curve = self.response_plot.plot(
+            pen='y',
+            name='Altitude'
+        )
+
+        self.sp_curve = self.response_plot.plot(
+            pen='r',
+            name='Setpoint'
+        )
 
         # OpenGL view inside placeholder
         self.view = gl.GLViewWidget()
@@ -282,6 +312,7 @@ class MainWindow(QMainWindow):
                     self.stab.Ki_att,
                     self.stab.Kd_att
                 )
+        self.update_step_response()
 
     def start_record(self):
         # shows recording status
@@ -377,3 +408,34 @@ class MainWindow(QMainWindow):
         self.ui.P_label.setText(f"Settling time: {Tss:.2f} s")
         self.ui.I_label.setText(f"Overshoot: {Mp:.2f} %")
         self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")
+
+    def update_step_response(self):
+        elapsed = time.time() - self.step_start_time
+
+        self.response_time.append(elapsed)
+
+        self.response_altitude.append(
+            self.quadcopter.position.z
+        )
+
+        self.response_setpoint.append(
+            self.quadcopter.controls.z
+        )
+
+        self.alt_curve.setData(
+            list(self.response_time),
+            list(self.response_altitude)
+        )
+
+        self.sp_curve.setData(
+            list(self.response_time),
+            list(self.response_setpoint)
+        )
+    def reset_step_response(self):
+        self.response_time.clear()
+        self.response_altitude.clear()
+        self.response_setpoint.clear()
+        self.logging_response = True
+
+    def stop_step_response(self):
+        self.logging_response = False
