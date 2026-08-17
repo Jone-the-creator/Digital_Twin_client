@@ -1,4 +1,9 @@
+# Written by Jonah Habel 2026
+# Flinders University
+#
+# with assistance from Microsoft Copilot
 # setup_window.py
+# -- used to instantiate and control imported setup window UI from the designer --
 
 from PySide6.QtWidgets import QDialog, QApplication
 from GUI.ui.ui_setup import Ui_Dialog
@@ -77,8 +82,8 @@ class SetupWindow(QDialog):
 # this will run the setup window before the main client, system will exit if this is cancelled
 def run_setup():
     comms_options = ["Crazyradio"]
-    controlsystem_options = ["PID"]
-    estimator_options = ["Kalman Filter", "TEST"]
+    controlsystem_options = ["PID", "Pole-placement"]
+    estimator_options = ["Kalman Filter"]
 
     defaults = functions.load_settings("init_defaults.txt")
 

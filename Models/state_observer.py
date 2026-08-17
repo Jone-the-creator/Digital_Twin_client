@@ -1,5 +1,8 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# state_observer.py
+# -- defines the linearised state observer (linearised about hover) used for state feedback --
 
 import numpy as np
 

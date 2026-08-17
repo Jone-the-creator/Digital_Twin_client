@@ -1,5 +1,8 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# state_space_model.py
+# -- defines the variable non-linear model of the quadcopter, to be used for simulation representation --
 
 import numpy as np
 import state_space as ss

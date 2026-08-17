@@ -1,8 +1,4 @@
-ID=test
 MASS=0.27
-I_xx=2.3951e-06
-I_yy=2.3951e-06
-I_zz=3.2347e-06
 comms=Crazyradio
-control system=PID
+control system=Pole-placement
 state estimator=Kalman Filter

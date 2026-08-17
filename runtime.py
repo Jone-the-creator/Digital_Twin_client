@@ -1,5 +1,9 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# with assistance from Microsoft Copilot
+# runtime.py
+# -- collates all objects and functions to run the digital twin program --
 
 from Classes import PS5Controller
 from Controllers.PID_stabiliser import PIDstabiliser
@@ -11,7 +15,7 @@ import pygame
 import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
-from Classes.simulation import QuadSimulation
+from Models.state_space_model import Nonlinear_Model
 from Controllers.PID_stabiliser import PIDstabiliser
 from Controllers.PP_stabiliser import PPstabiliser
 from Models.state_observer import Observer
@@ -37,9 +41,8 @@ def update_active(obs, quad, sim, u, altitude, dt):
             [u[3,0]]]), # thrust
             dt
         )
-    print(f"z = {obs.x[2,0]}, z_dot = {obs.x[5,0]}")
     if quad.simulation_mode:
-        sim.model.update(np.array([
+        sim.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
             [-np.deg2rad(u[1,0])], # pitch rate
             [-np.deg2rad(u[0,0])], # yaw rate
@@ -49,7 +52,7 @@ def update_active(obs, quad, sim, u, altitude, dt):
 
 
     # ---- CONTROL LOOP ----
-def control_loop(obs, quad, stab, sim, PP):
+def control_loop(obs, quad, PID, sim, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -79,16 +82,19 @@ def control_loop(obs, quad, stab, sim, PP):
             if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
                 roll, pitch, yaw_rate, altitude = \
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
-                stab.pitch_setpoint = -pitch
-                stab.roll_setpoint = roll
+                PID.pitch_setpoint = -pitch
+                PID.roll_setpoint = roll
                 u[0,0] = yaw_rate
-                u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
-                thrust_raw = PP.altitude_control(altitude, dt)
+                if quad.control_system == "PID":
+                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
+                elif quad.control_system == "Pole-placement":
+                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporary until full control is ready for pole-placement
+                    thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
             elif circle: 
                     quad.test_flight = False
-                    stab.reset()
+                    PID.reset()
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
@@ -103,21 +109,21 @@ def control_loop(obs, quad, stab, sim, PP):
             elif cross and eff_count % 4 == 0:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
-                stab.reset()
+                PID.reset()
                 u = np.zeros((4,1))
-                stab.zero() # Zeros the trim in the quadcopter object
+                PID.zero() # Zeros the trim in the quadcopter object
             elif not quad.test_flight and eff_count % 10 == 0:
                 thrust_raw = 0
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
-                stab.reset()
+                PID.reset()
                 u = np.zeros((4,1))
 
             # --- TEST FLIGHT MODE (AUTOMATIC) ---
             if quad.test_flight is True:
                 if count == 0:
                     target_altitude = 0.0     
-                    stab.zero() # Zeros the setpoints
+                    PID.zero() # Zeros the setpoints
                 flight_time = count * dt
 
                 # -- TEST FLIGHT SEQUENCE --
@@ -147,18 +153,18 @@ def control_loop(obs, quad, stab, sim, PP):
 
                 else:
                     quad.test_flight = False
-                    stab.reset()
+                    PID.reset()
                     target_altitude = 0.0
                     # stop recording if still recording
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
 
-                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
+                u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
 
             elif not r1:
                 # If no test flight started reset stabiliser and disable recording
-                stab.reset()
+                PID.reset()
                 if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
@@ -204,8 +210,8 @@ def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
     obs = Observer(quad)
-    sim = QuadSimulation(quad)
-    stab = PIDstabiliser(quad)
+    sim = Nonlinear_Model(quad)
+    PID = PIDstabiliser(quad)
     PP = PPstabiliser(obs)
 
     if quad is None:
@@ -221,7 +227,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(obs,quad,stab,sim,PP)).start()
+    threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
 
     # ---- COMMS ----
     comms = None
@@ -240,7 +246,10 @@ def main():
     timer.timeout.connect(pump_pygame)
     timer.start(10)  # 100 Hz
 
-    quad.viewer = MainWindow(quad, stab)
+    if quad.control_system == "PID":
+        quad.viewer = MainWindow(quad, PID)
+    elif quad.control_system == "Pole-placement":
+        quad.viewer = MainWindow(quad, PP)
 
     # Explicit shutdown function
     def shutdown():

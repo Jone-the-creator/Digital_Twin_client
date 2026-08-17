@@ -1,6 +1,9 @@
 # Written by Jonah Habel 2026
 # Flinders University
 #
+# Crazyradio.py
+# -- used to communicate with the Bitcraze Crazyflie 2.1 --
+#
 # written based on instruction from 
 # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
 

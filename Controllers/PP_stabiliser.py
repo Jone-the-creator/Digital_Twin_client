@@ -1,7 +1,8 @@
 # Written by Jonah Habel 2026
 # Flinders University
 #
-# with assistance from Microsoft Copilot
+# PP_stabiliser.py
+# -- defines the pole-placement stabiliser class stabilising the quadcopter with state-space control about hover --
 
 import numpy as np
 import time
@@ -14,9 +15,16 @@ class PPstabiliser():
         # initialise setpoints, adjust these directly for control
         self.roll_setpoint = 0.0
         self.pitch_setpoint = 0.0
-#        self.yaw_setpoint = 0.0
+        self.yaw_rate_setpoint = 0.0
 
-        self.integrated_error = 0 
+        # integrated error terms
+        self.integrated_z_error = 0 
+        self.integrated_yaw_error = 0
+
+        # adjustable specifications
+        self.settling_time_z = 1.25
+        self.overshoot_z = 10
+
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 10 # in degrees
@@ -34,26 +42,49 @@ class PPstabiliser():
             [0]
         ])
 
-        desired_poles = np.array([-32,-3.2 + 4.38j,-3.2 - 4.38j])
+        desired_poles = np.array([
+            -32,
+            -3.2 + 4.38j,
+            -3.2 - 4.38j
+        ])
 
-        self.K = place_poles(A,B,desired_poles).gain_matrix
-        print(self.K)
+        self.K_z = place_poles(A,B,desired_poles).gain_matrix
+        print(self.K_z)
+
+    def hover():
+        return None
         
     def altitude_control(self, altitude_setpoint, dt):
         altitude_error = self.obs.quad.position.z - altitude_setpoint
-        self.integrated_error += altitude_error * dt
+        self.integrated_z_error += altitude_error * dt
 
         altitude_dot = self.obs.x[5,0] # observed altitude velocity
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
         x = np.array([
             [altitude_error],
             [altitude_dot],
-            [-self.integrated_error]
+            [-self.integrated_z_error]
         ])
 
-        u = hover_thrust - (self.K @ x) * self.obs.quad.PWM_thrust_gain
+        u = hover_thrust - (self.K_z @ x) * self.obs.quad.PWM_thrust_gain
 
         return u[0,0]
+
+    def attitude_control():
+        return None
+
+    # def _pitch_control(self, pitch_setpoint, dt):
+    #     x = 
+
+
+    # def _yaw_control(self, yaw_setpoint, dt):
+    #     x = np.array([
+    #         []
+    #     ])
+
+        u = 0.0
+
+        return u
 
     def reset(self):
         # Reset setpoints
@@ -61,4 +92,4 @@ class PPstabiliser():
         self.roll_setpoint = 0.0
 
         # Set current yaw to target
-        self.yaw_setpoint = self.quad.attitude.yaw
+        self.yaw_rate_setpoint = 0.0

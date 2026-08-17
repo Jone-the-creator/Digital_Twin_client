@@ -1,5 +1,8 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# quadcopter.py
+# -- defines the quadcopter class containing all data (measurements and commands) as an intermediary between program and comms --
 
 from dataclasses import dataclass
 from typing import Optional
@@ -79,7 +82,6 @@ class Quadcopter:
         self.recording_active = False      
         self.simulation_mode = False
 
-        self.viewer = None
         if self.estimator == "Kalman Filter":
             self.att_KF = att_Kalmanfilter()
             self.pos_KF = pos_Kalmanfilter()
@@ -198,11 +200,6 @@ class Quadcopter:
              # predict states
             self.att_KF.predict(u, dt)
             # update attitudes based on predicted states
-            # self.update_attitude(
-            #     roll = np.rad2deg(self.att_KF.x[0,0]),
-            #     pitch = np.rad2deg(self.att_KF.x[1,0]),
-            #     yaw = np.rad2deg(self.att_KF.x[2,0])
-            # )
 
     # correct currently predicted states based on accelerometer data
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
