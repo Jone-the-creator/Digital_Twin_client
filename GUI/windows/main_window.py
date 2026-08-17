@@ -351,18 +351,8 @@ class MainWindow(QMainWindow):
                 self.stab.overshoot_z
             )
 
-        # -- adjust poles/gains based on new specifications --
-        self.stab.zeta_z = np.sqrt(((np.log(self.stab.overshoot_z/100))**2)/(np.pi**2+(np.log(self.stab.overshoot_z/100))**2))
-        self.stab.omega_z = 4/(self.stab.zeta_z*self.stab.settling_time_z)
-     
-        # calculate poles based on adjustable specifications
-        self.stab.desired_poles = np.array([-self.stab.zeta_z*self.stab.omega_z * 100, 
-                                -self.stab.zeta_z*self.stab.omega_z + (self.stab.omega_z*np.sqrt(1-self.stab.zeta_z**2))*1j, 
-                                -self.stab.zeta_z*self.stab.omega_z - (self.stab.omega_z*np.sqrt(1-self.stab.zeta_z**2))*1j 
-                                ])
-
-
-        self.stab.K_z = place_poles(self.stab.A, self.stab.B, self.stab.desired_poles).gain_matrix
+        # -- APPLY UPDATE TO POLES --
+        self.stab.K_z = self.stab.altitude_spec_update()
         print(self.stab.K_z)
 
     def toggle_simulation(self):

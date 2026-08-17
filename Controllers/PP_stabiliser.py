@@ -7,6 +7,8 @@
 import numpy as np
 from scipy.signal import place_poles
 
+g = 9.81 # m/s^2
+
 class PPstabiliser():
     def __init__(self, state_observer):
         self.obs = state_observer
@@ -20,40 +22,52 @@ class PPstabiliser():
         self.integrated_z_error = 0 
         self.integrated_yaw_error = 0
 
-        # adjustable specifications
+        # adjustable altitude specifications
         self.settling_time_z = 1.25 # seconds
         self.overshoot_z = 10 # %
+
+        # adjustable attitude specifications
+        self.settling_time_att = 0.5 # seconds
+        self.overshoot_att = 5 # %
 
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 10 # in degrees
 
-        # temporary calculation of pole-placement gains
-        self.A = np.array([
+        # -- MATRICES FOR ALTITUDE --
+        self.A_z = np.array([
             [0,         1,             0],
             [0, -self.obs.quad.c[0,0], 0],
             [-1,        0,             0]
         ])
 
-        self.B = np.array([
+        self.B_z = np.array([
             [0],
             [1/self.obs.quad.mass],
             [0]
         ])
 
-        # poles that adjust based on specifications
-        self.zeta_z = np.sqrt(((np.log(self.overshoot_z/100))**2)/(np.pi**2+(np.log(self.overshoot_z/100))**2))
-        self.omega_z = 4/(self.zeta_z*self.settling_time_z)
-     
-        # calculate poles based on adjustable specifications
-        self.desired_poles = np.array([-self.zeta_z*self.omega_z * 100, 
-                                -self.zeta_z*self.omega_z + (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j, 
-                                -self.zeta_z*self.omega_z - (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j 
-                                ])
+        self.K_z = self.altitude_spec_update()
 
+        # -- MATRICES FOR ATTITUDE --
+        self.A_att = np.array([
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [-1, 0, 0, 0, 0],
+            [0, -1, 0, 0, 0],
+        ])
 
-        self.K_z = place_poles(self.A,self.B,self.desired_poles).gain_matrix
-        print(self.K_z)
+        self.B_att = np.array([
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+        ])
+
+        self.K_att = self.attitude_spec_update()
+        print(self.K_att)
 
     def hover():
         return None
@@ -97,3 +111,34 @@ class PPstabiliser():
 
         # Set current yaw to target
         self.yaw_rate_setpoint = 0.0
+
+    def altitude_spec_update(self):
+        # poles that adjust based on specifications
+        self.zeta_z = np.sqrt(((np.log(self.overshoot_z/100))**2)/(np.pi**2+(np.log(self.overshoot_z/100))**2))
+        self.omega_z = 4/(self.zeta_z*self.settling_time_z)
+     
+        # calculate poles based on adjustable specifications
+        self.desired_poles_z = np.array([-self.zeta_z*self.omega_z * 10, 
+                                -self.zeta_z*self.omega_z + (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j, 
+                                -self.zeta_z*self.omega_z - (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j 
+                                ])
+
+
+        return place_poles(self.A_z,self.B_z,self.desired_poles_z).gain_matrix
+
+    def attitude_spec_update(self):
+        # poles that adjust based on specifications
+        self.zeta_att = np.sqrt(((np.log(self.overshoot_att/100))**2)/(np.pi**2+(np.log(self.overshoot_att/100))**2))
+        self.omega_att = 4/(self.zeta_att*self.settling_time_att)
+     
+        # calculate poles based on adjustable specifications
+        self.desired_poles_att = np.array([
+                                -self.zeta_z*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
+                                -self.zeta_z*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
+                                -self.zeta_z*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
+                                -self.zeta_z*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
+                                -2                                 
+                                ])
+
+
+        return place_poles(self.A_att,self.B_att,self.desired_poles_att).gain_matrix
