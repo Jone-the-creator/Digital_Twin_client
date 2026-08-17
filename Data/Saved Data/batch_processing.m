@@ -12,7 +12,7 @@ minLength = inf;
 
 for k = 1:numFiles
 
-    filename = sprintf('IV_Simulation_Validation_%d.csv', k);
+    filename = sprintf('V_Simulation_Validation_%d.csv', k);
     data = readtable(filename);
 
     minLength = min(minLength, height(data));
@@ -33,7 +33,7 @@ altitude_all = zeros(minLength, numFiles);
 %% ==========================
 for k = 1:numFiles
 
-    filename = sprintf('IV_Simulation_Validation_%d.csv', k);
+    filename = sprintf('V_Simulation_Validation_%d.csv', k);
     data = readtable(filename);
 
     % Trim to shortest run
@@ -111,7 +111,7 @@ xlabel('Time (s)');
 ylabel('Angle (deg)');
 
 title(sprintf('Attitude vs Time (%d-Run Average)',numFiles), ...
-    'Jonah Habel - Simulation Validation II - 11.08.2026');
+    'Jonah Habel - Simulation Validation III - 17.08.2026');
 
 legend('Location','best');
 grid on;
@@ -143,7 +143,7 @@ xlabel('Time (s)');
 ylabel('Altitude (m)');
 
 title(sprintf('Altitude vs Time (%d-Run Average)',numFiles), ...
-    'Jonah Habel - Simulation Validation II - 11.08.2026');
+    'Jonah Habel - Simulation Validation III - 17.08.2026');
 
 legend('Location','best');
 grid on;
@@ -180,7 +180,7 @@ xlabel('Time (s)');
 ylabel('Altitude Error (m)');
 
 title(sprintf('Altitude Error vs Time (%d-Run Average)',numFiles), ...
-    'Jonah Habel - Simulation Validation II - 11.08.2026');
+    'Jonah Habel - Simulation Validation III - 17.08.2026');
 
 legend('Location','best');
 grid on;

@@ -135,32 +135,15 @@ def control_loop(obs, quad, PID, sim, PP):
                     target_altitude = 0.0     
                     PID.zero() # Zeros the setpoints
                 flight_time = count * dt
+                if not quad.recording_active:
+                    # Start Recording thread
+                    quad.viewer.start_record_signal.emit()
+                    quad.recording_active = True
 
                 # -- TEST FLIGHT SEQUENCE --
-                if flight_time < 2:
-                    target_altitude = 0.25 * flight_time # slowly increase to 0.5
-
-                elif flight_time < 6:
-                    target_altitude = 0.5 # hold at altitude for 4 seconds
-
-                elif flight_time < 8:
-                    # Only start a recording thread if one hasn't started
-                    if not quad.recording_active:
-                        # Start Recording thread
-                        quad.viewer.start_record_signal.emit()
-                        quad.recording_active = True
-                    target_altitude += 0.25 * dt # slowly increase to 1m
-
-                elif flight_time < 16:
-                    target_altitude = 1.0 # hold at altitude for 8 seconds   
-                    
-                elif flight_time < 20:
-                    target_altitude -= 0.25 * dt # slowly decrease to 0m
-                    if target_altitude < 0.5: # stop recording at 0.5m
-                        if quad.recording_active:
-                            quad.viewer.stop_record_signal.emit()
-                            quad.recording_active = False
-
+                if flight_time < 5:
+                    target_altitude = 1 # hold at altitude for 5 seconds  
+                
                 else:
                     quad.test_flight = False
                     PID.reset()
@@ -171,6 +154,7 @@ def control_loop(obs, quad, PID, sim, PP):
                         quad.recording_active = False
 
                 u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
+                thrust_raw = PP.altitude_control(target_altitude, dt)
 
             elif not r1:
                 # If no test flight started reset stabiliser and disable recording
@@ -181,11 +165,11 @@ def control_loop(obs, quad, PID, sim, PP):
                 count = 0
 
             # # Smooth the thrust using an 'alpha' value
-            quad._thrust_smoothed = (
-                (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
-            )
-            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)                    
-                 
+            # quad._thrust_smoothed = (
+            #     (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+            # )
+            u[3,0] = np.clip(int(thrust_raw), 0.0, quad.max_thrust)                    
+
             # --- UPDATE CONTROLS ---
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
