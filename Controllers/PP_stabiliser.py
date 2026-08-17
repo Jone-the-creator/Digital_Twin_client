@@ -16,33 +16,44 @@ class PPstabiliser():
         self.pitch_setpoint = 0.0
 #        self.yaw_setpoint = 0.0
 
+        self.integrated_error = 0 
+
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 10 # in degrees
 
         # temporary calculation of pole-placement gains
         A = np.array([
-            [0, 1],
-            [0, -self.obs.quad.c[0,0]]
+            [0,         1,             0],
+            [0, -self.obs.quad.c[0,0], 0],
+            [-1,        0,             0]
         ])
 
         B = np.array([
             [0],
-            [1/self.obs.quad.mass]
+            [1/self.obs.quad.mass],
+            [0]
         ])
 
-        desired_poles = np.array([-3,-4])
+        desired_poles = np.array([-32,-3.2 + 4.38j,-3.2 - 4.38j])
 
         self.K = place_poles(A,B,desired_poles).gain_matrix
         print(self.K)
         
-    def altitude_control(self, altitude_setpoint):
-        altitude = self.obs.quad.position.z
-        altitude_dot = self.obs.x[5,0] # observed altitude velocity
-        hover_thrust = self.obs.quad.thrust_gain * self.obs.quad.mass * 9.81 
+    def altitude_control(self, altitude_setpoint, dt):
+        altitude_error = self.obs.quad.position.z - altitude_setpoint
+        self.integrated_error += altitude_error * dt
 
-        thrust = hover_thrust - self.K[0,0] * altitude - self.K[0,1] * altitude_dot
-    
-        return thrust
+        altitude_dot = self.obs.x[5,0] # observed altitude velocity
+        hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
+        x = np.array([
+            [altitude_error],
+            [altitude_dot],
+            [-self.integrated_error]
+        ])
+
+        u = hover_thrust - (self.K @ x) * self.obs.quad.PWM_thrust_gain
+
+        return u[0,0]
 
     def reset(self):
         # Reset setpoints

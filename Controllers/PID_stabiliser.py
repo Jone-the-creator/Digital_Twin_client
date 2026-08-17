@@ -48,7 +48,6 @@ class PIDstabiliser():
         # max integral term (limit integral windup)
         self.max_int = 40
 
-        self.quad.thrust_gain = 13000.0
         self.Kp_z = 3.5
         self.Ki_z = 0.75
         self.Kd_z = 0.65
@@ -63,7 +62,7 @@ class PIDstabiliser():
     def hover(self, altitude_setpoint):
         # --- ALTITUDE CONTROL ---
         altitude = self.quad.position.z
-        hover_thrust = self.quad.thrust_gain * self.quad.mass * 9.81 
+        hover_thrust = self.quad.PWM_thrust_gain * self.quad.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
         self.altitude_integral += altitude_error * self.quad.dt
@@ -71,7 +70,7 @@ class PIDstabiliser():
         self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
         self.prev_altitude_error = altitude_error
 
-        thrust = altitude_error * self.Kp_z * self.quad.thrust_gain + self.altitude_integral * self.Ki_z * self.quad.thrust_gain + self.altitude_derivative * self.Kd_z * self.quad.thrust_gain + hover_thrust
+        thrust = altitude_error * self.Kp_z * self.quad.PWM_thrust_gain + self.altitude_integral * self.Ki_z * self.quad.PWM_thrust_gain + self.altitude_derivative * self.Kd_z * self.quad.PWM_thrust_gain + hover_thrust
 
         # # --- ATTITUDE CONTROL ---
 
@@ -97,7 +96,7 @@ class PIDstabiliser():
         
     def altitude_control(self, altitude_setpoint):
         altitude = self.position.z
-        hover_thrust = self.quad.thrust_gain * self.mass * 9.81 
+        hover_thrust = self.quad.PWM_thrust_gain * self.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
         self.altitude_integral += altitude_error * self.quad.dt
@@ -105,7 +104,7 @@ class PIDstabiliser():
         self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
         self.prev_altitude_error = altitude_error
 
-        thrust = altitude_error * self.Kp_z * self.quad.thrust_gain + self.altitude_integral * self.Ki_z * self.quad.thrust_gain + self.altitude_derivative * self.Kd_z * self.quad.thrust_gain + hover_thrust
+        thrust = altitude_error * self.Kp_z * self.quad.PWM_thrust_gain + self.altitude_integral * self.Ki_z * self.quad.PWM_thrust_gain + self.altitude_derivative * self.Kd_z * self.quad.PWM_thrust_gain + hover_thrust
     
         return thrust
 

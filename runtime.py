@@ -22,7 +22,7 @@ LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
-def update_active(quad, sim, u, altitude, dt):
+def update_active(obs, quad, sim, u, altitude, dt):
     quad.update_controls(
             yaw_rate = u[0,0],
             pitch = u[1,0],
@@ -30,6 +30,14 @@ def update_active(quad, sim, u, altitude, dt):
             thrust = u[3,0],
             z = altitude
         )
+    obs.update(np.array([
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+    print(f"z = {obs.x[2,0]}, z_dot = {obs.x[5,0]}")
     if quad.simulation_mode:
         sim.model.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
@@ -41,7 +49,7 @@ def update_active(quad, sim, u, altitude, dt):
 
 
     # ---- CONTROL LOOP ----
-def control_loop(quad, stab, sim, PP):
+def control_loop(obs, quad, stab, sim, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -75,7 +83,7 @@ def control_loop(quad, stab, sim, PP):
                 stab.roll_setpoint = roll
                 u[0,0] = yaw_rate
                 u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
-                thrust_raw = PP.altitude_control(altitude)
+                thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -164,9 +172,9 @@ def control_loop(quad, stab, sim, PP):
             
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
-                update_active(quad, sim, u, target_altitude, dt)
+                update_active(obs, quad, sim, u, target_altitude, dt)
             else:
-                update_active(quad, sim, u, altitude, dt)
+                update_active(obs, quad, sim, u, altitude, dt)
                 
 
         if quad.test_flight:
@@ -213,7 +221,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,stab,sim,PP)).start()
+    threading.Thread(target=control_loop, args=(obs,quad,stab,sim,PP)).start()
 
     # ---- COMMS ----
     comms = None
