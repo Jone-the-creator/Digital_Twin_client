@@ -208,13 +208,15 @@ class Quadcopter:
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
-        z = np.zeros((2,1))
+        z = np.zeros((3,1))
 
         # fill measurement matrix with accelerometer readings
         if a_y is not None and a_z is not None:
             z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
         if a_y is not None and a_z is not None and a_x is not None:
             z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
+        if a_z is not None:
+            z[2,0] = 
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:

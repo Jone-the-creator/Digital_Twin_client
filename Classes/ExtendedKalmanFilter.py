@@ -5,25 +5,31 @@
 
 import numpy as np
 
-class SixDOFEKF():
+class NineDOF_EKF():
     def __init__(self):
         # control noise
         self.Q = np.array([
-            [0.25, 0, 0, 0, 0, 0],  # pitch
-            [0, 0.25, 0, 0, 0, 0],  # roll
-            [0, 0, 0.025, 0, 0, 0], # yaw
-            [0, 0, 0, 0.175, 0, 0], # x
-            [0, 0, 0, 0, 0.175, 0], # y
-            [0, 0, 0, 0, 0, 0.175]  #z
+            [0.25, 0, 0, 0, 0, 0, 0, 0, 0],  # pitch
+            [0, 0.25, 0, 0, 0, 0, 0, 0, 0],  # roll
+            [0, 0, 0.025, 0, 0, 0, 0, 0, 0], # yaw
+            [0, 0, 0, 0.175, 0, 0, 0, 0, 0], # x
+            [0, 0, 0, 0, 0.175, 0, 0, 0, 0], # y
+            [0, 0, 0, 0, 0, 0.175, 0, 0, 0], # z
+            [0, 0, 0, 0, 0, 0.175, 0, 0, 0], # x velocity
+            [0, 0, 0, 0, 0, 0.175, 0, 0, 0], # y velocity
+            [0, 0, 0, 0, 0, 0.175, 0, 0, 0], # z velocity
         ])
         # measurement noise
         self.R = np.array([
-            [0.025, 0, 0, 0, 0, 0],  # pitch
-            [0, 0.025, 0, 0, 0, 0],  # roll
-            [0, 0, 0.1, 0, 0, 0],    # yaw
-            [0, 0, 0, 0.05, 0, 0]    # x
-            [0, 0, 0, 0, 0.05, 0]    # y
-            [0, 0, 0, 0, 0, 0.5]     # z
+            [0.025, 0, 0, 0, 0, 0, 0, 0, 0],  # pitch
+            [0, 0.025, 0, 0, 0, 0, 0, 0, 0],  # roll
+            [0, 0, 0.1, 0, 0, 0, 0, 0, 0],    # yaw
+            [0, 0, 0, 0.05, 0, 0, 0, 0, 0],   # x
+            [0, 0, 0, 0, 0.05, 0, 0, 0, 0],   # y
+            [0, 0, 0, 0, 0, 0.5, 0, 0, 0],    # z
+            [0, 0, 0, 0, 0, 0.5, 0, 0, 0],    # x velocity
+            [0, 0, 0, 0, 0, 0.5, 0, 0, 0],    # y velocity
+            [0, 0, 0, 0, 0, 0.5, 0, 0, 0],    # z velocity
         ])
 
         # initial state vector x, [pitch, roll, yaw, x, y, z]
@@ -33,10 +39,7 @@ class SixDOFEKF():
             [0.0], # yaw
             [1.5], # x
             [1.5], # y
-            [0.0]  # z
-        ])
-
-        self.x_vel = np.array([
+            [0.0], # z
             [0.0], # x velocity
             [0.0], # y velocity
             [0.0]  # z velocity
@@ -44,12 +47,15 @@ class SixDOFEKF():
 
         # initialise covariance
         self.P = np.array([
-            [0.0001, 0, 0, 0, 0, 0], # pitch
-            [0, 0.0001, 0, 0, 0, 0], # roll
-            [0, 0, 0.06, 0, 0, 0],   # yaw
-            [0, 0, 0, 0.06, 0, 0],   # x
-            [0, 0, 0, 0, 0.06, 0],   # y            
-            [0, 0, 0, 0, 0, 0.06],   # z    
+            [0.0001, 0, 0, 0, 0, 0, 0, 0, 0], # pitch
+            [0, 0.0001, 0, 0, 0, 0, 0, 0, 0], # roll
+            [0, 0, 0.06, 0, 0, 0, 0, 0, 0],   # yaw
+            [0, 0, 0, 0.06, 0, 0, 0, 0, 0],   # x
+            [0, 0, 0, 0, 0.06, 0, 0, 0, 0],   # y            
+            [0, 0, 0, 0, 0, 0.06, 0, 0, 0],   # z
+            [0, 0, 0, 0, 0, 0.06, 0, 0, 0],   # x velocity
+            [0, 0, 0, 0, 0, 0.06, 0, 0, 0],   # y velocity
+            [0, 0, 0, 0, 0, 0.06, 0, 0, 0],   # z velocity 
         ])
 
     # Provides the non-linear state transisition function f
@@ -58,14 +64,12 @@ class SixDOFEKF():
         x[0,0] = u[0,0] * dt # update pitch
         x[1,0] = u[1,0] * dt # update roll
         x[2,0] = u[2,0] * dt # update yaw
-        x[3,0] = self.x_vel[0,0] * dt # update x
-        x[4,0] = self.x_vel[1,0] * dt # update y
-        x[5,0] = self.x_vel[2,0] * dt # update alitude
-
-        # update positional velocities based on control (thrust)
-        self.x_vel[0,0] = -u[5,0]*(np.cos(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])+np.sin(x[2,0])*np.sin(x[1,0]))
-        self.x_vel[0,0] = -u[5,0]*(np.sin(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])-np.cos(x[2,0])*np.sin(x[1,0]))
-        self.x_vel[2,0] = u[5,0] * dt # input thrust (gravity removed) in m/s^2
+        x[3,0] = x[6,0] * dt # update x
+        x[4,0] = x[7,0] * dt # update y
+        x[5,0] = x[8,0] * dt # update alitude
+        x[6,0] = -u[5,0]*(np.cos(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])+np.sin(x[2,0])*np.sin(x[1,0])) * dt # update x velocity
+        x[7,0] = -u[5,0]*(np.sin(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])-np.cos(x[2,0])*np.sin(x[1,0])) * dt # update y velocity
+        x[8,0] = u[5,0] * dt # update z velocity
 
         return x
 
@@ -73,7 +77,7 @@ class SixDOFEKF():
     def predict(self, u, dt):
         prev_x = self.x.copy()
 
-        # Jacobian F
+        # Jacobian F (TO BE UPDATED)
         F = np.eye(3)
 
         # Jacobian G
@@ -90,8 +94,9 @@ class SixDOFEKF():
         # update covariance
         self.P = F @ self.P @ np.transpose(F) + G @ self.Q @ np.transpose(G)
 
-    def _h(self, x, vel):
-        z_hat = np.atan2()
+    def _h(self, x):
+        z_hat = np.zeros((6,1))
+        z_hat[2,0] = np.atan2(self.x_vel[0,0],self.x_vel[1,0])
 
 
 
