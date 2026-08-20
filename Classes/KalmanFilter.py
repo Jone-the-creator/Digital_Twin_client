@@ -1,5 +1,8 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# KalmanFilter.py
+# -- defines the kalman filter classes for attitude and position data --
 
 import numpy as np
 
