@@ -204,4 +204,4 @@ class CRTP_logger:
                 thrust = int(self.quadcopter.controls.thrust)
             )
             # print(f"transmitted pitch rate {float(self.quadcopter.controls.pitch)}")
-            # print(f"transmitted thrust = {int(self.quadcopter.controls.thrust)}")
+            print(f"transmitted thrust = {int(self.quadcopter.controls.thrust)}")

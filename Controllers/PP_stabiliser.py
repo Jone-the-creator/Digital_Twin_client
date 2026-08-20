@@ -73,7 +73,7 @@ class PPstabiliser():
     def altitude_control(self, altitude_setpoint, dt):
         altitude_error = self.obs.quad.position.z - altitude_setpoint
         self.integrated_z_error += altitude_error * dt
-        self.integrated_z_error = np.clip(self.integrated_z_error, -0.1, 0.1)
+        self.integrated_z_error = np.clip(self.integrated_z_error, -0.1, 0.5)
 
         altitude_dot = self.obs.x[5,0] # observed altitude velocity
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
