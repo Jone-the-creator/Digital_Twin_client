@@ -68,8 +68,8 @@ class Quadcopter:
             [0.25]   # non-linear aerodynamic damping coefficient
         ])
 
-        self.max_thrust = 54000
-        self.thrust = 0.0
+        self.max_thrust = 54000 # in PWM
+        self.thrust = 0.0 # in m/s^2
         self.PWM_thrust_gain = 34000 / (self.mass * 9.81) # approximate thrust gain based on gravitational force
         self.kd = 0.05 # drag coefficient
 
@@ -102,8 +102,7 @@ class Quadcopter:
         if self.simulation_mode:
             return
         u = np.zeros((3,1))
-        if self.controls.thrust > 0:
-            u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
+        u[2,0] = self.controls.thrust / self.PWM_thrust_gain - 9.81 # in m/s^2
         z = np.zeros((3,1))
         if x is not None:
             z[0,0] = x
@@ -181,7 +180,8 @@ class Quadcopter:
         dt = now - self.last_update_time
         self.last_update_time = now
 
-        u = np.zeros((3,1))
+        u = np.zeros((4,1))
+        u = self.thrust
 
         # fill control matrix with attitude velocities
         if roll_vel is not None:
@@ -195,6 +195,10 @@ class Quadcopter:
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
+            u_att = np.zeros((3,1))
+            u_att[0,0] = u[0,0]
+            u_att[1,0] = u[1,0]
+            u_att[2,0] = u[2,0]
              # predict states
             self.att_KF.predict(u, dt)
             # update attitudes based on predicted states
@@ -208,26 +212,45 @@ class Quadcopter:
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
-        z = np.zeros((3,1))
+        z = np.zeros((9,1))
+        z[3,0] = self.position.x
+        z[4,0] = self.position.y
+        z[5,0] = self.position.z
 
         # fill measurement matrix with accelerometer readings
         if a_y is not None and a_z is not None:
-            z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
+            z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_PITCH_BIAS) # update pitch
+
         if a_y is not None and a_z is not None and a_x is not None:
-            z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
+            z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_ROLL_BIAS) # update roll
+            z[2,0] = np.atan2(a_x * self.dt,a_y * self.dt) # update yaw
         if a_z is not None:
-            z[2,0] = 
+            self.thrust = a_z
+            z[8,0] = self.thrust * self.dt # update z velocity
+
+        z[6,0] = -z[8,0]*(np.cos(z[2,0])*np.sin(z[0,0])*np.cos(z[1,0])+np.sin(z[2,0])*np.sin(z[1,0])) * self.dt # update x velocity
+        z[7,0] = -z[5,0]*(np.sin(z[2,0])*np.sin(z[0,0])*np.cos(z[1,0])-np.cos(z[2,0])*np.sin(z[1,0])) * self.dt # update y velocity
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
             # correct states
-            self.att_KF.correct(z)
+            z_att = np.zeros((2,1))
+            z_att[0,0] = z[0,0]
+            z_att[1,0] = z[1,0]
+            self.att_KF.correct(z_att)
 
             # update attitudes based on corrected states
             self.update_attitude(
                 roll = np.rad2deg(self.att_KF.x[0,0]),
                 pitch = np.rad2deg(self.att_KF.x[1,0]),
                 yaw = np.rad2deg(self.att_KF.x[2,0])
+            )
+        if self.EKF is not None:
+            self.EKF.correct(z)
+            self.update_attitude(
+                roll = np.rad2deg(self.EKF.x[0,0]),
+                pitch = np.rad2deg(self.EKF.x[1,0]),
+                yaw = np.rad2deg(self.EKF.x[2,0])
             )
 
 
