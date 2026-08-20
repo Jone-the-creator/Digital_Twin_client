@@ -12,19 +12,16 @@ class NineDOF_EKF():
             [0.25, 0, 0, 0],  # pitch
             [0, 0.25, 0, 0],  # roll
             [0, 0, 0.025, 0], # yaw
-            [0, 0, 0, 0.1]   # thrust
+            [0, 0, 0, 0.1]    # thrust
         ])
         # measurement noise
         self.R = np.array([
-            [0.025, 0, 0, 0, 0, 0, 0, 0, 0],  # pitch
-            [0, 0.025, 0, 0, 0, 0, 0, 0, 0],  # roll
-            [0, 0, 0.1, 0, 0, 0, 0, 0, 0],    # yaw
-            [0, 0, 0, 0.05, 0, 0, 0, 0, 0],   # x
-            [0, 0, 0, 0, 0.05, 0, 0, 0, 0],   # y
-            [0, 0, 0, 0, 0, 0.5, 0, 0, 0],    # z
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],      # x velocity
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],      # y velocity
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],      # z velocity
+            [0.025, 0, 0, 0, 0, 0],  # pitch
+            [0, 0.025, 0, 0, 0, 0],  # roll
+            [0, 0, 0.1, 0, 0, 0],    # yaw
+            [0, 0, 0, 0.05, 0, 0],   # x
+            [0, 0, 0, 0, 0.05, 0],      # y
+            [0, 0, 0, 0, 0, 0.5],    # z
         ])
 
         # initial state vector x, [pitch, roll, yaw, x, y, z]
@@ -114,32 +111,48 @@ class NineDOF_EKF():
         self.P = F @ self.P @ np.transpose(F) + G @ self.Q @ np.transpose(G)
 
     def _h(self, x):
-        z_hat = x
-        z_hat[2,0] = np.atan2(x[6,0],x[7,0])
+        z_hat = np.zeros((6,1))
+
+        z_hat[0,0] = x[0,0]
+        z_hat[1,0] = x[1,0]
+        z_hat[2,0] = x[2,0]
+        z_hat[3,0] = x[3,0]
+        z_hat[4,0] = x[4,0]
+        z_hat[5,0] = x[5,0]
 
         return z_hat
 
 
-    def correct(self, z):
+    def correct(self, z, mask):
+
         mu = self.x
         P = self.P
 
-        # define measurement Jacobian H (TO BE UPDATED)
-        H = np.eye(9)
+        # define measurement Jacobian H
+        H = np.array([
+            [1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0],
+        ])
 
         z_hat = self._h(mu)
-        err = z - z_hat
 
-        # wrap all angles
-        err[0,0] = self.wrap(err[0,0])
-        err[1,0] = self.wrap(err[1,0])
-        err[2,0] = self.wrap(err[2,0])
+        # use mask to remove absent measurements
+        H_sub = H[mask,:]
+        z_sub = z[mask]
+        z_hat_sub = z_hat[mask]
+        R_sub = self.R[np.ix_(mask,mask)]
 
-        S = H @ P @ H.T + self.R
-        K = P @ H.T @ np.linalg.pinv(S)
+        err = z_sub - z_hat_sub
+
+        S = H_sub @ P @ H_sub.T + R_sub
+        K = P @ H_sub.T @ np.linalg.pinv(S)
 
         self.x = mu + K @ err
-        self.P = (np.eye(9)- K @ H) @ P
+        self.P = (np.eye(9)- K @ H_sub) @ P
 
         # wrap all attitudes
         self.x[0,0] = self.wrap(self.x[0,0])
