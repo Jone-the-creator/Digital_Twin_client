@@ -53,15 +53,16 @@ class NineDOF_EKF():
     # Provides the non-linear state transisition function f
     def _f(self, dt, x, u):
         # integrate controls as they are all velocities
+        Thrust = (u[3,0] - 1) * 9.81
         x[0,0] += u[0,0] * dt # update pitch
         x[1,0] += u[1,0] * dt # update roll
         x[2,0] += u[2,0] * dt # update yaw
         x[3,0] += x[6,0] * dt # update x
         x[4,0] += x[7,0] * dt # update y
         x[5,0] += x[8,0] * dt # update z
-        x[6,0] += -u[3,0]*(np.cos(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])+np.sin(x[2,0])*np.sin(x[1,0])) * dt # update x velocity
-        x[7,0] += -u[3,0]*(np.sin(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])-np.cos(x[2,0])*np.sin(x[1,0])) * dt # update y velocity
-        x[8,0] += u[3,0] * dt  # update z velocity
+        x[6,0] += -Thrust*(np.cos(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])+np.sin(x[2,0])*np.sin(x[1,0])) * dt # update x velocity
+        x[7,0] += -Thrust*(np.sin(x[2,0])*np.sin(x[0,0])*np.cos(x[1,0])-np.cos(x[2,0])*np.sin(x[1,0])) * dt # update y velocity
+        x[8,0] += Thrust * dt  # update z velocity
 
         return x
 
@@ -101,6 +102,7 @@ class NineDOF_EKF():
 
         # prediction step
         self.x = self._f(dt, prev_x, u)
+
 
         # wrap all attitudes
         self.x[0,0] = self.wrap(self.x[0,0])
