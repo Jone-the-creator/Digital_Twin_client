@@ -27,6 +27,8 @@ class SetupWindow(QDialog):
 
         self.quad = None
 
+        self.values = {}
+
         # Populate controls
         self.ui.comms_dropdown.addItems(comms_options)
         self.ui.controlsystem_dropdown.addItems(controlsystem_options)
@@ -56,16 +58,14 @@ class SetupWindow(QDialog):
         self.ui.enter_button.clicked.connect(self.enter_pressed)
 
     def save_defaults(self):
-        values = {
-            "MASS": float(self.ui.mass_input.text()),
-            "comms": self.ui.comms_dropdown.currentText(),
-            "control system": self.ui.controlsystem_dropdown.currentText(),
-            "state estimator": self.ui.estimator_dropdown.currentText()
-        }
+        self.values["MASS"] = float(self.ui.mass_input.text())
+        self.values["comms"] = self.ui.comms_dropdown.currentText()
+        self.values["control system"] = self.ui.controlsystem_dropdown.currentText()
+        self.values["state estimator"] = self.ui.estimator_dropdown.currentText()
 
         functions.save_settings(
             "init_defaults.txt",
-            values
+            self.values
         )
 
     def enter_pressed(self):
