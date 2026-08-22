@@ -37,6 +37,7 @@ def update_active(obs, quad, sim, u, altitude, dt):
             thrust = u[3,0],
             z = altitude
         )
+    print(f"yaw rate = {u[0,0]:.2f}")
     obs.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
             [-np.deg2rad(u[1,0])], # pitch rate
@@ -100,7 +101,6 @@ def control_loop(obs, quad, PID, sim, PP):
                     # att_u = PP.attitude_control()
                     # u = np.vstack([att_u, np.zeros((1,1))])
                     thrust_raw = PP.altitude_control(altitude, dt)
-
             # Cancel test flight if circle pressed
             elif circle: 
                     quad.test_flight = False
@@ -121,6 +121,7 @@ def control_loop(obs, quad, PID, sim, PP):
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
                 PID.reset()
+                PP.reset()
                 u = np.zeros((4,1))
                 PID.zero() # Zeros the trim in the quadcopter object
             elif not quad.test_flight and eff_count % 10 == 0:
@@ -128,6 +129,7 @@ def control_loop(obs, quad, PID, sim, PP):
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
                 PID.reset()
+                PP.reset()
                 u = np.zeros((4,1))
 
             # --- TEST FLIGHT MODE (AUTOMATIC) ---
@@ -148,6 +150,7 @@ def control_loop(obs, quad, PID, sim, PP):
                 else:
                     quad.test_flight = False
                     PID.reset()
+                    PP.reset()
                     target_altitude = 0.0
 
                     quad.viewer.stop_step_response()
@@ -187,7 +190,6 @@ def control_loop(obs, quad, PID, sim, PP):
         # --- KILL SWITCH EFFECT ---
         if quad.killed: 
             u = np.zeros((4,1))
-
 
 
         # --- CONTROL LOOP TIMING ---
