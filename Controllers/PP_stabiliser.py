@@ -31,43 +31,45 @@ class PPstabiliser():
         self.settling_time_att = 4 # seconds
         self.overshoot_att = 20 # %
 
-
-
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 5 # in degrees
 
-        # -- MATRICES FOR ALTITUDE --
-        self.A_z = np.array([
-            [0,         1,             0],
-            [0, -self.obs.quad.c[0,0], 0],
-            [-1,        0,             0]
+        # -- CONTROL MATRICES --
+        # 12 x 12 A matrix (x dot based on x)
+        self.A = np.array([
+            [0, 0, 0, 1, 0,         0,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1,         0,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         1,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             0, -g, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             g, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, -self.obs.quad.c[0,0], 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             0, 0, 0, 0, 0, 0],
+            [0, 0, -1, 0, 0,        0,             0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             -1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0,         0,             0, -1, 0, 0, 0, 0],
         ])
 
-        self.B_z = np.array([
-            [0],
-            [1/self.obs.quad.mass],
-            [0]
+        self.B = np.array([
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0, 1/self.obs.quad.mass],
+            [1, 0, 0,           0],
+            [0, 1, 0,           0],
+            [0, 0, 1,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
+            [0, 0, 0,           0],
         ])
 
-        self.K_z = self.altitude_spec_update()
+        self.K = np.vstack(self.altitude_spec_update(), self.attitude_spec_update())
+        print(self.K)
 
-        # -- MATRICES FOR ATTITUDE --
-        self.A_att = np.array([
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
-        ])
-
-        self.B_att = np.array([
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1],
-        ])
-
-        self.K_att = self.attitude_spec_update()
-        print(self.K_att)
-
-        print(np.linalg.matrix_rank(ctrb(self.A_att,self.B_att)))
+        print(np.linalg.matrix_rank(ctrb(self.A,self.B)))
 
     def hover():
         return None
