@@ -94,12 +94,11 @@ def control_loop(obs, quad, PID, sim, PP):
                     PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
+                    PID.pitch_setpoint = -pitch 
+                    PID.roll_setpoint = roll
+                    u = PP.hover(altitude, dt)
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
-                    # PP.pitch_setpoint = -pitch 
-                    # PP.roll_setpoint = roll
-                    # att_u = PP.attitude_control()
-                    # u = np.vstack([att_u, np.zeros((1,1))])
-                    thrust_raw = PP.altitude_control(altitude, dt)
+                    thrust_raw = u[3,0]
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -227,7 +226,6 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    PP.hover(1.0, dt=dt)
     threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
 
     # ---- COMMS ----

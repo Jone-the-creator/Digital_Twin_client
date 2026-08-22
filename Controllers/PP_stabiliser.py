@@ -84,14 +84,14 @@ class PPstabiliser():
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
 
         # calculate real setpoint errors
-        altitude_error = self.obs.quad.position.z - altitude_setpoint
-        roll_error = self.obs.quad.attitude.roll - self.roll_setpoint
-        pitch_error = self.obs.quad.attitude.pitch - self.pitch_setpoint
+        altitude_error = altitude_setpoint - self.obs.quad.position.z
+        roll_error = np.deg2rad(self.roll_setpoint - self.obs.quad.attitude.roll)
+        pitch_error = np.deg2rad(self.pitch_setpoint - self.obs.quad.attitude.pitch)
 
         # integrate errors
         self.integrated_z_error += altitude_error * dt
-        self.integrated_roll_error += roll_error * dt
-        self.integrated_pitch_error += pitch_error * dt
+        self.integrated_roll_error -= roll_error * dt
+        self.integrated_pitch_error -= pitch_error * dt
 
         # clip integrators
         self.integrated_z_error = np.clip(self.integrated_z_error, -0.1, 0.1)
@@ -99,20 +99,22 @@ class PPstabiliser():
         self.integrated_pitch_error = np.clip(self.integrated_pitch_error, -0.25, 0.25)
 
         x = np.array([
-            [self.obs.quad.position.z],     # z
+            [altitude_error],     # z
             [self.obs.x[5,0]],              # z velocity
-            [self.obs.quad.attitude.roll],  # roll
-            [self.obs.quad.attitude.pitch], # pitch
-            [self.obs.quad.attitude.yaw],   # yaw
+            [roll_error],  # roll
+            [pitch_error], # pitch
+            [np.deg2rad(self.obs.quad.attitude.yaw)],   # yaw
             [self.integrated_z_error],      # integrated altitude error 
             [self.integrated_roll_error],   # integrated roll error
             [self.integrated_pitch_error]   # integrated pitch error
         ])
 
-        u = -(self.K @ x)
-        u[0,0] = np.rad2deg(u[0,0])
-        u[1,0] = np.rad2deg(u[1,0])
-        u[2,0] = np.rad2deg(u[2,0])
+        u = -self.K @ x
+        print(f"(pre_transform) roll dot = {u[0,0]}, pitch dot = {u[1,0]}, yaw dot = {u[2,0]}, thrust = {u[3,0]}")
+        u[0,0] = u[0,0]
+        u[1,0] = u[1,0]
+        u[2,0] = u[2,0]
+        # u[3,0] *= self.obs.quad.PWM_thrust_gain
         u[3,0] = hover_thrust - u[3,0] * self.obs.quad.PWM_thrust_gain
         print(f"roll dot = {u[0,0]}, pitch dot = {u[1,0]}, yaw dot = {u[2,0]}, thrust = {u[3,0]}")
         return u
