@@ -1,8 +1,14 @@
 # Written by Jonah Habel 2026
 # Flinders University
+#
+# with assistance from Microsoft Copilot
+# runtime.py
+# -- collates all objects and functions to run the digital twin program --
+
+# -- IMPORTS --
 
 from Classes import PS5Controller
-from Classes.PID_stabiliser import PIDstabiliser
+from Controllers.PID_stabiliser import PIDstabiliser
 from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PySide6.QtWidgets import QApplication
@@ -11,16 +17,19 @@ import pygame
 import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
-from Classes.simulation import QuadSimulation
-from Classes.PID_stabiliser import PIDstabiliser
+from Models.state_space_model import Nonlinear_Model
+from Controllers.PID_stabiliser import PIDstabiliser
+from Controllers.PP_stabiliser import PPstabiliser
+from Models.state_observer import Observer
+
+# -- VARIABLES --
 
 running = True
-viewer_exists = False
 LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
-def update_active(quad, sim, u, altitude, dt):
+def update_active(obs, quad, sim, u, altitude, dt):
     quad.update_controls(
             yaw_rate = u[0,0],
             pitch = u[1,0],
@@ -28,8 +37,15 @@ def update_active(quad, sim, u, altitude, dt):
             thrust = u[3,0],
             z = altitude
         )
+    obs.update(np.array([
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
     if quad.simulation_mode:
-        sim.model.update(np.array([
+        sim.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
             [-np.deg2rad(u[1,0])], # pitch rate
             [-np.deg2rad(u[0,0])], # yaw rate
@@ -39,13 +55,14 @@ def update_active(quad, sim, u, altitude, dt):
 
 
     # ---- CONTROL LOOP ----
-def control_loop(quad, stab, sim):
+def control_loop(obs, quad, PID, sim, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
     count = 0
     eff_count = 0
     u = np.zeros((4,1))
+    att_u = np.zeros((3,1))
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
@@ -69,15 +86,25 @@ def control_loop(quad, stab, sim):
             if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
                 roll, pitch, yaw_rate, altitude = \
                 functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
-                stab.pitch_setpoint = -pitch
-                stab.roll_setpoint = roll
+                PID.pitch_setpoint = -pitch
+                PID.roll_setpoint = roll
                 u[0,0] = yaw_rate
-                u[1,0], u[2,0], thrust_raw = stab.hover(altitude)
+                if quad.control_system == "PID":
+                    PID.pitch_setpoint = -pitch
+                    PID.roll_setpoint = roll
+                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
+                elif quad.control_system == "Pole-placement":
+                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
+                    # PP.pitch_setpoint = -pitch 
+                    # PP.roll_setpoint = roll
+                    # att_u = PP.attitude_control()
+                    # u = np.vstack([att_u, np.zeros((1,1))])
+                    thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
             elif circle: 
                     quad.test_flight = False
-                    stab.reset()
+                    PID.reset()
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
@@ -87,109 +114,81 @@ def control_loop(quad, stab, sim):
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
             elif triangle and not quad.killed and eff_count % 2 == 0:
                 quad.test_flight = True
+                quad.viewer.reset_step_response()
 
             # Reset altitude and thrust when r1 cross is pressed
             elif cross and eff_count % 4 == 0:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
-                stab.reset()
+                PID.reset()
                 u = np.zeros((4,1))
-                stab.zero() # Zeros the trim in the quadcopter object
+                PID.zero() # Zeros the trim in the quadcopter object
             elif not quad.test_flight and eff_count % 10 == 0:
                 thrust_raw = 0
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
-                stab.reset()
+                PID.reset()
                 u = np.zeros((4,1))
 
             # --- TEST FLIGHT MODE (AUTOMATIC) ---
             if quad.test_flight is True:
                 if count == 0:
                     target_altitude = 0.0     
-                    stab.zero() # Zeros the setpoints
+                    PID.zero() # Zeros the setpoints
                 flight_time = count * dt
+                if not quad.recording_active:
+                    # Start Recording thread
+                    quad.viewer.start_record_signal.emit()
+                    quad.recording_active = True
 
                 # -- TEST FLIGHT SEQUENCE --
-                if flight_time < 2:
-                    target_altitude = 0.25 * flight_time # slowly increase to 0.5
-
-                elif flight_time < 6:
-                    target_altitude = 0.5 # hold at altitude for 4 seconds
-
-                elif flight_time < 8:
-                    # Only start a recording thread if one hasn't started
-                    if not quad.recording_active:
-                        # Start Recording thread
-                        quad.viewer.start_record_signal.emit()
-                        quad.recording_active = True
-                    target_altitude += 0.25 * dt # slowly increase to 1m
-
-                elif flight_time < 16:
-                    target_altitude = 1.0 # hold at altitude for 8 seconds   
-                    
-                elif flight_time < 20:
-                    target_altitude -= 0.25 * dt # slowly decrease to 0m
-                    if target_altitude < 0.5: # stop recording at 0.5m
-                        if quad.recording_active:
-                            quad.viewer.stop_record_signal.emit()
-                            quad.recording_active = False
-
+                if flight_time < 5:
+                    target_altitude = 1 # hold at altitude for 5 seconds  
+                
                 else:
                     quad.test_flight = False
-                    stab.reset()
+                    PID.reset()
                     target_altitude = 0.0
+
+                    quad.viewer.stop_step_response()
+
                     # stop recording if still recording
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
 
-                u[1,0], u[2,0], thrust_raw = stab.hover(target_altitude)
+                u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
+                thrust_raw = PP.altitude_control(target_altitude, dt)
 
             elif not r1:
                 # If no test flight started reset stabiliser and disable recording
-                stab.reset()
+                PID.reset()
                 if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
                 count = 0
 
             # # Smooth the thrust using an 'alpha' value
-            quad._thrust_smoothed = (
-                (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
-            )
-            u[3,0] = np.clip(int(quad._thrust_smoothed), 0.0, quad.max_thrust)              
-            
-            #if eff_count % (LOOP_RATE/3) == 0:
-                #print(
-                    # f"altitude = {altitude} "
-                    # f"thrust={thrust}, "
-                    # f"r1={r1}, "
-                    # f"killed={quad.killed}, "
-                    # f"test={quad.test_flight}"
-                    # f"x ={quad.position.x} "
-                    # f"y ={quad.position.y} "
-                    # f"z ={quad.position.z} "
-                    # f"x setpoint = {current_x} "
-                    # f"y setpoint = {current_y} "
-                    # f"pitch rate cmd = {u[1,0]}, "
-                    # f"roll rate cmd = {u[2,0]}, "
-                    # f"pitch setpoint = {stab.pitch_setpoint}, "
-                    # f"roll setpoint = {stab.roll_setpoint} "
-                    # )              
-            
+            # quad._thrust_smoothed = (
+            #     (1 - alpha) * quad._thrust_smoothed + alpha * thrust_raw
+            # )
+            u[3,0] = np.clip(int(thrust_raw), 0.0, quad.max_thrust)                    
+
+            # --- UPDATE CONTROLS ---
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
-                update_active(quad, sim, u, target_altitude, dt)
+                update_active(obs, quad, sim, u, target_altitude, dt)
             else:
-                update_active(quad, sim, u, altitude, dt)
+                update_active(obs, quad, sim, u, altitude, dt)
                 
-
         if quad.test_flight:
             count += 1
 
         # --- KILL SWITCH EFFECT ---
         if quad.killed: 
             u = np.zeros((4,1))
+
+
 
         # --- CONTROL LOOP TIMING ---
         loop_time = time.time() - start_time
@@ -210,8 +209,10 @@ def main():
 
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
-    sim = QuadSimulation(quad)
-    stab = PIDstabiliser(quad)
+    obs = Observer(quad)
+    sim = Nonlinear_Model(quad)
+    PID = PIDstabiliser(quad)
+    PP = PPstabiliser(obs)
 
     if quad is None:
         print("User cancelled startup.")
@@ -226,7 +227,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(quad,stab,sim)).start()
+    threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
 
     # ---- COMMS ----
     comms = None
@@ -245,7 +246,10 @@ def main():
     timer.timeout.connect(pump_pygame)
     timer.start(10)  # 100 Hz
 
-    quad.viewer = MainWindow(quad, stab)
+    if quad.control_system == "PID":
+        quad.viewer = MainWindow(quad, PID)
+    elif quad.control_system == "Pole-placement":
+        quad.viewer = MainWindow(quad, PP)
 
     # Explicit shutdown function
     def shutdown():

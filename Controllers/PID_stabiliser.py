@@ -1,7 +1,9 @@
 # Written by Jonah Habel 2026
 # Flinders University
 #
-# with assistance from Microsoft Copilot
+# PID_stabiliser.py
+# -- defines the PID stabiliser class stabilising the quadcopter with PID control about hover --
+
 
 import numpy as np
 import time
@@ -48,7 +50,6 @@ class PIDstabiliser():
         # max integral term (limit integral windup)
         self.max_int = 40
 
-        self.DC_gain_z = 13000.0
         self.Kp_z = 3.5
         self.Ki_z = 0.75
         self.Kd_z = 0.65
@@ -63,7 +64,7 @@ class PIDstabiliser():
     def hover(self, altitude_setpoint):
         # --- ALTITUDE CONTROL ---
         altitude = self.quad.position.z
-        hover_thrust = self.DC_gain_z * self.quad.mass * 9.81 
+        hover_thrust = self.quad.PWM_thrust_gain * self.quad.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
         self.altitude_integral += altitude_error * self.quad.dt
@@ -71,7 +72,7 @@ class PIDstabiliser():
         self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
         self.prev_altitude_error = altitude_error
 
-        thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
+        thrust = altitude_error * self.Kp_z * self.quad.PWM_thrust_gain + self.altitude_integral * self.Ki_z * self.quad.PWM_thrust_gain + self.altitude_derivative * self.Kd_z * self.quad.PWM_thrust_gain + hover_thrust
 
         # # --- ATTITUDE CONTROL ---
 
@@ -94,20 +95,6 @@ class PIDstabiliser():
         roll_rate = roll_error * self.Kp_att + self.roll_integral * self.Ki_att + self.roll_derivative * self.Kd_att
 
         return pitch_rate, roll_rate, thrust
-        
-    def altitude_control(self, altitude_setpoint):
-        altitude = self.position.z
-        hover_thrust = self.DC_gain_z * self.mass * 9.81 
-
-        altitude_error = altitude_setpoint - altitude
-        self.altitude_integral += altitude_error * self.quad.dt
-
-        self.altitude_derivative = (altitude_error - self.prev_altitude_error) / self.quad.dt
-        self.prev_altitude_error = altitude_error
-
-        thrust = altitude_error * self.Kp_z * self.DC_gain_z + self.altitude_integral * self.Ki_z * self.DC_gain_z + self.altitude_derivative * self.Kd_z * self.DC_gain_z + hover_thrust
-    
-        return thrust
 
     def reset(self):
         # Reset integral errors

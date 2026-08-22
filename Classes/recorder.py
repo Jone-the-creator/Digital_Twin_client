@@ -2,6 +2,8 @@
 # Flinders University
 #
 # with assistance from Microsoft Copilot
+# recorder.py
+# -- defines the recorder worker class used for recording data --
 
 from PySide6.QtCore import ( 
     QObject, Signal, QThread

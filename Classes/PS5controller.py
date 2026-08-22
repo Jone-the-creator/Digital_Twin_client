@@ -2,6 +2,9 @@
 # Flinders University
 #
 # with assistance from Microsoft Copilot
+# PS5controller.py
+# -- defines the class used for reading the PS5 controller --
+
 
 import pygame
 

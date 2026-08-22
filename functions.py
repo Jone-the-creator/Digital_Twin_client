@@ -2,11 +2,10 @@
 # Flinders University
 #
 # with assistance from Microsoft Copilot
+# functions.py
+# -- defines random functions (e.g. default saving functions) for improved QoL --
 
 import os
-import numpy as np
-
-thrust_set = 0.0
 
 # save dictionary keys and values into a file
 def save_settings(filename, settings):

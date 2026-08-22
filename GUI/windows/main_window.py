@@ -2,6 +2,8 @@
 # Flinders University
 #
 # with assistance from Microsoft Copilot
+# main_window.py
+# -- used to instantiate and control imported main window UI from the designer --
 
 from PySide6 import QtGui
 from PySide6.QtCore import (
@@ -10,18 +12,19 @@ from PySide6.QtCore import (
 from PySide6.QtWidgets import (
     QPushButton, QHBoxLayout, QMainWindow, QLabel, QVBoxLayout
 )
+import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import os, trimesh
+import os, trimesh, time, collections
 import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
-from GUI.ui.ui_setup import Ui_Dialog
+from scipy.signal import place_poles
 
-#importing quadcopter model (RELATIVE PATH)
+# importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
 model_path = os.path.join(base_dir, "Models", "Quadcopter.stl")
 
-#load model and ensure centered
+# load model and ensure centered
 mesh = trimesh.load(model_path)
 vertices = mesh.vertices
 faces = mesh.faces
@@ -37,10 +40,39 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
+
+        self.response_time = []
+        self.response_altitude = []
+        self.response_setpoint = []
+        self.logging_response = False
+
+        self.step_start_time = time.time()
         
         # instantiate ui
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # Step response plot
+        self.response_plot = pg.PlotWidget()
+
+        self.response_plot.setLabel('left', 'Altitude (m)')
+        self.response_plot.setLabel('bottom', 'Time (s)')
+        self.response_plot.showGrid(x=True, y=True)
+        self.response_plot.addLegend()
+
+        layout = QVBoxLayout(self.ui.widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.response_plot)
+
+        self.alt_curve = self.response_plot.plot(
+            pen='y',
+            name='Altitude'
+        )
+
+        self.sp_curve = self.response_plot.plot(
+            pen='r',
+            name='Setpoint'
+        )
 
         # OpenGL view inside placeholder
         self.view = gl.GLViewWidget()
@@ -80,6 +112,7 @@ class MainWindow(QMainWindow):
         )
 
         self.ui.recording_label.hide()  # hidden by default
+        self.ui.Warn_alarm.hide() # hidden by default
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(
@@ -120,11 +153,39 @@ class MainWindow(QMainWindow):
         self.view.addItem(self.y_axis)
         self.view.addItem(self.z_axis)
 
-        self.update_pid_labels(
-            self.stab.Kp_att,
-            self.stab.Ki_att,
-            self.stab.Kd_att
-        )
+        # Control tuning
+        if self.quadcopter.control_system == "Pole-placement":
+            self.ui.title.setText("Pole-placement Tuning")
+
+            # hide all tuning for PID
+            self.ui.D_label.hide()
+            self.ui.d_add_large.hide()
+            self.ui.d_add_small.hide()
+            self.ui.d_sub_large.hide()
+            self.ui.d_sub_small.hide()
+
+            # change buttons for PP
+            self.ui.p_add_large.setText("+0.25s")
+            self.ui.p_add_small.setText("+0.05s")
+            self.ui.p_sub_large.setText("-0.25s")
+            self.ui.p_sub_small.setText("-0.05s")
+            self.ui.i_add_large.setText("+1.0%")
+            self.ui.i_add_small.setText("+0.25%")
+            self.ui.i_sub_large.setText("-1.0%")
+            self.ui.i_sub_small.setText("-0.25%")
+
+            self.update_PP_labels(
+                self.stab.settling_time_z,
+                self.stab.overshoot_z
+            )
+
+        elif self.quadcopter.control_system == "PID":
+            self.ui.title.setText("PID Tuning")
+            self.update_pid_labels(
+                self.stab.Kp_att,
+                self.stab.Ki_att,
+                self.stab.Kd_att
+            )
 
         # render loop
         self.render_timer = QTimer()
@@ -140,57 +201,40 @@ class MainWindow(QMainWindow):
         self.ui.start_recording_btn.clicked.connect(self.start_record)
         self.ui.stop_recording_btn.clicked.connect(self.stop_record)
 
-        # connect buttons to change gains
-        # P gains
-        self.ui.p_sub_large.clicked.connect(
-            lambda: self.handle_pid_change("P", -0.25)
-        )
 
-        self.ui.p_sub_small.clicked.connect(
-            lambda: self.handle_pid_change("P", -0.05)
-        )
+        if self.quadcopter.control_system == "PID":
+            # connect buttons to change gains
+            # P gains
+            self.ui.p_sub_large.clicked.connect(lambda: self.handle_pid_change("P", -0.25))
+            self.ui.p_sub_small.clicked.connect(lambda: self.handle_pid_change("P", -0.05))
+            self.ui.p_add_small.clicked.connect(lambda: self.handle_pid_change("P", 0.05))
+            self.ui.p_add_large.clicked.connect(lambda: self.handle_pid_change("P", 0.25))
 
-        self.ui.p_add_small.clicked.connect(
-            lambda: self.handle_pid_change("P", 0.05)
-        )
+            # I gains
+            self.ui.i_sub_large.clicked.connect(lambda: self.handle_pid_change("I", -0.25))
+            self.ui.i_sub_small.clicked.connect(lambda: self.handle_pid_change("I", -0.05))
+            self.ui.i_add_small.clicked.connect(lambda: self.handle_pid_change("I", 0.05))
+            self.ui.i_add_large.clicked.connect(lambda: self.handle_pid_change("I", 0.25))
 
-        self.ui.p_add_large.clicked.connect(
-            lambda: self.handle_pid_change("P", 0.25)
-        )
+            # D gains
+            self.ui.d_sub_large.clicked.connect(lambda: self.handle_pid_change("D", -0.25))
+            self.ui.d_sub_small.clicked.connect(lambda: self.handle_pid_change("D", -0.05))
+            self.ui.d_add_small.clicked.connect(lambda: self.handle_pid_change("D", 0.05))
+            self.ui.d_add_large.clicked.connect(lambda: self.handle_pid_change("D", 0.25))
 
-        # I gains
-        self.ui.i_sub_large.clicked.connect(
-            lambda: self.handle_pid_change("I", -0.25)
-        )
+        elif self.quadcopter.control_system == "Pole-placement":
+            # connect buttons to change specs
+            # Settling time
+            self.ui.p_sub_large.clicked.connect(lambda: self.handle_spec_change("Tss", -0.25))
+            self.ui.p_sub_small.clicked.connect(lambda: self.handle_spec_change("Tss", -0.05))
+            self.ui.p_add_small.clicked.connect(lambda: self.handle_spec_change("Tss", 0.05))
+            self.ui.p_add_large.clicked.connect(lambda: self.handle_spec_change("Tss", 0.25))
 
-        self.ui.i_sub_small.clicked.connect(
-            lambda: self.handle_pid_change("I", -0.05)
-        )
-
-        self.ui.i_add_small.clicked.connect(
-            lambda: self.handle_pid_change("I", 0.05)
-        )
-
-        self.ui.i_add_large.clicked.connect(
-            lambda: self.handle_pid_change("I", 0.25)
-        )
-
-        # D gains
-        self.ui.d_sub_large.clicked.connect(
-            lambda: self.handle_pid_change("D", -0.25)
-        )
-
-        self.ui.d_sub_small.clicked.connect(
-            lambda: self.handle_pid_change("D", -0.05)
-        )
-
-        self.ui.d_add_small.clicked.connect(
-            lambda: self.handle_pid_change("D", 0.05)
-        )
-
-        self.ui.d_add_large.clicked.connect(
-            lambda: self.handle_pid_change("D", 0.25)
-        )
+            # Overshoot
+            self.ui.i_sub_large.clicked.connect(lambda: self.handle_spec_change("Mp", -1.0))
+            self.ui.i_sub_small.clicked.connect(lambda: self.handle_spec_change("Mp", -0.25))
+            self.ui.i_add_small.clicked.connect(lambda: self.handle_spec_change("Mp", 0.25))
+            self.ui.i_add_large.clicked.connect(lambda: self.handle_spec_change("Mp", 1.0))
 
         self.start_record_signal.connect(self.start_record)
         self.stop_record_signal.connect(self.stop_record)
@@ -242,50 +286,36 @@ class MainWindow(QMainWindow):
             )
 
         # update readings
-        self.ui.yaw_reading.setText(
-            f"Yaw: {self.quadcopter.attitude.yaw:.2f} °"
-        )
-
-        self.ui.pitch_reading.setText(
-            f"Pitch: {self.quadcopter.attitude.pitch:.2f} °"
-        )
-
-        self.ui.roll_reading.setText(
-            f"Roll: {self.quadcopter.attitude.roll:.2f} °"
-        )
-
-        self.ui.altitude_reading.setText(
-            f"Current Altitude: {self.quadcopter.position.z:.2f} m"
-        )
-
-        self.ui.altitude_sp_reading.setText(
-            f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m"
-        )
-
-        self.ui.loop_rate_reading.setText(
-            f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz"
-        )
-        
+        self.ui.yaw_reading.setText(f"Yaw: {self.quadcopter.attitude.yaw:.2f} °")
+        self.ui.pitch_reading.setText(f"Pitch: {self.quadcopter.attitude.pitch:.2f} °")
+        self.ui.roll_reading.setText(f"Roll: {self.quadcopter.attitude.roll:.2f} °")
+        self.ui.altitude_reading.setText(f"Current Altitude: {self.quadcopter.position.z:.2f} m")
+        self.ui.altitude_sp_reading.setText(f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m")
+        self.ui.loop_rate_reading.setText(f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz")
         controller = self.ui.controller_select.currentText().lower()
 
-        if controller == "altitude controller":
-            self.update_pid_labels(
-                self.stab.Kp_z,
-                self.stab.Ki_z,
-                self.stab.Kd_z
+        if self.quadcopter.control_system == "Pole-placement":
+            self.update_PP_labels(
+                self.stab.settling_time_z,
+                self.stab.overshoot_z
             )
-        else:
-            self.update_pid_labels(
-                self.stab.Kp_att,
-                self.stab.Ki_att,
-                self.stab.Kd_att
-            )
+
+        elif self.quadcopter.control_system == "PID":
+            if controller == "altitude controller":
+                self.update_pid_labels(
+                    self.stab.Kp_z,
+                    self.stab.Ki_z,
+                    self.stab.Kd_z
+                )
+            else:
+                self.update_pid_labels(
+                    self.stab.Kp_att,
+                    self.stab.Ki_att,
+                    self.stab.Kd_att
+                )
+        self.update_step_response()
 
     def start_record(self):
-        # if hasattr(self, "thread") and self.thread is not None:
-        #    if self.thread.isRunning():
-        #        return  # already recording
-
         # shows recording status
         self.ui.recording_label.show()
 
@@ -341,6 +371,30 @@ class MainWindow(QMainWindow):
                 self.stab.Kd_att
             )
 
+    def handle_spec_change(self, spec, delta):
+        controller = self.ui.controller_select.currentText().lower()
+        if controller == "altitude controller":
+            if spec == "Tss":
+                self.stab.settling_time_z += delta
+            elif spec == "Mp":
+                self.stab.overshoot_z += delta
+            self.update_PP_labels(
+                self.stab.settling_time_z,
+                self.stab.overshoot_z
+            )
+
+        # -- APPLY UPDATE TO POLES --
+        self.stab.K_z = self.stab.altitude_spec_update()
+
+        if self.stab.delay_ratio_z < 0.09:
+            self.ui.Warn_alarm.hide()
+        elif self.stab.delay_ratio_z < 0.12:
+            self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
+            self.ui.Warn_alarm.show()
+        else:
+            self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
+            self.ui.Warn_alarm.show()
+
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (
             not self.quadcopter.simulation_mode
@@ -359,3 +413,39 @@ class MainWindow(QMainWindow):
         self.ui.P_label.setText(f"P: {kp:.2f}")
         self.ui.I_label.setText(f"I: {ki:.2f}")
         self.ui.D_label.setText(f"D: {kd:.2f}")
+
+    def update_PP_labels(self, Tss, Mp):
+        self.ui.P_label.setText(f"Settling time: {Tss:.2f} s")
+        self.ui.I_label.setText(f"Overshoot: {Mp:.2f} %")
+        self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")
+
+    def update_step_response(self):
+        elapsed = time.time() - self.step_start_time
+
+        self.response_time.append(elapsed)
+
+        self.response_altitude.append(
+            self.quadcopter.position.z
+        )
+
+        self.response_setpoint.append(
+            self.quadcopter.controls.z
+        )
+
+        self.alt_curve.setData(
+            list(self.response_time),
+            list(self.response_altitude)
+        )
+
+        self.sp_curve.setData(
+            list(self.response_time),
+            list(self.response_setpoint)
+        )
+    def reset_step_response(self):
+        self.response_time.clear()
+        self.response_altitude.clear()
+        self.response_setpoint.clear()
+        self.logging_response = True
+
+    def stop_step_response(self):
+        self.logging_response = False
