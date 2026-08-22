@@ -111,6 +111,9 @@ class PPstabiliser():
         self.pitch_setpoint = 0.0
         self.roll_setpoint = 0.0
 
+        # Reset integral errors
+        self.integrated_z_error = 0.0
+
         # Set current yaw to target
         self.yaw_rate_setpoint = 0.0
 

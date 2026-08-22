@@ -105,6 +105,7 @@ def control_loop(obs, quad, PID, sim, PP):
             elif circle: 
                     quad.test_flight = False
                     PID.reset()
+                    PP.reset()
                     if quad.recording_active:
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
@@ -121,6 +122,7 @@ def control_loop(obs, quad, PID, sim, PP):
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
                 PID.reset()
+                PP.reset()
                 u = np.zeros((4,1))
                 PID.zero() # Zeros the trim in the quadcopter object
             elif not quad.test_flight and eff_count % 10 == 0:
