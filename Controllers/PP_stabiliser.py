@@ -25,10 +25,12 @@ class PPstabiliser():
         # adjustable altitude specifications
         self.settling_time_z = 1.25 # seconds
         self.overshoot_z = 10 # %
+        self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications
         self.settling_time_att = 4 # seconds
         self.overshoot_att = 20 # %
+
 
 
         # maximum angle change to remain within linear approximation (small angle change)
@@ -116,6 +118,7 @@ class PPstabiliser():
         # poles that adjust based on specifications
         self.zeta_z = np.sqrt(((np.log(self.overshoot_z/100))**2)/(np.pi**2+(np.log(self.overshoot_z/100))**2))
         self.omega_z = 4/(self.zeta_z*self.settling_time_z)
+        self.delay_ratio_z = self.omega_z * self.obs.quad.dt # should be under 0.1 for stability
      
         # calculate poles based on adjustable specifications
         self.desired_poles_z = np.array([-self.zeta_z*self.omega_z * 5, 

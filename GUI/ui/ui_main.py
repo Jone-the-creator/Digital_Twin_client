@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowjMpMDV.ui'
+## Form generated from reading UI file 'main_windowzccPRn.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -138,10 +138,12 @@ class Ui_MainWindow(object):
         self.widget.setGeometry(QRect(860, 60, 331, 281))
         self.widget1 = QWidget(self.centralwidget)
         self.widget1.setObjectName(u"widget1")
-        self.widget1.setGeometry(QRect(630, 400, 561, 242))
-        self.verticalLayout_4 = QVBoxLayout(self.widget1)
+        self.widget1.setGeometry(QRect(630, 400, 561, 266))
+        self.verticalLayout_5 = QVBoxLayout(self.widget1)
+        self.verticalLayout_5.setObjectName(u"verticalLayout_5")
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_4 = QVBoxLayout()
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.title = QLabel(self.widget1)
@@ -252,6 +254,18 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.PP_k_label)
 
+
+        self.verticalLayout_5.addLayout(self.verticalLayout_4)
+
+        self.Warn_alarm = QLabel(self.widget1)
+        self.Warn_alarm.setObjectName(u"Warn_alarm")
+        font1 = QFont()
+        font1.setBold(True)
+        self.Warn_alarm.setFont(font1)
+        self.Warn_alarm.setStyleSheet(u"color: rgb(255, 170, 0);")
+
+        self.verticalLayout_5.addWidget(self.Warn_alarm)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -298,5 +312,6 @@ class Ui_MainWindow(object):
         self.d_add_small.setText(QCoreApplication.translate("MainWindow", u"+0.05", None))
         self.d_add_large.setText(QCoreApplication.translate("MainWindow", u"+0.25", None))
         self.PP_k_label.setText(QCoreApplication.translate("MainWindow", u"k_0 = ", None))
+        self.Warn_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Approaching instability", None))
     # retranslateUi
 

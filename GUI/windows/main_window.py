@@ -112,6 +112,7 @@ class MainWindow(QMainWindow):
         )
 
         self.ui.recording_label.hide()  # hidden by default
+        self.ui.Warn_alarm.hide() # hidden by default
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(
@@ -384,6 +385,15 @@ class MainWindow(QMainWindow):
 
         # -- APPLY UPDATE TO POLES --
         self.stab.K_z = self.stab.altitude_spec_update()
+
+        if self.stab.delay_ratio_z < 0.09:
+            self.ui.Warn_alarm.hide()
+        elif self.stab.delay_ratio_z < 0.12:
+            self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
+            self.ui.Warn_alarm.show()
+        else:
+            self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
+            self.ui.Warn_alarm.show()
 
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (
