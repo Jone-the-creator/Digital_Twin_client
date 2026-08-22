@@ -55,10 +55,10 @@ class SetupWindow(QDialog):
                 defaults.get("state estimator")
             )
 
-        # Signals
+        # buttons
         self.ui.save_button.clicked.connect(self.save_defaults)
-
         self.ui.enter_button.clicked.connect(self.enter_pressed)
+        self.ui.calibrate_button.clicked.connect(self.cal.init)
 
     def save_defaults(self):
         self.values["MASS"] = float(self.ui.mass_input.text())
@@ -81,6 +81,7 @@ class SetupWindow(QDialog):
         )
 
         self.accept()
+
 
 # this will run the setup window before the main client, system will exit if this is cancelled
 def run_setup():

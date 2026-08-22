@@ -19,10 +19,17 @@ from GUI.ui.ui_calibration import Ui_Dialog
 class CalibrationWindow(QDialog):
     def __init__(self, SetupWindow):
         super().__init__()
-
+        self.SetupWindow = SetupWindow
         self.ui = Ui_Dialog()
+
+    def init(self):
         self.ui.setupUi(self)
 
-        defaults = SetupWindow.values
+        self.defaults = self.SetupWindow.values
 
-        defaults["test"] = "big test"
+        self.ui.save_button.clicked.connect(self.hover_thrust)
+
+        self.exec()
+
+    def hover_thrust(self):
+        self.defaults["test"] = "test test"
