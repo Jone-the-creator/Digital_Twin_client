@@ -295,10 +295,16 @@ class MainWindow(QMainWindow):
         controller = self.ui.controller_select.currentText().lower()
 
         if self.quadcopter.control_system == "Pole-placement":
-            self.update_PP_labels(
-                self.stab.settling_time_z,
-                self.stab.overshoot_z
-            )
+            if controller == "altitude controller":
+                self.update_PP_labels(
+                    self.stab.settling_time_z,
+                    self.stab.overshoot_z
+                )
+            else:
+                self.update_PP_labels(
+                    self.stab.settling_time_att,
+                    self.stab.overshoot_att
+                )
 
         elif self.quadcopter.control_system == "PID":
             if controller == "altitude controller":
@@ -382,18 +388,32 @@ class MainWindow(QMainWindow):
                 self.stab.settling_time_z,
                 self.stab.overshoot_z
             )
+        if controller == "attitude controller":
+            if spec == "Tss":
+                self.stab.settling_time_att += delta
+            elif spec == "Mp":
+                self.stab.overshoot_att += delta
+            self.update_PP_labels(
+                self.stab.settling_time_att,
+                self.stab.overshoot_att
+            )
 
         # -- APPLY UPDATE TO POLES --
-        self.stab.K_z = self.stab.altitude_spec_update()
+        self.stab.desired_poles = np.hstack((
+            self.stab.desired_poles_z, # altitude state poles
+            self.stab.desired_poles_att, # attitude state poles
+        )).flatten()
 
-        if self.stab.delay_ratio_z < 0.09:
-            self.ui.Warn_alarm.hide()
-        elif self.stab.delay_ratio_z < 0.12:
-            self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
-            self.ui.Warn_alarm.show()
-        else:
-            self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
-            self.ui.Warn_alarm.show()
+        self.stab.K = place_poles(self.stab.A,self.stab.B,self.stab.desired_poles).gain_matrix
+
+        # if self.stab.delay_ratio_z < 0.09:
+        #     self.ui.Warn_alarm.hide()
+        # elif self.stab.delay_ratio_z < 0.12:
+        #     self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
+        #     self.ui.Warn_alarm.show()
+        # else:
+        #     self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
+        #     self.ui.Warn_alarm.show()
 
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (
@@ -417,7 +437,7 @@ class MainWindow(QMainWindow):
     def update_PP_labels(self, Tss, Mp):
         self.ui.P_label.setText(f"Settling time: {Tss:.2f} s")
         self.ui.I_label.setText(f"Overshoot: {Mp:.2f} %")
-        self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")
+        self.ui.PP_k_label.setText(f"k_0 = {self.stab.K[0,0]:.2f}, k_1 = {self.stab.K[0,1]:.2f}, k_2 = {self.stab.K[0,2]:.2f}")
 
     def update_step_response(self):
         elapsed = time.time() - self.step_start_time

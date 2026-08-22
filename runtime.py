@@ -227,6 +227,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
+    PP.hover(1.0, dt=dt)
     threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
 
     # ---- COMMS ----
