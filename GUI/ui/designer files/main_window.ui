@@ -229,151 +229,171 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
       <x>630</x>
       <y>400</y>
       <width>561</width>
-      <height>242</height>
+      <height>266</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <layout class="QVBoxLayout" name="verticalLayout_5">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QLabel" name="title">
-         <property name="text">
-          <string>PID Tuning</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="controller_select"/>
-       </item>
-       <item>
-        <widget class="QLabel" name="P_label">
-         <property name="text">
-          <string>P:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QPushButton" name="p_sub_large">
+          <widget class="QLabel" name="title">
            <property name="text">
-            <string>-0.25</string>
+            <string>PID Tuning</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="p_sub_small">
+          <widget class="QComboBox" name="controller_select"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="P_label">
            <property name="text">
-            <string>-0.05</string>
+            <string>P:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="p_add_small">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <widget class="QPushButton" name="p_sub_large">
+             <property name="text">
+              <string>-0.25</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="p_sub_small">
+             <property name="text">
+              <string>-0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="p_add_small">
+             <property name="text">
+              <string>+0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="p_add_large">
+             <property name="text">
+              <string>+0.25</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="I_label">
            <property name="text">
-            <string>+0.05</string>
+            <string>I:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="p_add_large">
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QPushButton" name="i_sub_large">
+             <property name="text">
+              <string>-0.25</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="i_sub_small">
+             <property name="text">
+              <string>-0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="i_add_small">
+             <property name="text">
+              <string>+0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="i_add_large">
+             <property name="text">
+              <string>+0.25</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QLabel" name="D_label">
            <property name="text">
-            <string>+0.25</string>
+            <string>D:</string>
            </property>
           </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QPushButton" name="d_sub_large">
+             <property name="text">
+              <string>-0.25</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="d_sub_small">
+             <property name="text">
+              <string>-0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="d_add_small">
+             <property name="text">
+              <string>+0.05</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="d_add_large">
+             <property name="text">
+              <string>+0.25</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="I_label">
+        <widget class="QLabel" name="PP_k_label">
          <property name="text">
-          <string>I:</string>
+          <string>k_0 = </string>
          </property>
         </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QPushButton" name="i_sub_large">
-           <property name="text">
-            <string>-0.25</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="i_sub_small">
-           <property name="text">
-            <string>-0.05</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="i_add_small">
-           <property name="text">
-            <string>+0.05</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="i_add_large">
-           <property name="text">
-            <string>+0.25</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QLabel" name="D_label">
-         <property name="text">
-          <string>D:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <item>
-          <widget class="QPushButton" name="d_sub_large">
-           <property name="text">
-            <string>-0.25</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="d_sub_small">
-           <property name="text">
-            <string>-0.05</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="d_add_small">
-           <property name="text">
-            <string>+0.05</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="d_add_large">
-           <property name="text">
-            <string>+0.25</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
       </layout>
      </item>
      <item>
-      <widget class="QLabel" name="PP_k_label">
+      <widget class="QLabel" name="Warn_alarm">
+       <property name="font">
+        <font>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">color: rgb(255, 170, 0);</string>
+       </property>
        <property name="text">
-        <string>k_0 = </string>
+        <string>Warning: Approaching instability</string>
        </property>
       </widget>
      </item>
     </layout>
    </widget>
   </widget>
+  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
@@ -383,8 +403,13 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <height>33</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuCalibration">
+    <property name="title">
+     <string>Calibration</string>
+    </property>
+   </widget>
+   <addaction name="menuCalibration"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
  <connections/>

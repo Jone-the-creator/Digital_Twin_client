@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QDialog, QApplication
 from GUI.ui.ui_setup import Ui_Dialog
 
 from Classes.quadcopter import Quadcopter
+from GUI.windows.calibration_window import CalibrationWindow
 import functions, sys
 
 
@@ -28,6 +29,8 @@ class SetupWindow(QDialog):
         self.quad = None
 
         self.values = {}
+
+        self.cal = CalibrationWindow(self)
 
         # Populate controls
         self.ui.comms_dropdown.addItems(comms_options)
