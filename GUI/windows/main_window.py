@@ -113,8 +113,10 @@ class MainWindow(QMainWindow):
             width=3
         )
 
-        self.ui.recording_label.hide()  # hidden by default
-        self.ui.Warn_alarm.hide() # hidden by default
+        # alarms/warnings hidden by default
+        self.ui.recording_label.hide()
+        self.ui.Warn_alarm.hide()
+        self.ui.Warn_thrust_alarm.hide() 
 
         # initialise camera viewing from behind drone
         self.view.setCameraPosition(

@@ -1,4 +1,3 @@
-test=test test
 MASS=0.27
 comms=Crazyradio
 control system=Pole-placement

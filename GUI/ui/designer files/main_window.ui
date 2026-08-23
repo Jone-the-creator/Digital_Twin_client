@@ -410,6 +410,27 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <string>Calibrate</string>
     </property>
    </widget>
+   <widget class="QLabel" name="Warn_thrust_alarm">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>700</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Warning: Using default thrust</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">

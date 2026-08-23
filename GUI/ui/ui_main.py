@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowWITeQe.ui'
+## Form generated from reading UI file 'main_windowMHIear.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -272,6 +272,11 @@ class Ui_MainWindow(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.calibrate_button.setFont(font2)
+        self.Warn_thrust_alarm = QLabel(self.centralwidget)
+        self.Warn_thrust_alarm.setObjectName(u"Warn_thrust_alarm")
+        self.Warn_thrust_alarm.setGeometry(QRect(630, 700, 191, 16))
+        self.Warn_thrust_alarm.setFont(font1)
+        self.Warn_thrust_alarm.setStyleSheet(u"color: rgb(255, 170, 0);")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -320,5 +325,6 @@ class Ui_MainWindow(object):
         self.PP_k_label.setText(QCoreApplication.translate("MainWindow", u"k_0 = ", None))
         self.Warn_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Approaching instability", None))
         self.calibrate_button.setText(QCoreApplication.translate("MainWindow", u"Calibrate", None))
+        self.Warn_thrust_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Using default thrust", None))
     # retranslateUi
 
