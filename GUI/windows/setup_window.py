@@ -27,6 +27,10 @@ class SetupWindow(QDialog):
 
         self.quad = None
 
+        self.values = {}
+
+        self.defaults = defaults
+
         # Populate controls
         self.ui.comms_dropdown.addItems(comms_options)
         self.ui.controlsystem_dropdown.addItems(controlsystem_options)
@@ -35,38 +39,36 @@ class SetupWindow(QDialog):
         # Set defaults
         self.ui.mass_input.setText(defaults.get("MASS", ""))
 
-        if defaults.get("comms") in comms_options:
+        if self.defaults.get("comms") in comms_options:
             self.ui.comms_dropdown.setCurrentText(
-                defaults.get("comms")
+                self.defaults.get("comms")
             )
 
-        if defaults.get("control system") in controlsystem_options:
+        if self.defaults.get("control system") in controlsystem_options:
             self.ui.controlsystem_dropdown.setCurrentText(
-                defaults.get("control system")
+                self.defaults.get("control system")
             )
 
-        if defaults.get("state estimator") in estimator_options:
+        if self.defaults.get("state estimator") in estimator_options:
             self.ui.estimator_dropdown.setCurrentText(
-                defaults.get("state estimator")
+                self.defaults.get("state estimator")
             )
 
-        # Signals
+        # buttons
         self.ui.save_button.clicked.connect(self.save_defaults)
-
         self.ui.enter_button.clicked.connect(self.enter_pressed)
 
     def save_defaults(self):
-        values = {
-            "MASS": float(self.ui.mass_input.text()),
-            "comms": self.ui.comms_dropdown.currentText(),
-            "control system": self.ui.controlsystem_dropdown.currentText(),
-            "state estimator": self.ui.estimator_dropdown.currentText()
-        }
+        self.values["MASS"] = float(self.ui.mass_input.text())
+        self.values["comms"] = self.ui.comms_dropdown.currentText()
+        self.values["control system"] = self.ui.controlsystem_dropdown.currentText()
+        self.values["state estimator"] = self.ui.estimator_dropdown.currentText()
 
-        functions.save_settings(
+        functions.replace_settings(
             "init_defaults.txt",
-            values
+            self.values
         )
+        print(self.values)
 
     def enter_pressed(self):
         self.quad = Quadcopter(
@@ -74,10 +76,13 @@ class SetupWindow(QDialog):
             comms=self.ui.comms_dropdown.currentText(),
             controller=None,
             estimator=self.ui.estimator_dropdown.currentText(),
-            control_system=self.ui.controlsystem_dropdown.currentText()
+            control_system=self.ui.controlsystem_dropdown.currentText(),
+            hover_thrust=self.defaults.get("hover thrust")
         )
+        print(self.quad.hover_thrust)
 
         self.accept()
+
 
 # this will run the setup window before the main client, system will exit if this is cancelled
 def run_setup():

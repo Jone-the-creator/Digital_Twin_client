@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>280</height>
+    <width>390</width>
+    <height>278</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Digital Twin Setup Window</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>12</x>
@@ -106,8 +106,8 @@
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>240</y>
+     <x>11</x>
+     <y>241</y>
      <width>371</width>
      <height>29</height>
     </rect>
