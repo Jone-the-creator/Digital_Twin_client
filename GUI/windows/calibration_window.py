@@ -8,7 +8,8 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QDialog
 
 from GUI.ui.ui_calibration import Ui_Dialog
-from functions import append_settings
+from functions import replace_settings
+import statistics
 
 class CalibrationWindow(QDialog):
     def __init__(self, obs):
@@ -27,13 +28,15 @@ class CalibrationWindow(QDialog):
         self.acc_z_filtered = 0.995 # start accelerometer filter biased under 1.0
         self.running_average = 0.0
         self.average_total = 0.0
+        self.tests_results = []
         self.average_num = 0
         self.liftoff_count = 0
+        self.dev = 0
 
         # connect button clicks
         self.ui.calibrate_button.clicked.connect(self.calibrate_thrust)
         self.ui.close_button.clicked.connect(self.close)
-        self.ui.save_button.clicked.connect(lambda: append_settings("init_defaults.txt", self.defaults_append))
+        self.ui.save_button.clicked.connect(lambda: replace_settings("init_defaults.txt", self.defaults_append))
 
         # hide labels by default
         self.ui.label_2.hide()
@@ -53,8 +56,12 @@ class CalibrationWindow(QDialog):
         self.ui.calibrate_button.setText("Cancel Test")
         self.ui.calibrate_button.clicked.connect(self.cancel_thrust)
 
-        # when completing subsequent tests, start closer to the average
-        self.current_thrust = 0.8 * self.running_average
+        # when completing subsequent tests, start 2 standard deviations away
+        if self.dev == 0:
+            self.current_thrust = self.running_average * 0.33
+        else:
+            self.current_thrust = self.running_average - self.dev * 2
+        print(f"standard deviation = {self.dev}")
 
         self.testing = True
         self.timer.start(30)
@@ -62,7 +69,6 @@ class CalibrationWindow(QDialog):
     def test_acc(self):
         # lowpass filter the accelerometer reading (in Gs)
         self.acc_z_filtered = 0.85 * self.acc_z_filtered + 0.15 * self.quad.acc_z
-        print(self.acc_z_filtered)
 
         # do not run if testing has been cancelled or finished
         if not self.testing:
@@ -76,18 +82,35 @@ class CalibrationWindow(QDialog):
         else:
             self.liftoff_count = 0
         if self.liftoff_count >= 3:
-            # load into running average
-            self.average_num += 1
-            self.average_total += self.current_thrust
-            self.running_average = self.average_total/self.average_num
+            # compute standard deviation
+            if self.current_thrust > (self.running_average - self.dev * 1.5) and self.current_thrust < (self.running_average + self.dev * 1.5):
+                # if standard deviation exists, only include thrusts that are within 1.5 standard deviations 
+                self.tests_results.append(self.current_thrust)
+                self.average_num += 1
+                self.average_total += self.current_thrust
+                self.running_average = self.average_total/self.average_num
+                self.ui.label_3.hide()
+            elif len(self.tests_results) <= 1:
+                # contribute to average if no standard deviation exists
+                self.tests_results.append(self.current_thrust)
+                self.average_num += 1
+                self.average_total += self.current_thrust
+                self.running_average = self.average_total/self.average_num
+                self.ui.label_3.hide()
+            else:
+                # outside of range
+                self.ui.label_3.show()
+                self.ui.label_3.setText("Measurement outside of 1 standard deviation of the current data")
+
+            if len(self.tests_results) > 1:
+                self.dev = statistics.stdev(self.tests_results)
 
             self.defaults_append["hover thrust"] = self.running_average
 
             # hide process labels and show hover thrust label
             self.ui.label_2.hide()
-            self.ui.label_3.hide()
             self.ui.label_4.show()
-            self.ui.label_4.setText(f"Hover achieved! Average hover thrust = {self.quad.controls.thrust:.0f} ({self.average_num} tests)")
+            self.ui.label_4.setText(f"Hover achieved! Average hover thrust = {self.running_average:.0f} ({self.average_num} tests)")
 
             # reset the button
             self.ui.calibrate_button.setText("Calibrate Hover Thrust")

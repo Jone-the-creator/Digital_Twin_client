@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'calibrationtlYCmV.ui'
+## Form generated from reading UI file 'calibrationtNxQnr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -36,7 +36,7 @@ class Ui_Dialog(object):
         self.label_2.setGeometry(QRect(10, 40, 181, 16))
         self.label_3 = QLabel(Dialog)
         self.label_3.setObjectName(u"label_3")
-        self.label_3.setGeometry(QRect(10, 70, 121, 16))
+        self.label_3.setGeometry(QRect(10, 70, 391, 16))
         self.label_4 = QLabel(Dialog)
         self.label_4.setObjectName(u"label_4")
         self.label_4.setGeometry(QRect(10, 100, 381, 16))

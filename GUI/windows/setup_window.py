@@ -62,7 +62,7 @@ class SetupWindow(QDialog):
         self.values["control system"] = self.ui.controlsystem_dropdown.currentText()
         self.values["state estimator"] = self.ui.estimator_dropdown.currentText()
 
-        functions.save_settings(
+        functions.replace_settings(
             "init_defaults.txt",
             self.values
         )
