@@ -249,9 +249,9 @@ def main():
     timer.start(10)  # 100 Hz
 
     if quad.control_system == "PID":
-        quad.viewer = MainWindow(quad, PID)
+        quad.viewer = MainWindow(quad, PID, obs)
     elif quad.control_system == "Pole-placement":
-        quad.viewer = MainWindow(quad, PP)
+        quad.viewer = MainWindow(quad, PP, obs)
 
     # Explicit shutdown function
     def shutdown():

@@ -37,10 +37,11 @@ md = gl.MeshData.sphere(rows=10,cols=10)
 class MainWindow(QMainWindow):
     start_record_signal = Signal()
     stop_record_signal = Signal()
-    def __init__(self, quadcopter, stabiliser):
+    def __init__(self, quadcopter, stabiliser, obs):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
+        self.obs = obs
         self.cal = None
 
         self.response_time = []
@@ -458,5 +459,5 @@ class MainWindow(QMainWindow):
         self.logging_response = False
 
     def calibration_window(self):
-        self.cal = CalibrationWindow(self.quadcopter)
+        self.cal = CalibrationWindow(self.obs)
         self.cal.exec()

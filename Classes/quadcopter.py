@@ -213,6 +213,8 @@ class Quadcopter:
         if a_y is not None and a_z is not None and a_x is not None:
             z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
 
+        self.acc_z = a_z
+
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
             # correct states
