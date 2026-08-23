@@ -48,7 +48,7 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, MASS:float, comms: str, controller, estimator, control_system):
+    def __init__(self, MASS:float, comms: str, controller, estimator, control_system, hover_thrust):
         self.mass: float = MASS
         # self.I_xx: float = I_xx
         # self.I_yy: float = I_yy
@@ -57,6 +57,10 @@ class Quadcopter:
         self.controller = controller
         self.control_system = control_system
         self.estimator = estimator
+        if hover_thrust is not None:
+            self.hover_thrust = float(hover_thrust)
+        else:
+            self.hover_thrust = 38000
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
         self.velocity = Velocity() # velocity readings in m/s
@@ -73,7 +77,7 @@ class Quadcopter:
 
         self.max_thrust = 54000
         self.thrust = 0.0
-        self.PWM_thrust_gain = 39000 / (self.mass * 9.81) # approximate thrust gain based on gravitational force
+        self.PWM_thrust_gain = self.hover_thrust / (self.mass * 9.81) # approximate thrust gain based on gravitational force
         self.kd = 0.05 # drag coefficient
 
         # Conditions
@@ -212,6 +216,8 @@ class Quadcopter:
             z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
         if a_y is not None and a_z is not None and a_x is not None:
             z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
+
+        self.acc_z = a_z
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
