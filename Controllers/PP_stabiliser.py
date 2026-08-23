@@ -23,7 +23,7 @@ class PPstabiliser():
         self.integrated_z_error = 0 
 
         # adjustable altitude specifications
-        self.settling_time_z = 2.5 # seconds
+        self.settling_time_z = 1.25 # seconds
         self.overshoot_z = 10 # %
         self.delay_ratio_z = 0.0
 
@@ -73,15 +73,16 @@ class PPstabiliser():
         return None
         
     def altitude_control(self, altitude_setpoint, dt):
-        altitude_error = altitude_setpoint - self.obs.quad.position.z
-        self.integrated_z_error -= altitude_error * dt
-        self.integrated_z_error = np.clip(self.integrated_z_error, -0.5, 0.5)
+        altitude_error = self.obs.quad.position.z - altitude_setpoint
+        self.integrated_z_error += altitude_error * dt
+        self.integrated_z_error = np.clip(self.integrated_z_error, -0.1, 0.5)
 
+        altitude_dot = self.obs.x[5,0] # observed altitude velocity
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
         x = np.array([
-            [self.obs.quad.position.z], # z state
-            [self.obs.x[5,0]],          # z dot state
-            [-self.integrated_z_error]  # z error integral state
+            [altitude_error],
+            [altitude_dot],
+            [-self.integrated_z_error]
         ])
 
         u = hover_thrust - (self.K_z @ x) * self.obs.quad.PWM_thrust_gain
@@ -123,7 +124,7 @@ class PPstabiliser():
         self.delay_ratio_z = self.omega_z * self.obs.quad.dt # should be under 0.1 for stability
      
         # calculate poles based on adjustable specifications
-        self.desired_poles_z = np.array([-self.zeta_z*self.omega_z * 500, 
+        self.desired_poles_z = np.array([-self.zeta_z*self.omega_z * 5, 
                                 -self.zeta_z*self.omega_z + (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j, 
                                 -self.zeta_z*self.omega_z - (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j 
                                 ])
