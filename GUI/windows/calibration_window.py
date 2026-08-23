@@ -17,19 +17,12 @@ from PySide6.QtWidgets import (QApplication, QDialog, QLabel, QPushButton,
 from GUI.ui.ui_calibration import Ui_Dialog
 
 class CalibrationWindow(QDialog):
-    def __init__(self, SetupWindow):
+    def __init__(self, quad):
         super().__init__()
-        self.SetupWindow = SetupWindow
         self.ui = Ui_Dialog()
-
-    def init(self):
         self.ui.setupUi(self)
 
-        self.defaults = self.SetupWindow.values
-
-        self.ui.save_button.clicked.connect(self.hover_thrust)
-
-        self.exec()
+        self.ui.calibrate_button.clicked.connect(self.hover_thrust)
 
     def hover_thrust(self):
         self.defaults["test"] = "test test"

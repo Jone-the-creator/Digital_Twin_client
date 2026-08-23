@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QDialog, QApplication
 from GUI.ui.ui_setup import Ui_Dialog
 
 from Classes.quadcopter import Quadcopter
-from GUI.windows.calibration_window import CalibrationWindow
 import functions, sys
 
 
@@ -29,8 +28,6 @@ class SetupWindow(QDialog):
         self.quad = None
 
         self.values = {}
-
-        self.cal = CalibrationWindow(self)
 
         # Populate controls
         self.ui.comms_dropdown.addItems(comms_options)
@@ -58,7 +55,6 @@ class SetupWindow(QDialog):
         # buttons
         self.ui.save_button.clicked.connect(self.save_defaults)
         self.ui.enter_button.clicked.connect(self.enter_pressed)
-        self.ui.calibrate_button.clicked.connect(self.cal.init)
 
     def save_defaults(self):
         self.values["MASS"] = float(self.ui.mass_input.text())
@@ -70,6 +66,7 @@ class SetupWindow(QDialog):
             "init_defaults.txt",
             self.values
         )
+        print(self.values)
 
     def enter_pressed(self):
         self.quad = Quadcopter(

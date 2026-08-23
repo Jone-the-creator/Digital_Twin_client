@@ -223,7 +223,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      </rect>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>630</x>
@@ -392,6 +392,24 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="calibrate_button">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>720</y>
+      <width>119</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Calibrate</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
@@ -403,12 +421,6 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <height>33</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuCalibration">
-    <property name="title">
-     <string>Calibration</string>
-    </property>
-   </widget>
-   <addaction name="menuCalibration"/>
   </widget>
  </widget>
  <resources/>

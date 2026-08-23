@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'setup_dialogsgyToO.ui'
+## Form generated from reading UI file 'setup_dialogFBewZK.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -23,7 +23,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(400, 278)
+        Dialog.resize(390, 278)
         self.layoutWidget = QWidget(Dialog)
         self.layoutWidget.setObjectName(u"layoutWidget")
         self.layoutWidget.setGeometry(QRect(12, 5, 371, 221))
@@ -81,7 +81,7 @@ class Ui_Dialog(object):
 
         self.widget = QWidget(Dialog)
         self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(10, 240, 371, 29))
+        self.widget.setGeometry(QRect(11, 241, 371, 29))
         self.horizontalLayout = QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -90,12 +90,6 @@ class Ui_Dialog(object):
         self.save_button.setFont(font)
 
         self.horizontalLayout.addWidget(self.save_button)
-
-        self.calibrate_button = QPushButton(self.widget)
-        self.calibrate_button.setObjectName(u"calibrate_button")
-        self.calibrate_button.setFont(font)
-
-        self.horizontalLayout.addWidget(self.calibrate_button)
 
         self.enter_button = QPushButton(self.widget)
         self.enter_button.setObjectName(u"enter_button")
@@ -119,7 +113,6 @@ class Ui_Dialog(object):
         self.controller_label.setText(QCoreApplication.translate("Dialog", u"Select control system:", None))
         self.estimator_label.setText(QCoreApplication.translate("Dialog", u"Select state estimator:", None))
         self.save_button.setText(QCoreApplication.translate("Dialog", u"Save as defaults", None))
-        self.calibrate_button.setText(QCoreApplication.translate("Dialog", u"Calibrate", None))
         self.enter_button.setText(QCoreApplication.translate("Dialog", u"Enter", None))
     # retranslateUi
 

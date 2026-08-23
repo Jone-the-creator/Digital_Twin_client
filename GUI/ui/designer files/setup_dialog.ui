@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>390</width>
     <height>278</height>
    </rect>
   </property>
@@ -106,8 +106,8 @@
   <widget class="QWidget" name="">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>240</y>
+     <x>11</x>
+     <y>241</y>
      <width>371</width>
      <height>29</height>
     </rect>
@@ -122,18 +122,6 @@
       </property>
       <property name="text">
        <string>Save as defaults</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="calibrate_button">
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Calibrate</string>
       </property>
      </widget>
     </item>

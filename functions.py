@@ -13,6 +13,12 @@ def save_settings(filename, settings):
         for key, value in settings.items():
             file.write(f"{key}={value}\n")
 
+# will append dictionary keys and values into existing file
+def append_settings(filename, settings):
+    with open(os.path.join("GUI",filename), "a") as file:
+        for key, value in settings.items():
+            file.write(f"{key}={value}\n")
+
 # read dictionary keys and values from a file
 def load_settings(filename):
     settings = {}

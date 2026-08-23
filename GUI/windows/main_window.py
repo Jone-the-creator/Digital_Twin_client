@@ -19,6 +19,7 @@ import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
 from scipy.signal import place_poles
+from GUI.windows.calibration_window import CalibrationWindow
 
 # importing quadcopter model (RELATIVE PATH)
 base_dir = os.path.dirname(os.path.dirname(__file__)) # go to project folder
@@ -40,6 +41,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
+        self.cal = None
 
         self.response_time = []
         self.response_altitude = []
@@ -200,6 +202,9 @@ class MainWindow(QMainWindow):
         # record data when start recording button pressed
         self.ui.start_recording_btn.clicked.connect(self.start_record)
         self.ui.stop_recording_btn.clicked.connect(self.stop_record)
+
+        # open calibration window upon button press
+        self.ui.calibrate_button.clicked.connect(self.calibration_window)
 
 
         if self.quadcopter.control_system == "PID":
@@ -449,3 +454,7 @@ class MainWindow(QMainWindow):
 
     def stop_step_response(self):
         self.logging_response = False
+
+    def calibration_window(self):
+        self.cal = CalibrationWindow(self.quadcopter)
+        self.cal.exec()
