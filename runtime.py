@@ -67,7 +67,6 @@ def control_loop(obs, quad, PID, sim, PP):
     altitude = 0.0
     target_altitude = 0.0
     
-
     while running:
         start_time = time.time()
         if quad.controller:
@@ -118,22 +117,23 @@ def control_loop(obs, quad, PID, sim, PP):
                 quad.viewer.reset_step_response()
 
             # Reset altitude and thrust when r1 cross is pressed
-            elif cross and eff_count % 4 == 0:
+            elif cross and eff_count % 4 == 0 and not quad.calibrating:
                 thrust_raw = 0
                 functions.joystick_to_setpoint.altitude = 0.0
                 PID.reset()
                 PP.reset()
                 u = np.zeros((4,1))
                 PID.zero() # Zeros the trim in the quadcopter object
-            elif not quad.test_flight and eff_count % 10 == 0:
+            elif not quad.test_flight and eff_count % 10 == 0 and not quad.calibrating:
                 thrust_raw = 0
                 altitude = 0.0
                 functions.joystick_to_setpoint.altitude = 0.0
                 PID.reset()
+                PP.reset()
                 u = np.zeros((4,1))
 
             # --- TEST FLIGHT MODE (AUTOMATIC) ---
-            if quad.test_flight is True:
+            if quad.test_flight:
                 if count == 0:
                     target_altitude = 0.0     
                     PID.zero() # Zeros the setpoints
@@ -162,7 +162,7 @@ def control_loop(obs, quad, PID, sim, PP):
                 u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
                 thrust_raw = PP.altitude_control(target_altitude, dt)
 
-            elif not r1:
+            elif not r1 and not quad.calibrating:
                 # If no test flight started reset stabiliser and disable recording
                 PID.reset()
                 if quad.recording_active:
@@ -180,7 +180,7 @@ def control_loop(obs, quad, PID, sim, PP):
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
                 update_active(obs, quad, sim, u, target_altitude, dt)
-            else:
+            elif not quad.calibrating:
                 update_active(obs, quad, sim, u, altitude, dt)
                 
         if quad.test_flight:

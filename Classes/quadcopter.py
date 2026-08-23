@@ -85,6 +85,7 @@ class Quadcopter:
         self.test_flight = False
         self.recording_active = False      
         self.simulation_mode = False
+        self.calibrating = False
 
         if self.estimator == "Kalman Filter":
             self.att_KF = att_Kalmanfilter()

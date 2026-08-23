@@ -48,6 +48,7 @@ class CalibrationWindow(QDialog):
         #show process labels
         self.ui.label_2.show()
         self.ui.label_3.show()
+        self.quad.calibrating = True
 
         # start accelerometer filter biased under 1.0
         self.acc_z_filtered = 0.995
@@ -121,6 +122,7 @@ class CalibrationWindow(QDialog):
             self.liftoff_count = 0
             self.timer.stop()
             self.testing = False
+            self.quad.calibrating = False
 
         # increase by 100 each loop (30ms)
         self.current_thrust += 100
@@ -128,6 +130,7 @@ class CalibrationWindow(QDialog):
     def cancel_thrust(self):
         # reset variables
         self.testing = False
+        self.quad.calibrating = False
         self.quad.controls.thrust = 0.0
         self.current_thrust = 0.0
         self.liftoff_count = 0
