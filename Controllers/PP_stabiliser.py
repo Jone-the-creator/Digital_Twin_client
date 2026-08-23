@@ -30,8 +30,8 @@ class PPstabiliser():
         self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications
-        self.settling_time_att = 0.5 # seconds
-        self.overshoot_att = 5 # %
+        self.settling_time_att = 0.75 # seconds
+        self.overshoot_att = 20 # %
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 5 # in degrees
@@ -94,14 +94,17 @@ class PPstabiliser():
         return u[0,0]
 
     def attitude_control(self, dt):
-        roll_error = self.roll_setpoint - self.obs.quad.attitude.roll
+        roll_error = self.roll_setpoint - self.obs.x[7,0]
         pitch_error = self.pitch_setpoint - self.obs.quad.attitude.pitch
 
         self.integrated_pitch_error += pitch_error * dt
         self.integrated_roll_error += roll_error * dt
 
+        # self.integrated_pitch_error = np.clip(self.integrated_pitch_error, -np.deg2rad(5), np.deg2rad(5))
+        # self.integrated_roll_error = np.clip(self.integrated_roll_error, -np.deg2rad(5), np.deg2rad(5))
+
         x_pitch = np.array([
-            [np.deg2rad(self.obs.quad.attitude.pitch)],
+            [self.obs.x[7,0]],
             [np.deg2rad(self.integrated_pitch_error)],
         ])
 
@@ -111,6 +114,7 @@ class PPstabiliser():
         ])
 
         u_pitch = -self.K_pitch @ x_pitch
+        print(f"pitch={np.rad2deg(self.obs.x[7,0])}, ")
         u_roll = -self.K_roll @ x_roll
         return -np.rad2deg(u_pitch[0,0]), np.rad2deg(u_roll[0,0])
 
@@ -121,6 +125,8 @@ class PPstabiliser():
 
         # Reset integral errors
         self.integrated_z_error = 0.0
+        self.integrated_roll_error = 0.0
+        self.integrated_pitch_error = 0.0
 
         # Set current yaw to target
         self.yaw_rate_setpoint = 0.0

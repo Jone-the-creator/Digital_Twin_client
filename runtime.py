@@ -25,7 +25,7 @@ from Models.state_observer import Observer
 # -- VARIABLES --
 
 running = True
-LOOP_RATE = 300 # control loop rate in Hz
+LOOP_RATE = 500 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
@@ -39,7 +39,7 @@ def update_active(obs, quad, sim, u, altitude, dt):
         )
     obs.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
-            [-np.deg2rad(u[1,0])], # pitch rate
+            [np.deg2rad(u[1,0])], # pitch rate
             [-np.deg2rad(u[0,0])], # yaw rate
             [u[3,0]]]), # thrust
             dt
@@ -58,11 +58,9 @@ def update_active(obs, quad, sim, u, altitude, dt):
 def control_loop(obs, quad, PID, sim, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
-    alpha = 0.1
     count = 0
     eff_count = 0
     u = np.zeros((4,1))
-    att_u = np.zeros((3,1))
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
@@ -96,8 +94,6 @@ def control_loop(obs, quad, PID, sim, PP):
                     # u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
                     PP.pitch_setpoint = -pitch 
                     PP.roll_setpoint = roll
-                    # att_u = PP.attitude_control()
-                    # u = np.vstack([att_u, np.zeros((1,1))])
                     u[1,0], u[2,0] = PP.attitude_control(dt)
                     thrust_raw = PP.altitude_control(altitude, dt)
 
@@ -196,7 +192,7 @@ def control_loop(obs, quad, PID, sim, PP):
         # --- CONTROL LOOP TIMING ---
         loop_time = time.time() - start_time
         while(loop_time < dt):
-            time.sleep(0.00001)
+            time.sleep(0.000001)
             loop_time = time.time() - start_time
 
         if eff_count % (LOOP_RATE/2) == 0:

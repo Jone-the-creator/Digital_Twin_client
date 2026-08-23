@@ -7,7 +7,7 @@
 # written based on instruction from 
 # https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration
 
-import time, threading
+import time, threading, random as rand
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -203,5 +203,6 @@ class CRTP_logger:
                 yawrate = float(self.quadcopter.controls.yaw_rate),
                 thrust = int(self.quadcopter.controls.thrust)
             )
-            # print(f"transmitted pitch rate {float(self.quadcopter.controls.pitch)}")
+            if rand.randint(1,10) == 4:
+                print(f"transmitted pitch rate {float(self.quadcopter.controls.pitch)}")
             # print(f"transmitted thrust = {int(self.quadcopter.controls.thrust)}")

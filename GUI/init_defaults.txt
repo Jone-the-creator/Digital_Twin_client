@@ -2,4 +2,4 @@ MASS=0.27
 comms=Crazyradio
 control system=Pole-placement
 state estimator=Kalman Filter
-hover thrust=40008.96477752078
+hover thrust=31333.5
