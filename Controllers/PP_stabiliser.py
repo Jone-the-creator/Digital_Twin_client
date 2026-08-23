@@ -23,15 +23,13 @@ class PPstabiliser():
         self.integrated_z_error = 0 
 
         # adjustable altitude specifications
-        self.settling_time_z = 1.25 # seconds
-        self.overshoot_z = 10 # %
+        self.settling_time_z = 1.8 # seconds
+        self.overshoot_z = 14 # %
         self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications
         self.settling_time_att = 4 # seconds
         self.overshoot_att = 20 # %
-
-
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 5 # in degrees
@@ -75,9 +73,7 @@ class PPstabiliser():
     def altitude_control(self, altitude_setpoint, dt):
         altitude_error = altitude_setpoint - self.obs.quad.position.z
         self.integrated_z_error += altitude_error * dt
-        # self.integrated_z_error = np.clip(self.integrated_z_error, -0.1, 0.5)
 
-        altitude_dot = self.obs.x[5,0] # observed altitude velocity
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
         x = np.array([
             [self.obs.quad.position.z],

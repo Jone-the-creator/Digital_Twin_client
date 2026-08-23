@@ -293,6 +293,11 @@ class MainWindow(QMainWindow):
                 int(self.quadcopter.battery_percent)
             )
 
+        if self.quadcopter.hover_thrust == 38000:
+            self.ui.Warn_thrust_alarm.show()
+        else:
+            self.ui.Warn_thrust_alarm.hide()
+
         # update readings
         self.ui.yaw_reading.setText(f"Yaw: {self.quadcopter.attitude.yaw:.2f} °")
         self.ui.pitch_reading.setText(f"Pitch: {self.quadcopter.attitude.pitch:.2f} °")

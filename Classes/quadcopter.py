@@ -78,7 +78,6 @@ class Quadcopter:
         self.max_thrust = 54000
         self.thrust = 0.0
         self.PWM_thrust_gain = self.hover_thrust / (self.mass * 9.81) # approximate thrust gain based on gravitational force
-        self.kd = 0.05 # drag coefficient
 
         # Conditions
         self.killed = False
