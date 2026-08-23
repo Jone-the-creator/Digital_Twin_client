@@ -29,6 +29,8 @@ class SetupWindow(QDialog):
 
         self.values = {}
 
+        self.defaults = defaults
+
         # Populate controls
         self.ui.comms_dropdown.addItems(comms_options)
         self.ui.controlsystem_dropdown.addItems(controlsystem_options)
@@ -37,19 +39,19 @@ class SetupWindow(QDialog):
         # Set defaults
         self.ui.mass_input.setText(defaults.get("MASS", ""))
 
-        if defaults.get("comms") in comms_options:
+        if self.defaults.get("comms") in comms_options:
             self.ui.comms_dropdown.setCurrentText(
-                defaults.get("comms")
+                self.defaults.get("comms")
             )
 
-        if defaults.get("control system") in controlsystem_options:
+        if self.defaults.get("control system") in controlsystem_options:
             self.ui.controlsystem_dropdown.setCurrentText(
-                defaults.get("control system")
+                self.defaults.get("control system")
             )
 
-        if defaults.get("state estimator") in estimator_options:
+        if self.defaults.get("state estimator") in estimator_options:
             self.ui.estimator_dropdown.setCurrentText(
-                defaults.get("state estimator")
+                self.defaults.get("state estimator")
             )
 
         # buttons
@@ -74,8 +76,10 @@ class SetupWindow(QDialog):
             comms=self.ui.comms_dropdown.currentText(),
             controller=None,
             estimator=self.ui.estimator_dropdown.currentText(),
-            control_system=self.ui.controlsystem_dropdown.currentText()
+            control_system=self.ui.controlsystem_dropdown.currentText(),
+            hover_thrust=self.defaults.get("hover thrust")
         )
+        print(self.quad.hover_thrust)
 
         self.accept()
 

@@ -36,7 +36,7 @@ class CalibrationWindow(QDialog):
         # connect button clicks
         self.ui.calibrate_button.clicked.connect(self.calibrate_thrust)
         self.ui.close_button.clicked.connect(self.close)
-        self.ui.save_button.clicked.connect(lambda: replace_settings("init_defaults.txt", self.defaults_append))
+        self.ui.save_button.clicked.connect(self.save_thrust)
 
         # hide labels by default
         self.ui.label_2.hide()
@@ -143,4 +143,11 @@ class CalibrationWindow(QDialog):
 
         # stop timer
         self.timer.stop()
+
+    # save as default and to current instance
+    def save_thrust(self):
+        self.quad.hover_thrust = self.running_average
+        replace_settings("init_defaults.txt", self.defaults_append)
+        print(self.quad.hover_thrust)
+
 
