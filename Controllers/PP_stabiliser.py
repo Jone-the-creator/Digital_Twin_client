@@ -30,8 +30,8 @@ class PPstabiliser():
         self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications
-        self.settling_time_att = 4 # seconds
-        self.overshoot_att = 20 # %
+        self.settling_time_att = 0.5 # seconds
+        self.overshoot_att = 5 # %
 
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle = 5 # in degrees
@@ -52,21 +52,17 @@ class PPstabiliser():
         self.K_z = self.altitude_spec_update()
 
         # -- MATRICES FOR ATTITUDE --
-        self.A_att = np.array([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [-1, 0, 0, 0],
-            [0, -1, 0, 0],
+        self.A_pitch = np.array([
+            [0, 0],
+            [-1, 0],
         ])
 
-        self.B_att = np.array([
-            [1, 0],
-            [0, 1],
-            [0, 0],
-            [0, 0],
+        self.B_pitch = np.array([
+            [1],
+            [0],
         ])
 
-        self.K_att = self.attitude_spec_update()
+        self.K_pitch = self.attitude_spec_update()
 
     def hover():
         return None
@@ -93,17 +89,15 @@ class PPstabiliser():
         self.integrated_pitch_error += pitch_error * dt
         self.integrated_roll_error += roll_error * dt
 
-        x = np.array([
+        x_pitch = np.array([
             [np.deg2rad(self.obs.quad.attitude.pitch)],
-            [np.deg2rad(self.obs.quad.attitude.roll)],
             [np.deg2rad(self.integrated_pitch_error)],
-            [np.deg2rad(self.integrated_roll_error)]
         ])
 
-        u = -self.K_att @ x
+        u = -self.K_pitch @ x_pitch
         print("pitch =", self.obs.quad.attitude.pitch)
         print("u_pitch rate =", np.rad2deg(u[0,0]))
-        return np.rad2deg(u[0,0]), np.rad2deg(u[1,0])
+        return -np.rad2deg(u[0,0]), 0
 
     def reset(self):
         # Reset setpoints
@@ -138,12 +132,10 @@ class PPstabiliser():
         self.omega_att = 4/(self.zeta_att*self.settling_time_att)
      
         # calculate poles based on adjustable specifications
-        self.desired_poles_att = np.array([
-                                -self.zeta_att*self.omega_att * 5,
-                                -self.zeta_att*self.omega_att * 8,      
+        self.desired_poles_att = np.array([  
                                 -self.zeta_att*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
                                 -self.zeta_att*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,                              
                                 ])
 
 
-        return place_poles(self.A_att,self.B_att,self.desired_poles_att).gain_matrix
+        return place_poles(self.A_pitch,self.B_pitch,self.desired_poles_att).gain_matrix
