@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'calibrationSUahRP.ui'
+## Form generated from reading UI file 'calibrationtlYCmV.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -39,7 +39,7 @@ class Ui_Dialog(object):
         self.label_3.setGeometry(QRect(10, 70, 121, 16))
         self.label_4 = QLabel(Dialog)
         self.label_4.setObjectName(u"label_4")
-        self.label_4.setGeometry(QRect(10, 100, 261, 16))
+        self.label_4.setGeometry(QRect(10, 100, 381, 16))
         self.widget = QWidget(Dialog)
         self.widget.setObjectName(u"widget")
         self.widget.setGeometry(QRect(0, 120, 401, 29))
@@ -73,7 +73,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u" Calibration Window", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Calibration Mode", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Slowly increasing thrust...", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"PWM Thrust:", None))

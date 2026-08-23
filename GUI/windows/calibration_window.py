@@ -25,6 +25,9 @@ class CalibrationWindow(QDialog):
         self.timer.timeout.connect(self.test_acc)
         self.current_thrust = 10000.0
         self.acc_z_filtered = 0.995 # start accelerometer filter biased under 1.0
+        self.running_average = 0.0
+        self.average_total = 0.0
+        self.average_num = 0
         self.liftoff_count = 0
 
         # connect button clicks
@@ -50,6 +53,9 @@ class CalibrationWindow(QDialog):
         self.ui.calibrate_button.setText("Cancel Test")
         self.ui.calibrate_button.clicked.connect(self.cancel_thrust)
 
+        # when completing subsequent tests, start closer to the average
+        self.current_thrust = 0.8 * self.running_average
+
         self.testing = True
         self.timer.start(30)
 
@@ -70,13 +76,18 @@ class CalibrationWindow(QDialog):
         else:
             self.liftoff_count = 0
         if self.liftoff_count >= 3:
-            self.defaults_append["hover thrust"] = self.quad.controls.thrust
+            # load into running average
+            self.average_num += 1
+            self.average_total += self.current_thrust
+            self.running_average = self.average_total/self.average_num
+
+            self.defaults_append["hover thrust"] = self.running_average
 
             # hide process labels and show hover thrust label
             self.ui.label_2.hide()
             self.ui.label_3.hide()
             self.ui.label_4.show()
-            self.ui.label_4.setText(f"Hover achieved! Hover thrust = {self.quad.controls.thrust:.0f}")
+            self.ui.label_4.setText(f"Hover achieved! Average hover thrust = {self.quad.controls.thrust:.0f} ({self.average_num} tests)")
 
             # reset the button
             self.ui.calibrate_button.setText("Calibrate Hover Thrust")
@@ -95,7 +106,7 @@ class CalibrationWindow(QDialog):
         # reset variables
         self.testing = False
         self.quad.controls.thrust = 0.0
-        self.current_thrust = 10000.0
+        self.current_thrust = 0.0
         self.liftoff_count = 0
 
         # reset the button
