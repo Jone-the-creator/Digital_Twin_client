@@ -62,7 +62,18 @@ class PPstabiliser():
             [0],
         ])
 
+        self.A_roll = np.array([
+            [0, 0],
+            [-1, 0],
+        ])
+
+        self.B_roll = np.array([
+            [1],
+            [0],
+        ])
+
         self.K_pitch = self.attitude_spec_update()
+        self.K_roll = self.attitude_spec_update()
 
     def hover():
         return None
@@ -94,10 +105,14 @@ class PPstabiliser():
             [np.deg2rad(self.integrated_pitch_error)],
         ])
 
-        u = -self.K_pitch @ x_pitch
-        print("pitch =", self.obs.quad.attitude.pitch)
-        print("u_pitch rate =", np.rad2deg(u[0,0]))
-        return -np.rad2deg(u[0,0]), 0
+        x_roll = np.array([
+            [np.deg2rad(self.obs.quad.attitude.roll)],
+            [np.deg2rad(self.integrated_roll_error)],
+        ])
+
+        u_pitch = -self.K_pitch @ x_pitch
+        u_roll = -self.K_roll @ x_roll
+        return -np.rad2deg(u_pitch[0,0]), np.rad2deg(u_roll[0,0])
 
     def reset(self):
         # Reset setpoints

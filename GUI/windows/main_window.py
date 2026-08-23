@@ -308,11 +308,16 @@ class MainWindow(QMainWindow):
         controller = self.ui.controller_select.currentText().lower()
 
         if self.quadcopter.control_system == "Pole-placement":
-            self.update_PP_labels(
-                self.stab.settling_time_z,
-                self.stab.overshoot_z
-            )
-
+            if controller == "altitude controller":
+                self.update_PP_labels(
+                    self.stab.settling_time_z,
+                    self.stab.overshoot_z
+                )
+            else:
+                self.update_PP_labels(
+                    self.stab.settling_time_att,
+                    self.stab.overshoot_att
+                )
         elif self.quadcopter.control_system == "PID":
             if controller == "altitude controller":
                 self.update_pid_labels(
@@ -395,18 +400,29 @@ class MainWindow(QMainWindow):
                 self.stab.settling_time_z,
                 self.stab.overshoot_z
             )
+        else:
+            if spec == "Tss":
+                self.stab.settling_time_att += delta
+            elif spec == "Mp":
+                self.stab.overshoot_att += delta
+            self.update_PP_labels(
+                self.stab.settling_time_att,
+                self.stab.overshoot_att
+            )
 
         # -- APPLY UPDATE TO POLES --
         self.stab.K_z = self.stab.altitude_spec_update()
+        self.stab.K_pitch = self.stab.attitude_spec_update()
+        self.stab.K_roll = self.stab.attitude_spec_update()
 
-        if self.stab.delay_ratio_z < 0.09:
-            self.ui.Warn_alarm.hide()
-        elif self.stab.delay_ratio_z < 0.12:
-            self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
-            self.ui.Warn_alarm.show()
-        else:
-            self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
-            self.ui.Warn_alarm.show()
+        # if self.stab.delay_ratio_z < 0.09:
+        #     self.ui.Warn_alarm.hide()
+        # elif self.stab.delay_ratio_z < 0.12:
+        #     self.ui.Warn_alarm.setText("<font color='orange'>Warning: Approaching Instability")
+        #     self.ui.Warn_alarm.show()
+        # else:
+        #     self.ui.Warn_alarm.setText("<font color='red'>Alarm: Likely Instability")
+        #     self.ui.Warn_alarm.show()
 
     def toggle_simulation(self):
         self.quadcopter.simulation_mode = (
