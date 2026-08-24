@@ -37,17 +37,21 @@ class CalibrationWindow(QDialog):
         self.ui.calibrate_button.clicked.connect(self.calibrate_thrust)
         self.ui.close_button.clicked.connect(self.close)
         self.ui.save_button.clicked.connect(self.save_thrust)
+        self.ui.save_button.hide()
 
         # hide labels by default
-        self.ui.label_2.hide()
-        self.ui.label_3.hide()
-        self.ui.label_4.hide()
+        self.ui.status.hide()
+        self.ui.result_1.hide()
+        self.ui.result_2.hide()
 
     # step through thrust controls to find one that achieves hover acceleration
     def calibrate_thrust(self):
         #show process labels
-        self.ui.label_2.show()
-        self.ui.label_3.show()
+        self.ui.status.show()
+        self.ui.status.setText("Slowly increasing thrust...")
+        self.ui.result_1.show()
+        self.ui.result_2.hide()
+
         self.quad.calibrating = True
 
         # start accelerometer filter biased under 1.0
@@ -62,7 +66,6 @@ class CalibrationWindow(QDialog):
             self.current_thrust = self.running_average * 0.33
         else:
             self.current_thrust = self.running_average - self.dev * 2
-        print(f"standard deviation = {self.dev}")
 
         self.testing = True
         self.timer.start(30)
@@ -75,7 +78,7 @@ class CalibrationWindow(QDialog):
         if not self.testing:
             return
         self.quad.controls.thrust = self.current_thrust
-        self.ui.label_3.setText(f"PWM Thrust: {self.current_thrust:.0f}")
+        self.ui.result_1.setText(f"PWM Thrust: {self.current_thrust:.0f}")
 
         # check if the threshold has been reached 3 times in a row (90ms)
         if self.acc_z_filtered >= 1.01:
@@ -90,28 +93,33 @@ class CalibrationWindow(QDialog):
                 self.average_num += 1
                 self.average_total += self.current_thrust
                 self.running_average = self.average_total/self.average_num
-                self.ui.label_3.hide()
+                self.ui.result_1.hide()
             elif len(self.tests_results) <= 1:
                 # contribute to average if no standard deviation exists
                 self.tests_results.append(self.current_thrust)
                 self.average_num += 1
                 self.average_total += self.current_thrust
                 self.running_average = self.average_total/self.average_num
-                self.ui.label_3.hide()
+                self.ui.result_1.hide()
+                self.ui.save_button.show()
             else:
                 # outside of range
-                self.ui.label_3.show()
-                self.ui.label_3.setText("Measurement outside of 1 standard deviation of the current data")
+                self.ui.result_1.show()
+                self.ui.result_1.setText("Measurement outside of 1 standard deviation of the current data")
 
             if len(self.tests_results) > 1:
                 self.dev = statistics.stdev(self.tests_results)
+                self.ui.result_2.show()
+                self.ui.result_2.setText(f"σ = {self.dev:.1f}")
 
             self.defaults_append["hover thrust"] = self.running_average
 
             # hide process labels and show hover thrust label
-            self.ui.label_2.hide()
-            self.ui.label_4.show()
-            self.ui.label_4.setText(f"Hover achieved! Average hover thrust = {self.running_average:.0f} ({self.average_num} tests)")
+            self.ui.result_1.show()
+
+            # update labels
+            self.ui.status.setText(f"Hover achieved!") 
+            self.ui.result_1.setText(f"Average hover thrust = {self.running_average:.0f} ({self.average_num} tests)")
 
             # reset the button
             self.ui.calibrate_button.setText("Calibrate Hover Thrust")
@@ -139,10 +147,11 @@ class CalibrationWindow(QDialog):
         self.ui.calibrate_button.setText("Calibrate Hover Thrust")
         self.ui.calibrate_button.clicked.connect(self.calibrate_thrust)
 
+        self.ui.status.setText("Cancelled calibration test")
+
         # hide all labels
-        self.ui.label_2.hide()
-        self.ui.label_3.hide()
-        self.ui.label_4.hide()
+        self.ui.result_1.hide()
+        self.ui.result_2.hide()
 
         # stop timer
         self.timer.stop()
@@ -151,6 +160,5 @@ class CalibrationWindow(QDialog):
     def save_thrust(self):
         self.quad.hover_thrust = self.running_average
         replace_settings("init_defaults.txt", self.defaults_append)
-        print(self.quad.hover_thrust)
 
 
