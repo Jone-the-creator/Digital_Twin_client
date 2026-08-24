@@ -140,5 +140,4 @@ class PPstabiliser():
                                 -self.zeta_att*self.omega_att * 10                                
                                 ])
 
-
         return place_poles(self.A_att,self.B_att,self.desired_poles_att).gain_matrix

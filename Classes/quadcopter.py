@@ -109,7 +109,7 @@ class Quadcopter:
             return
         u = np.zeros((3,1))
         if self.controls.thrust > 0:
-            u[2,0] = 9.81 * (self.controls.thrust / 34000 - 1)
+            u[2,0] = 9.81 * (self.controls.thrust / self.hover_thrust - 1)
         z = np.zeros((3,1))
         if x is not None:
             z[0,0] = x
