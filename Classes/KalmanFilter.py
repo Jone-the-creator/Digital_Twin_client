@@ -98,6 +98,8 @@ class pos_Kalmanfilter():
         x[0,0] += x[0,0] - Thrust/self.quad.mass * (np.cos(yaw)*np.sin(pitch)*np.cos(roll) + np.sin(yaw)*np.sin(roll)) * dt
         x[1,0] += x[1,0] - Thrust/self.quad.mass * (np.sin(yaw)*np.sin(pitch)*np.cos(roll) - np.cos(yaw)*np.sin(roll)) * dt
         x[2,0] += x[2,0] + (Thrust/self.quad.mass * (np.sin(pitch)*np.cos(roll)) - 9.81) * dt
+
+        return x
     
     # prediction step based on previous state and control, u for altitude is g * (T/Thover - 1)
     def predict(self, u, dt):
@@ -122,8 +124,20 @@ class pos_Kalmanfilter():
         # update covariance
         self.P = F @ self.P @ F.T + G @ self.Q @ G.T
 
+    def _h(self, x):
+        z_hat = np.zeros((3,1))
+
+        z_hat[0,0] = x[0,0]
+        z_hat[1,0] = x[1,0]
+        z_hat[2,0] = x[2,0]
+
+        return z_hat
+
         # correction step based on predicted state and measurements, z is [z_x, z_y, z_z]
     def correct(self, z):
+        mu = self.x
+        P = self.P
+
         # measurement matrix
         H = np.array([
             [1, 0, 0],
@@ -131,11 +145,16 @@ class pos_Kalmanfilter():
             [0, 0, 1]
         ])
 
+        z_hat = self._h(mu)
+        err = z - z_hat
+
+        S = H @ P @ H.T + self.R
+
         # calculate Kalman gain
-        K = self.P @ H.T @ np.linalg.pinv(H @ self.P @ H.T + self.R)
+        K = self.P @ H.T @ np.linalg.pinv(S)
 
         # update state estimate
-        self.x = self.x + K @ (z - H @ self.x)
+        self.x = mu + K @ err
 
         # update covariance
         self.P = (np.eye(3) - K @ H) @ self.P
