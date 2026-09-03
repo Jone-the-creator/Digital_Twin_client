@@ -63,6 +63,7 @@ class Quadcopter:
             self.hover_thrust = 38000
         self.controls = ControlInputs() 
         self.position = Position() # coordinate readings in meters
+        self.position_reading = Position() 
         self.velocity = Velocity() # velocity readings in m/s
         self.attitude = Attitude() # attitude angles in degrees
         self.pitch_trim = 0.0
@@ -113,10 +114,13 @@ class Quadcopter:
         z = np.zeros((3,1))
         if x is not None:
             z[0,0] = x
+            self.position_reading.x = x
         if y is not None:
             z[1,0] = y
+            self.position_reading.y = y
         if alt is not None:
             z[2,0] = max(alt, 0.0)
+            self.position_reading.z = alt
 
         now = time.time()
         dt = now - self.last_update_time
