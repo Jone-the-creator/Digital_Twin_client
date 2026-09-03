@@ -89,7 +89,7 @@ class Quadcopter:
 
         if self.estimator == "Kalman Filter":
             self.att_KF = att_Kalmanfilter()
-            self.pos_KF = pos_Kalmanfilter()
+            self.pos_KF = pos_Kalmanfilter(self)
         else:
             self.att_KF = None
             self.pos_KF = None

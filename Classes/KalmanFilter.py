@@ -62,7 +62,8 @@ class att_Kalmanfilter():
         self.P = (np.eye(3) - K @ H) @ self.P
 
 class pos_Kalmanfilter():
-    def __init__(self):
+    def __init__(self, quadcopter):
+        self.quad = quadcopter
         # control noise, ALTITUDE TUNED
         self.Q = np.array([
             [0.175, 0, 0],
@@ -88,20 +89,38 @@ class pos_Kalmanfilter():
             [0, 0.025, 0],
             [0, 0, 0.01]
         ])
+
+    def _f(self, dt, x, u):
+        Thrust = u[3,0] / self.quad.PWM_thrust_gain
+        yaw = self.quad.attitude.yaw
+        roll = self.quad.attitude.roll
+        pitch = self.quad.attitude.pitch
+        x[0,0] += x[0,0] - Thrust/self.quad.mass * (np.cos(yaw)*np.sin(pitch)*np.cos(roll) + np.sin(yaw)*np.sin(roll)) * dt
+        x[1,0] += x[1,0] - Thrust/self.quad.mass * (np.sin(yaw)*np.sin(pitch)*np.cos(roll) - np.cos(yaw)*np.sin(roll)) * dt
+        x[2,0] += x[2,0] + (Thrust/self.quad.mass * (np.sin(pitch)*np.cos(roll)) - 9.81) * dt
     
     # prediction step based on previous state and control, u for altitude is g * (T/Thover - 1)
     def predict(self, u, dt):
+        Thrust = u[3,0] / self.quad.PWM_thrust_gain
+        yaw = self.quad.attitude.yaw
+        roll = self.quad.attitude.roll
+        pitch = self.quad.attitude.pitch
+        mu = self.x.copy()
         # state transition matrix
         F = np.eye(3)
 
         # control matrix
-        G = np.eye(3) * dt
-        
+        G = np.array((
+            [-Thrust/self.quad.mass * (-np.cos(yaw)*np.sin(pitch)*np.cos(roll) + np.sin(yaw)*np.cos(roll)) * dt, -Thrust/self.quad.mass * (np.cos(yaw)*np.cos(pitch)*np.cos(roll) + np.sin(yaw)*np.sin(roll)) * dt, -Thrust/self.quad.mass * (-np.sin(yaw)*np.sin(pitch)*np.cos(roll) + np.cos(yaw)*np.sin(roll)) * dt, -1/self.quad.mass * (np.cos(yaw)*np.sin(pitch)*np.cos(roll) + np.sin(yaw)*np.sin(roll)) * dt],
+            [-Thrust/self.quad.mass * (-np.sin(yaw)*np.sin(pitch)*np.sin(roll) - np.cos(yaw)*np.cos(roll)) * dt, -Thrust/self.quad.mass * (np.sin(yaw)*np.cos(pitch)*np.cos(roll) - np.cos(yaw)*np.sin(roll)) * dt, -Thrust/self.quad.mass * (np.cos(yaw)*np.sin(pitch)*np.cos(roll) + np.sin(yaw)*np.sin(roll)) * dt, -1/self.quad.mass * (np.sin(yaw)*np.sin(pitch)*np.cos(roll) - np.cos(yaw)*np.sin(roll)) * dt],
+            [Thrust/self.quad.mass * (-np.cos(pitch)*np.sin(roll)) * dt, Thrust/self.quad.mass * (-np.sin(pitch)*np.cos(roll)) * dt, 0, 1/self.quad.mass * (np.cos(pitch)*np.cos(roll)) * dt]
+        ))
+
         # update state prediction
-        self.x = F @ self.x + G @ u
+        self.x = self._f(dt, mu, u)
 
         # update covariance
-        self.P = F @ self.P @ F.T + self.Q
+        self.P = F @ self.P @ F.T + G @ self.Q @ G.T
 
         # correction step based on predicted state and measurements, z is [z_x, z_y, z_z]
     def correct(self, z):
