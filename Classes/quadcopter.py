@@ -111,7 +111,6 @@ class Quadcopter:
         u = np.array((
             [self.attitude.roll],
             [self.attitude.pitch],
-            [self.attitude.yaw],
             [self.controls.thrust]
         ))
         z = np.zeros((3,1))
@@ -122,9 +121,12 @@ class Quadcopter:
             z[1,0] = y
             self.position_reading.y = y
         if alt is not None:
-            z[2,0] = max(alt, 0.0)
-            self.position_reading.z = alt
-        print(z)
+            # Loco positioning system has a bias near-ground this logic accounts for that smoothly
+            offset = 0.2411 # offset will always be a minimum of 0.085m
+            if z < 0.5:
+                offset += 0.1561 - 0.3239 * z
+            z[2,0] = max(alt - offset, 0.0)
+
 
         now = time.time()
         dt = now - self.last_update_time
@@ -139,13 +141,6 @@ class Quadcopter:
         self.position.y = self.pos_KF.x[1,0]
         self.position.z = self.pos_KF.x[2,0]
 
-        # # Loco positioning system has a bias near-ground of about 0.3, this logic accounts for that smoothly
-        # z = self.pos_KF.x[2,0]
-        # if z < 0.5:
-        #     correction = 0.3 * (1.0 - z / 0.5)
-        # else:
-        #     correction = 0.0
-        # self.position.z = max(0.0, z - correction)
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if self.simulation_mode:
