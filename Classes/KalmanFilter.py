@@ -11,16 +11,16 @@ class att_Kalmanfilter():
     def __init__(self):
         # control noise
         self.Q = np.array([
-            [0.0007, 0, 0],
-            [0, 0.0007, 0],
-            [0, 0, 0.025]
+            [0.0212, 0, 0],
+            [0, 0.0137, 0],
+            [0, 0, 0.0149]
         ])
         # measurement noise
         self.R = np.array([
-            [0.025, 0, 0, 0],
-            [0, 0.025, 0, 0],
-            [0, 0, 0.025, 0],
-            [0, 0, 0, 0.1]
+            [0.0000448, 0, 0, 0],
+            [0, 0.0000545, 0, 0],
+            [0, 0, 0.001, 0],
+            [0, 0, 0, 0.1172]
         ])
         # initial state
         self.x = np.array((
@@ -31,8 +31,8 @@ class att_Kalmanfilter():
 
         # initialise covariance
         self.P = np.array([
-            [0.0001, 0, 0],
-            [0, 0.0001, 0],
+            [0.001, 0, 0],
+            [0, 0.001, 0],
             [0, 0, 0.06]
         ])
 
@@ -64,26 +64,25 @@ class att_Kalmanfilter():
 
     def _h(self, x):
         z_hat = np.zeros((4,1))
-        g = 9.81 # ms^-2
 
-        z_hat[0,0] = g * np.sin(x[1,0])                    # a_x
-        z_hat[1,0] = -g * np.sin(x[0,0]) * np.cos(x[1,0])  # a_y
-        z_hat[2,0] = -g * np.cos(x[0,0]) * np.cos(x[1,0])  # a_z
+        z_hat[0,0] = -np.sin(x[1,0])                       # a_x (Gs)
+        z_hat[1,0] = np.sin(x[0,0]) * np.cos(x[1,0])       # a_y (Gs)
+        z_hat[2,0] = np.cos(x[0,0]) * np.cos(x[1,0])       # a_z (Gs)
         z_hat[3,0] = x[2,0]                                # yaw
 
         return z_hat
 
 
-        # correction step based on predicted state and measurements, z is [a_y, a_x]
+        # correction step based on predicted state and measurements
     def correct(self, z):
-        g = 9.81 # ms^-2
+
         mu_hat = self.x
         P = self.P
         # measurement matrix
         H = np.array([
-            [0, g * np.cos(mu_hat[1,0]), 0],
-            [-g * np.cos(mu_hat[0,0]) * np.cos(mu_hat[1,0]), g * np.sin(mu_hat[0,0]) * np.sin(mu_hat[1,0]), 0],
-            [g * np.sin(mu_hat[0,0]) * np.cos(mu_hat[1,0]), g * np.cos(mu_hat[0,0]) * np.sin(mu_hat[1,0]), 0],
+            [0, -np.cos(mu_hat[1,0]), 0],
+            [np.cos(mu_hat[0,0]) * np.cos(mu_hat[1,0]), -np.sin(mu_hat[0,0]) * np.sin(mu_hat[1,0]), 0],
+            [-np.sin(mu_hat[0,0]) * np.cos(mu_hat[1,0]), -np.cos(mu_hat[0,0]) * np.sin(mu_hat[1,0]), 0],
             [0, 0, 1]
         ])
 
@@ -106,10 +105,9 @@ class pos_Kalmanfilter():
         self.quad = quadcopter
         # control noise, ALTITUDE TUNED
         self.Q = np.array([
-            [0.02, 0, 0, 0],
-            [0, 0.02, 0, 0],
-            [0, 0, 0.05, 0],
-            [0, 0, 0, 1.0]
+            [0.02, 0, 0],
+            [0, 0.02, 0],
+            [0, 0, 1.0]
         ])
         # measurement noise, ALTITUDE TUNED
         self.R = np.array([

@@ -71,6 +71,14 @@ class Quadcopter:
         self.loop_rate = 0.0
         self.dt = 0.033
 
+        # raw readings
+        self.acc_x = 0.0
+        self.acc_y = 0.0
+        self.acc_z = 0.0
+        self.gyro_x = 0.0
+        self.gyro_y = 0.0
+        self.gyro_z = 0.0
+
         self.c = np.array([
             [0.5],  # linear aerodynamic damping coefficient
             [0.25]   # non-linear aerodynamic damping coefficient
@@ -123,8 +131,8 @@ class Quadcopter:
         if alt is not None:
             # Loco positioning system has a bias near-ground this logic accounts for that smoothly
             offset = 0.2411 # offset will always be a minimum of 0.085m
-            if z < 0.5:
-                offset += 0.1561 - 0.3239 * z
+            if alt < 0.5:
+                offset += 0.1561 - 0.3239 * alt
             z[2,0] = max(alt - offset, 0.0)
 
 
@@ -199,12 +207,15 @@ class Quadcopter:
         # fill control matrix with attitude velocities
         if roll_vel is not None:
             u[0,0] = np.deg2rad(roll_vel)
+            self.gyro_y = roll_vel
         
         if pitch_vel is not None:
             u[1,0] = np.deg2rad(pitch_vel)
+            self.gyro_x = pitch_vel
         
         if yaw_vel is not None:
             u[2,0] = np.deg2rad(yaw_vel)
+            self.gyro_z = yaw_vel
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
@@ -230,6 +241,8 @@ class Quadcopter:
         ))
 
         self.acc_z = a_z
+        self.acc_x = a_x
+        self.acc_y = a_y
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
         if self.att_KF is not None:
