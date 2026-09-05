@@ -77,7 +77,8 @@ class att_Kalmanfilter():
         # correction step based on predicted state and measurements, z is [a_y, a_x]
     def correct(self, z):
         g = 9.81 # ms^-2
-        mu_hat = self.x.copy()
+        mu_hat = self.x
+        P = self.P
         # measurement matrix
         H = np.array([
             [0, g * np.cos(mu_hat[1,0]), 0],
@@ -86,11 +87,16 @@ class att_Kalmanfilter():
             [0, 0, 1]
         ])
 
+        z_hat = self._h(mu_hat)
+        err = z - z_hat
+
+        S = H @ P @ H.T + self.R
+
         # calculate Kalman gain
-        K = self.P @ H.T @ np.linalg.pinv(H @ self.P @ H.T + self.R)
+        K = self.P @ H.T @ np.linalg.pinv(S)
 
         # update state estimate
-        self.x = self.x + K @ (z - H @ self.x)
+        self.x = mu_hat + K @ err
 
         # update covariance
         self.P = (np.eye(3) - K @ H) @ self.P
@@ -193,7 +199,7 @@ class pos_Kalmanfilter():
 
         return z_hat
 
-        # correction step based on predicted state and measurements, z is [z_x, z_y, z_z]
+        # correction step based on predicted state and measurements, z is [x, y, z]
     def correct(self, z):
         mu = self.x
         P = self.P

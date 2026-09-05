@@ -140,6 +140,9 @@ class Quadcopter:
         self.position.x = self.pos_KF.x[0,0]
         self.position.y = self.pos_KF.x[1,0]
         self.position.z = self.pos_KF.x[2,0]
+        self.velocity.x = self.pos_KF.x[3,0]
+        self.velocity.y = self.pos_KF.x[4,0]
+        self.velocity.z = self.pos_KF.x[5,0]
 
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
@@ -213,13 +216,12 @@ class Quadcopter:
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
-        z = np.zeros((2,1))
-
-        # fill measurement matrix with accelerometer readings
-        if a_y is not None and a_z is not None:
-            z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
-        if a_y is not None and a_z is not None and a_x is not None:
-            z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
+        z = np.array((
+            [a_x],
+            [a_y],
+            [a_z],
+            [np.arctan2(self.velocity.y, self.velocity.x)]
+        ))
 
         self.acc_z = a_z
 
