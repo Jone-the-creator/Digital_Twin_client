@@ -216,11 +216,17 @@ class Quadcopter:
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
+        # speed = np.hypot(self.velocity.x, self.velocity.y)
+
+        # if speed > 0.2:
+        yaw_meas = np.arctan2(self.velocity.y, self.velocity.x)
+        # else:
+        #     yaw_meas = self.attitude.yaw
         z = np.array((
             [a_x],
             [a_y],
             [a_z],
-            [np.arctan2(self.velocity.y, self.velocity.x)]
+            [yaw_meas]
         ))
 
         self.acc_z = a_z
