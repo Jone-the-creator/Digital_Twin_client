@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 import time
 import numpy as np
-from Classes.KalmanFilter import att_Kalmanfilter, pos_Kalmanfilter
+from Classes.ExtendedKalmanFilter import att_EKF, pos_EKF
 
 ACC_PITCH_BIAS = 0.95 # BIAS in degrees (more negative steers more forward, more positive steers more backward)
 ACC_ROLL_BIAS = -0.55 # BIAS in degrees (more negative steers more right, more positive steers more left)
@@ -71,6 +71,14 @@ class Quadcopter:
         self.loop_rate = 0.0
         self.dt = 0.033
 
+        # raw readings
+        self.acc_x = 0.0
+        self.acc_y = 0.0
+        self.acc_z = 0.0
+        self.gyro_x = 0.0
+        self.gyro_y = 0.0
+        self.gyro_z = 0.0
+
         self.c = np.array([
             [0.5],  # linear aerodynamic damping coefficient
             [0.25]   # non-linear aerodynamic damping coefficient
@@ -87,13 +95,14 @@ class Quadcopter:
         self.simulation_mode = False
         self.calibrating = False
 
-        if self.estimator == "Kalman Filter":
-            self.att_KF = att_Kalmanfilter()
-            self.pos_KF = pos_Kalmanfilter()
+        if self.estimator == "Extended Kalman Filter":
+            self.att_EKF = att_EKF()
+            self.pos_EKF = pos_EKF(self)
         else:
-            self.att_KF = None
-            self.pos_KF = None
+            self.att_EKF = None
+            self.pos_EKF = None
         self.last_update_time: float = time.time()
+        self.last_gyro_update_time: float = time.time()
 
         # System status
         self.battery_percent: Optional[int] = None # should be receieved as a percentage (e.g. 10, not 0.1)
@@ -108,39 +117,46 @@ class Quadcopter:
     def update_position(self, *, x=None, y=None, alt=None):
         if self.simulation_mode:
             return
-        u = np.zeros((3,1))
-        if self.controls.thrust > 0:
-            u[2,0] = 9.81 * (self.controls.thrust / self.hover_thrust - 1)
+        u = np.array((
+            [self.attitude.roll],
+            [self.attitude.pitch],
+            [self.controls.thrust]
+        ))
         z = np.zeros((3,1))
         if x is not None:
             z[0,0] = x
             self.position_reading.x = x
+            print(f"x reading = {x:.2f}")
         if y is not None:
             z[1,0] = y
             self.position_reading.y = y
+            print(f"y reading = {y:.2f}")
         if alt is not None:
-            z[2,0] = max(alt, 0.0)
-            self.position_reading.z = alt
+            # Loco positioning system has a bias near-ground this logic accounts for that smoothly
+            # print(f"before offset = {alt:.2f}")
+            offset = 0.085 # offset will always be a minimum of 0.085m
+            if alt < 0.5:
+                offset += 0.1561 - 0.3239 * self.position.z
+            z[2,0] = max(alt - offset, 0.0)
+            # print(f"after offset = {z[2,0]:.2f}")
+
 
         now = time.time()
         dt = now - self.last_update_time
         self.last_update_time = now
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.pos_KF is not None:
+        if self.pos_EKF is not None:
              # predict states
-            self.pos_KF.predict(u, dt)
-            self.pos_KF.correct(z)
+            self.pos_EKF.predict(u, dt)
+            self.pos_EKF.correct(z)
 
-        self.position.x = self.pos_KF.x[0,0]
-        self.position.y = self.pos_KF.x[1,0]
+        self.position.x = self.pos_EKF.x[0,0]
+        self.position.y = self.pos_EKF.x[1,0]
+        self.position.z = self.pos_EKF.x[2,0]
+        self.velocity.x = self.pos_EKF.x[3,0]
+        self.velocity.y = self.pos_EKF.x[4,0]
+        self.velocity.z = self.pos_EKF.x[5,0]
 
-        # Loco positioning system has a bias near-ground of about 0.3, this logic accounts for that smoothly
-        z = self.pos_KF.x[2,0]
-        if z < 0.5:
-            correction = 0.3 * (1.0 - z / 0.5)
-        else:
-            correction = 0.0
-        self.position.z = max(0.0, z - correction)
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
         if self.simulation_mode:
@@ -184,55 +200,68 @@ class Quadcopter:
 
     # predict states based on received gyro data
     def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):
+        now = time.time()
+        dt = now - self.last_gyro_update_time
+        self.last_gyro_update_time = now
+        
         if self.simulation_mode:
             return
         # calculate change in time
-        now = time.time()
-        dt = now - self.last_update_time
-        self.last_update_time = now
 
         u = np.zeros((3,1))
 
         # fill control matrix with attitude velocities
         if roll_vel is not None:
-            u[0,0] = np.deg2rad(roll_vel)
+            u[0,0] = np.deg2rad(roll_vel - 0.0034)
+            self.gyro_y = roll_vel - 0.0034
         
         if pitch_vel is not None:
-            u[1,0] = np.deg2rad(pitch_vel)
+            u[1,0] = np.deg2rad(pitch_vel - 0.0039)
+            self.gyro_x = pitch_vel - 0.0039
         
         if yaw_vel is not None:
-            u[2,0] = np.deg2rad(yaw_vel)
+
+            u[2,0] = np.deg2rad(yaw_vel - 0.009)
+            self.gyro_z = yaw_vel
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.att_KF is not None:
+        if self.att_EKF is not None:
              # predict states
-            self.att_KF.predict(u, dt)
+            self.att_EKF.predict(u, dt)
             # update attitudes based on predicted states
 
     # correct currently predicted states based on accelerometer data
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
-        z = np.zeros((2,1))
+        speed = np.hypot(self.velocity.x, self.velocity.y)
+        # print(f"speed = {speed:.2f}")
 
-        # fill measurement matrix with accelerometer readings
-        if a_y is not None and a_z is not None:
-            z[0,0] = np.arctan2(-a_y, a_z) - np.deg2rad(ACC_ROLL_BIAS)
-        if a_y is not None and a_z is not None and a_x is not None:
-            z[1,0] = np.arctan2(a_x, np.sqrt(a_y*a_y + a_z*a_z)) - np.deg2rad(ACC_PITCH_BIAS)
+        # if speed > 3:
+        #     yaw_meas = np.arctan2(self.velocity.x, self.velocity.y)
+        # else:
+        yaw_meas = self.att_EKF.x[2,0]
+        z = np.array((
+            [a_x],
+            [a_y],
+            [a_z],
+            [yaw_meas]
+        ))
 
         self.acc_z = a_z
+        self.acc_x = a_x
+        self.acc_y = a_y
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.att_KF is not None:
+        if self.att_EKF is not None:
             # correct states
-            self.att_KF.correct(z)
+            self.att_EKF.correct(z)
 
             # update attitudes based on corrected states
             self.update_attitude(
-                roll = np.rad2deg(self.att_KF.x[0,0]),
-                pitch = np.rad2deg(self.att_KF.x[1,0]),
-                yaw = np.rad2deg(self.att_KF.x[2,0])
+                roll = np.rad2deg(self.att_EKF.x[0,0]),
+                pitch = np.rad2deg(self.att_EKF.x[1,0]),
+                yaw = np.rad2deg(self.att_EKF.x[2,0])
             )
 
 

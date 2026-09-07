@@ -65,6 +65,10 @@ class CRTP_logger:
             name='Accelerometer', 
             period_in_ms=15
         )
+        self.logconf_mag = LogConfig(
+            name='Magnetometer', 
+            period_in_ms=15
+        )
         self.logconf_periph = LogConfig(
             name='Peripherals', 
             period_in_ms=250
@@ -83,6 +87,10 @@ class CRTP_logger:
         self.logconf_acc.add_variable('acc.y', 'float')
         self.logconf_acc.add_variable('acc.z', 'float')
 
+        self.logconf_mag.add_variable('mag.x', 'float')
+        self.logconf_mag.add_variable('mag.y', 'float')
+        self.logconf_mag.add_variable('mag.z', 'float')
+
         self.logconf_periph.add_variable('pm.vbat', 'float')
 
         self.logconf_pos.add_variable('kalman.stateX', 'float')
@@ -91,6 +99,7 @@ class CRTP_logger:
 
         self.logconf_gyro.data_received_cb.add_callback(self._log_gyro_data_received)
         self.logconf_acc.data_received_cb.add_callback(self._log_acc_data_received)
+        self.logconf_mag.data_received_cb.add_callback(self._log_mag_data_received)
         self.logconf_periph.data_received_cb.add_callback(self._log_periph_data_received)
         self.logconf_pos.data_received_cb.add_callback(self._log_pos_data_received)
 
@@ -104,6 +113,8 @@ class CRTP_logger:
             self.logconf_gyro.start()
             self.cf.log.add_config(self.logconf_acc)
             self.logconf_acc.start()
+            self.cf.log.add_config(self.logconf_mag)
+            self.logconf_mag.start()
             self.cf.log.add_config(self.logconf_periph)
             self.logconf_periph.start()
             self.cf.log.add_config(self.logconf_pos)
@@ -155,6 +166,9 @@ class CRTP_logger:
             alt = data['kalman.stateZ'],
         )
         # print(f"z = {data['kalman.stateZ']}")
+    
+    def _log_mag_data_received(self, timestamp, data, logconfig):
+        print(f"mag readings = {data['mag.x']:.10f}, {data['mag.y']:.2f}, {data['mag.z']:.2f}")
 
     def _log_periph_data_received(self, timestamp, data, logconfig):
         # if no thrust, battery percentage can be safely calculated

@@ -88,7 +88,7 @@ class SetupWindow(QDialog):
 def run_setup():
     comms_options = ["Crazyradio"]
     controlsystem_options = ["PID", "Pole-placement"]
-    estimator_options = ["Kalman Filter"]
+    estimator_options = ["Extended Kalman Filter"]
 
     defaults = functions.load_settings("init_defaults.txt")
 
