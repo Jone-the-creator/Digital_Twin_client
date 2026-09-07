@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Optional
 import time
 import numpy as np
-from Classes.KalmanFilter import att_Kalmanfilter, pos_Kalmanfilter
+from Classes.ExtendedKalmanFilter import att_EKF, pos_EKF
 
 ACC_PITCH_BIAS = 0.95 # BIAS in degrees (more negative steers more forward, more positive steers more backward)
 ACC_ROLL_BIAS = -0.55 # BIAS in degrees (more negative steers more right, more positive steers more left)
@@ -95,12 +95,12 @@ class Quadcopter:
         self.simulation_mode = False
         self.calibrating = False
 
-        if self.estimator == "Kalman Filter":
-            self.att_KF = att_Kalmanfilter()
-            self.pos_KF = pos_Kalmanfilter(self)
+        if self.estimator == "Extended Kalman Filter":
+            self.att_EKF = att_EKF()
+            self.pos_EKF = pos_EKF(self)
         else:
-            self.att_KF = None
-            self.pos_KF = None
+            self.att_EKF = None
+            self.pos_EKF = None
         self.last_update_time: float = time.time()
         self.last_gyro_update_time: float = time.time()
 
@@ -145,17 +145,17 @@ class Quadcopter:
         dt = now - self.last_update_time
         self.last_update_time = now
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.pos_KF is not None:
+        if self.pos_EKF is not None:
              # predict states
-            self.pos_KF.predict(u, dt)
-            self.pos_KF.correct(z)
+            self.pos_EKF.predict(u, dt)
+            self.pos_EKF.correct(z)
 
-        self.position.x = self.pos_KF.x[0,0]
-        self.position.y = self.pos_KF.x[1,0]
-        self.position.z = self.pos_KF.x[2,0]
-        self.velocity.x = self.pos_KF.x[3,0]
-        self.velocity.y = self.pos_KF.x[4,0]
-        self.velocity.z = self.pos_KF.x[5,0]
+        self.position.x = self.pos_EKF.x[0,0]
+        self.position.y = self.pos_EKF.x[1,0]
+        self.position.z = self.pos_EKF.x[2,0]
+        self.velocity.x = self.pos_EKF.x[3,0]
+        self.velocity.y = self.pos_EKF.x[4,0]
+        self.velocity.z = self.pos_EKF.x[5,0]
 
 
     def update_velocity(self, *, x=None, y=None, z=None, timestamp: Optional[float] = None):
@@ -225,9 +225,9 @@ class Quadcopter:
             self.gyro_z = yaw_vel
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.att_KF is not None:
+        if self.att_EKF is not None:
              # predict states
-            self.att_KF.predict(u, dt)
+            self.att_EKF.predict(u, dt)
             # update attitudes based on predicted states
 
     # correct currently predicted states based on accelerometer data
@@ -240,7 +240,7 @@ class Quadcopter:
         # if speed > 3:
         #     yaw_meas = np.arctan2(self.velocity.x, self.velocity.y)
         # else:
-        yaw_meas = self.att_KF.x[2,0]
+        yaw_meas = self.att_EKF.x[2,0]
         z = np.array((
             [a_x],
             [a_y],
@@ -253,15 +253,15 @@ class Quadcopter:
         self.acc_y = a_y
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
-        if self.att_KF is not None:
+        if self.att_EKF is not None:
             # correct states
-            self.att_KF.correct(z)
+            self.att_EKF.correct(z)
 
             # update attitudes based on corrected states
             self.update_attitude(
-                roll = np.rad2deg(self.att_KF.x[0,0]),
-                pitch = np.rad2deg(self.att_KF.x[1,0]),
-                yaw = np.rad2deg(self.att_KF.x[2,0])
+                roll = np.rad2deg(self.att_EKF.x[0,0]),
+                pitch = np.rad2deg(self.att_EKF.x[1,0]),
+                yaw = np.rad2deg(self.att_EKF.x[2,0])
             )
 
 

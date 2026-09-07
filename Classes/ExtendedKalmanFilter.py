@@ -1,13 +1,13 @@
 # Written by Jonah Habel 2026
 # Flinders University
 #
-# KalmanFilter.py
+# ExtendedKalmanFilter.py
 # -- defines the kalman filter classes for attitude and position data --
 
 import numpy as np
 
 # only good for attitudes up to 45 degrees, numpy does algebra in radians
-class att_Kalmanfilter():
+class att_EKF():
     def __init__(self):
         # control noise
         self.Q = np.array([
@@ -105,7 +105,7 @@ class att_Kalmanfilter():
         # update covariance
         self.P = (np.eye(3) - K @ H) @ self.P
 
-class pos_Kalmanfilter():
+class pos_EKF():
     def __init__(self, quadcopter):
         self.quad = quadcopter
         # control noise, ALTITUDE TUNED
