@@ -20,7 +20,7 @@ class att_Kalmanfilter():
             [0.0000448, 0, 0, 0],
             [0, 0.0000545, 0, 0],
             [0, 0, 0.001, 0],
-            [0, 0, 0, 0.1172]
+            [0, 0, 0, 10000]
         ])
         # initial state
         self.x = np.array((
@@ -45,6 +45,8 @@ class att_Kalmanfilter():
         x[1,0] = x[1,0] + pitch_rate * dt
         x[2,0] = x[2,0] + yaw_rate * dt
 
+        x[2,0] = wrap(x[2,0])
+
         return x
 
  # prediction step based on previous state and control
@@ -62,13 +64,15 @@ class att_Kalmanfilter():
         # update covariance
         self.P = F @ self.P @ F.T + G @ self.Q @ G.T
 
+        print(self.P[2,2])
+
     def _h(self, x):
         z_hat = np.zeros((4,1))
 
         z_hat[0,0] = -np.sin(x[1,0])                       # a_x (Gs)
         z_hat[1,0] = np.sin(x[0,0]) * np.cos(x[1,0])       # a_y (Gs)
         z_hat[2,0] = np.cos(x[0,0]) * np.cos(x[1,0])       # a_z (Gs)
-        z_hat[3,0] = x[2,0]                                # yaw
+        z_hat[3,0] = wrap(x[2,0])                                # yaw
 
         return z_hat
 
@@ -88,6 +92,7 @@ class att_Kalmanfilter():
 
         z_hat = self._h(mu_hat)
         err = z - z_hat
+        err[3,0] = wrap(err[3,0])
 
         S = H @ P @ H.T + self.R
 
@@ -105,9 +110,9 @@ class pos_Kalmanfilter():
         self.quad = quadcopter
         # control noise, ALTITUDE TUNED
         self.Q = np.array([
-            [0.02, 0, 0],
-            [0, 0.02, 0],
-            [0, 0, 1.0]
+            [0.000022, 0, 0],
+            [0, 0.00053, 0],
+            [0, 0, 0.0000009]
         ])
         # measurement noise, ALTITUDE TUNED
         self.R = np.array([
@@ -117,8 +122,8 @@ class pos_Kalmanfilter():
         ])
         # initial state (1.5, 1.5, 0.0 for FFoF)
         self.x = np.array([
-            [1.5],  # x
-            [1.5],  # y
+            [0.5],  # x
+            [0.5],  # y
             [0.0],  # z
             [0.0],  # v_x
             [0.0],  # v_y
@@ -130,9 +135,9 @@ class pos_Kalmanfilter():
 
         # initialise covariance, ALTITUDE TUNED
         self.P = np.array([
-            [0.045, 0, 0, 0, 0, 0],
-            [0, 0.045, 0, 0, 0, 0],
-            [0, 0, 0.001, 0, 0, 0],
+            [0.75, 0, 0, 0, 0, 0],
+            [0, 0.75, 0, 0, 0, 0],
+            [0, 0, 0.01, 0, 0, 0],
             [0, 0, 0, 0.001, 0, 0],
             [0, 0, 0, 0, 0.001, 0],
             [0, 0, 0, 0, 0, 0.001]
@@ -145,7 +150,9 @@ class pos_Kalmanfilter():
         pitch = u[1,0]
         x[0,0] = x[0,0]
         x[1,0] = x[1,0]
-        x[2,0] = x[2,0] + x[5,0] * dt
+        print(f"x,y = {x[0,0]:.2f},{x[1,0]:.2f}")
+        x[2,0] = x[2,0] 
+        #+ x[5,0] * dt
         x[3,0] = 1/2 * x[3,0] + (x[0,0] - self.prev_pos_x) / (2 * dt) # change in x is current (corrected) and previous
         x[4,0] = 1/2 * x[4,0] + (x[1,0] - self.prev_pos_y) / (2 * dt) # change in y is current (corrected) and previous
         x[5,0] = Thrust/self.quad.mass * (np.cos(pitch)*np.cos(roll)) * dt
@@ -174,9 +181,9 @@ class pos_Kalmanfilter():
 
         # control matrix
         G = np.array((
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
             [0, 0, 0],
             [0, 0, 0],
             [(-Thrust * np.cos(pitch)*np.sin(roll) * dt) /self.quad.mass, (-Thrust * np.sin(pitch)*np.cos(roll) * dt) /self.quad.mass, (np.cos(pitch)*np.cos(roll) * dt) /self.quad.mass]
@@ -211,7 +218,7 @@ class pos_Kalmanfilter():
 
         z_hat = self._h(mu)
         err = z - z_hat
-
+        
         S = H @ P @ H.T + self.R
 
         # calculate Kalman gain
@@ -222,3 +229,6 @@ class pos_Kalmanfilter():
 
         # update covariance
         self.P = (np.eye(6) - K @ H) @ self.P
+
+def wrap(angle):
+    return (angle + np.pi) % (2*np.pi) - np.pi

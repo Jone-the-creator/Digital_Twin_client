@@ -102,6 +102,7 @@ class Quadcopter:
             self.att_KF = None
             self.pos_KF = None
         self.last_update_time: float = time.time()
+        self.last_gyro_update_time: float = time.time()
 
         # System status
         self.battery_percent: Optional[int] = None # should be receieved as a percentage (e.g. 10, not 0.1)
@@ -125,15 +126,19 @@ class Quadcopter:
         if x is not None:
             z[0,0] = x
             self.position_reading.x = x
+            print(f"x reading = {x:.2f}")
         if y is not None:
             z[1,0] = y
             self.position_reading.y = y
+            print(f"y reading = {y:.2f}")
         if alt is not None:
             # Loco positioning system has a bias near-ground this logic accounts for that smoothly
-            offset = 0.2411 # offset will always be a minimum of 0.085m
+            # print(f"before offset = {alt:.2f}")
+            offset = 0.085 # offset will always be a minimum of 0.085m
             if alt < 0.5:
-                offset += 0.1561 - 0.3239 * alt
+                offset += 0.1561 - 0.3239 * self.position.z
             z[2,0] = max(alt - offset, 0.0)
+            # print(f"after offset = {z[2,0]:.2f}")
 
 
         now = time.time()
@@ -195,26 +200,28 @@ class Quadcopter:
 
     # predict states based on received gyro data
     def update_gyro(self, *, roll_vel=None, pitch_vel=None, yaw_vel=None):
+        now = time.time()
+        dt = now - self.last_gyro_update_time
+        self.last_gyro_update_time = now
+        
         if self.simulation_mode:
             return
         # calculate change in time
-        now = time.time()
-        dt = now - self.last_update_time
-        self.last_update_time = now
 
         u = np.zeros((3,1))
 
         # fill control matrix with attitude velocities
         if roll_vel is not None:
-            u[0,0] = np.deg2rad(roll_vel)
-            self.gyro_y = roll_vel
+            u[0,0] = np.deg2rad(roll_vel - 0.0034)
+            self.gyro_y = roll_vel - 0.0034
         
         if pitch_vel is not None:
-            u[1,0] = np.deg2rad(pitch_vel)
-            self.gyro_x = pitch_vel
+            u[1,0] = np.deg2rad(pitch_vel - 0.0039)
+            self.gyro_x = pitch_vel - 0.0039
         
         if yaw_vel is not None:
-            u[2,0] = np.deg2rad(yaw_vel)
+
+            u[2,0] = np.deg2rad(yaw_vel - 0.009)
             self.gyro_z = yaw_vel
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
@@ -227,12 +234,13 @@ class Quadcopter:
     def update_acc(self, *, a_x = None, a_y = None, a_z = None):
         if self.simulation_mode:
             return
-        # speed = np.hypot(self.velocity.x, self.velocity.y)
+        speed = np.hypot(self.velocity.x, self.velocity.y)
+        # print(f"speed = {speed:.2f}")
 
-        # if speed > 0.2:
-        yaw_meas = np.arctan2(self.velocity.y, self.velocity.x)
+        # if speed > 3:
+        #     yaw_meas = np.arctan2(self.velocity.x, self.velocity.y)
         # else:
-        #     yaw_meas = self.attitude.yaw
+        yaw_meas = self.att_KF.x[2,0]
         z = np.array((
             [a_x],
             [a_y],
