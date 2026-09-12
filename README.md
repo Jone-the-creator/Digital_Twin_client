@@ -34,10 +34,9 @@ _Note, the thrust_raw value is smoothed and once smoothed will be input to u[3,0
 1. Create a python script in /Classes.
 2. Create your state estimator (_See the ExtendedKalmanFilter.py script as an example_).
 3. In the quadcopter class, add a statement to check if the estimator variable is the string that denotes your state estimator plugin.  <img width="362" height="63" alt="image" src="https://github.com/user-attachments/assets/1d8c50bf-bae2-4825-9693-f308752c673b" />
-4. The current iteration of the quadcopter class has three placements for the EKF, in the update_position(), update_gyro() and update_acc() functions. If these are to be used, add the new estimator as an elif statement in these functions; if a new function is to be used, ensure that the estimator is only used if it is not none. This will allow for integration with other estimators in the future.<img width="399" height="220" alt="image" src="https://github.com/user-attachments/assets/13fcd869-e4ed-4929-a065-913eeba910b5" />
+4. The current iteration of the quadcopter class has three placements for the EKF, in the update_position(), update_gyro() and update_acc() functions. If these are to be used, add the new estimator as an elif statement in these functions; if a new function is to be used, ensure that the estimator is only used if it is not none. This will allow for integration with other estimators in the future.
+<img width="399" height="220" alt="image" src="https://github.com/user-attachments/assets/13fcd869-e4ed-4929-a065-913eeba910b5" />
 
-**Quadcopter Class**
-If variables imported into the quadcopter object are adjusted, these must be changed throughout each other plugin.
 
 ## Installing Required Libraries
 To install all required libraries, enter 
