@@ -70,6 +70,7 @@ class Quadcopter:
         self.roll_trim = 0.0
         self.loop_rate = 0.0
         self.dt = 0.033
+        self.recording_rate = 20 # Hz
 
         # raw readings
         self.acc_x = 0.0
@@ -98,9 +99,6 @@ class Quadcopter:
         if self.estimator == "Extended Kalman Filter":
             self.att_EKF = att_EKF()
             self.pos_EKF = pos_EKF(self)
-        else:
-            self.att_EKF = None
-            self.pos_EKF = None
         self.last_update_time: float = time.time()
         self.last_gyro_update_time: float = time.time()
 

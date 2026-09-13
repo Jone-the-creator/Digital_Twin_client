@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowMHIear.ui'
+## Form generated from reading UI file 'main_windowfEzPrA.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -17,18 +17,19 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QLabel,
     QMainWindow, QMenuBar, QProgressBar, QPushButton,
-    QSizePolicy, QStatusBar, QVBoxLayout, QWidget)
+    QSizePolicy, QSpinBox, QStatusBar, QVBoxLayout,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1200, 800)
+        MainWindow.resize(1207, 807)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.recording_label = QLabel(self.centralwidget)
         self.recording_label.setObjectName(u"recording_label")
-        self.recording_label.setGeometry(QRect(920, 720, 67, 16))
+        self.recording_label.setGeometry(QRect(900, 730, 67, 16))
         self.recording_label.setStyleSheet(u"color: rgb(255, 0, 0);\n"
 "font: 700 9pt \"Segoe UI\";")
         self.gl_container = QWidget(self.centralwidget)
@@ -68,62 +69,36 @@ class Ui_MainWindow(object):
 
         self.layoutWidget1 = QWidget(self.centralwidget)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(990, 691, 204, 62))
-        self.verticalLayout = QVBoxLayout(self.layoutWidget1)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.sim_btn = QPushButton(self.layoutWidget1)
-        self.sim_btn.setObjectName(u"sim_btn")
-
-        self.verticalLayout.addWidget(self.sim_btn)
-
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.start_recording_btn = QPushButton(self.layoutWidget1)
-        self.start_recording_btn.setObjectName(u"start_recording_btn")
-
-        self.horizontalLayout_2.addWidget(self.start_recording_btn)
-
-        self.stop_recording_btn = QPushButton(self.layoutWidget1)
-        self.stop_recording_btn.setObjectName(u"stop_recording_btn")
-
-        self.horizontalLayout_2.addWidget(self.stop_recording_btn)
-
-
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-
-        self.layoutWidget2 = QWidget(self.centralwidget)
-        self.layoutWidget2.setObjectName(u"layoutWidget2")
-        self.layoutWidget2.setGeometry(QRect(630, 60, 211, 171))
-        self.verticalLayout_3 = QVBoxLayout(self.layoutWidget2)
+        self.layoutWidget1.setGeometry(QRect(630, 60, 211, 171))
+        self.verticalLayout_3 = QVBoxLayout(self.layoutWidget1)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
         self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.yaw_reading = QLabel(self.layoutWidget2)
+        self.yaw_reading = QLabel(self.layoutWidget1)
         self.yaw_reading.setObjectName(u"yaw_reading")
 
         self.verticalLayout_3.addWidget(self.yaw_reading)
 
-        self.pitch_reading = QLabel(self.layoutWidget2)
+        self.pitch_reading = QLabel(self.layoutWidget1)
         self.pitch_reading.setObjectName(u"pitch_reading")
 
         self.verticalLayout_3.addWidget(self.pitch_reading)
 
-        self.roll_reading = QLabel(self.layoutWidget2)
+        self.roll_reading = QLabel(self.layoutWidget1)
         self.roll_reading.setObjectName(u"roll_reading")
 
         self.verticalLayout_3.addWidget(self.roll_reading)
 
-        self.altitude_reading = QLabel(self.layoutWidget2)
+        self.altitude_reading = QLabel(self.layoutWidget1)
         self.altitude_reading.setObjectName(u"altitude_reading")
 
         self.verticalLayout_3.addWidget(self.altitude_reading)
 
-        self.altitude_sp_reading = QLabel(self.layoutWidget2)
+        self.altitude_sp_reading = QLabel(self.layoutWidget1)
         self.altitude_sp_reading.setObjectName(u"altitude_sp_reading")
 
         self.verticalLayout_3.addWidget(self.altitude_sp_reading)
 
-        self.loop_rate_reading = QLabel(self.layoutWidget2)
+        self.loop_rate_reading = QLabel(self.layoutWidget1)
         self.loop_rate_reading.setObjectName(u"loop_rate_reading")
 
         self.verticalLayout_3.addWidget(self.loop_rate_reading)
@@ -136,110 +111,122 @@ class Ui_MainWindow(object):
         self.widget = QWidget(self.centralwidget)
         self.widget.setObjectName(u"widget")
         self.widget.setGeometry(QRect(860, 60, 331, 281))
-        self.layoutWidget3 = QWidget(self.centralwidget)
-        self.layoutWidget3.setObjectName(u"layoutWidget3")
-        self.layoutWidget3.setGeometry(QRect(630, 400, 561, 266))
-        self.verticalLayout_5 = QVBoxLayout(self.layoutWidget3)
+        self.layoutWidget2 = QWidget(self.centralwidget)
+        self.layoutWidget2.setObjectName(u"layoutWidget2")
+        self.layoutWidget2.setGeometry(QRect(630, 400, 561, 266))
+        self.verticalLayout_5 = QVBoxLayout(self.layoutWidget2)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
         self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4 = QVBoxLayout()
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.verticalLayout_2 = QVBoxLayout()
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.title = QLabel(self.layoutWidget3)
+        self.title = QLabel(self.layoutWidget2)
         self.title.setObjectName(u"title")
 
         self.verticalLayout_2.addWidget(self.title)
 
-        self.controller_select = QComboBox(self.layoutWidget3)
+        self.controller_select = QComboBox(self.layoutWidget2)
         self.controller_select.setObjectName(u"controller_select")
 
         self.verticalLayout_2.addWidget(self.controller_select)
 
-        self.P_label = QLabel(self.layoutWidget3)
+        self.P_label = QLabel(self.layoutWidget2)
         self.P_label.setObjectName(u"P_label")
 
         self.verticalLayout_2.addWidget(self.P_label)
 
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.p_sub_large = QPushButton(self.layoutWidget3)
+        self.p_sub_large = QPushButton(self.layoutWidget2)
         self.p_sub_large.setObjectName(u"p_sub_large")
+        self.p_sub_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_3.addWidget(self.p_sub_large)
 
-        self.p_sub_small = QPushButton(self.layoutWidget3)
+        self.p_sub_small = QPushButton(self.layoutWidget2)
         self.p_sub_small.setObjectName(u"p_sub_small")
+        self.p_sub_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_3.addWidget(self.p_sub_small)
 
-        self.p_add_small = QPushButton(self.layoutWidget3)
+        self.p_add_small = QPushButton(self.layoutWidget2)
         self.p_add_small.setObjectName(u"p_add_small")
+        self.p_add_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_3.addWidget(self.p_add_small)
 
-        self.p_add_large = QPushButton(self.layoutWidget3)
+        self.p_add_large = QPushButton(self.layoutWidget2)
         self.p_add_large.setObjectName(u"p_add_large")
+        self.p_add_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_3.addWidget(self.p_add_large)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
-        self.I_label = QLabel(self.layoutWidget3)
+        self.I_label = QLabel(self.layoutWidget2)
         self.I_label.setObjectName(u"I_label")
 
         self.verticalLayout_2.addWidget(self.I_label)
 
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.i_sub_large = QPushButton(self.layoutWidget3)
+        self.i_sub_large = QPushButton(self.layoutWidget2)
         self.i_sub_large.setObjectName(u"i_sub_large")
+        self.i_sub_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_4.addWidget(self.i_sub_large)
 
-        self.i_sub_small = QPushButton(self.layoutWidget3)
+        self.i_sub_small = QPushButton(self.layoutWidget2)
         self.i_sub_small.setObjectName(u"i_sub_small")
+        self.i_sub_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_4.addWidget(self.i_sub_small)
 
-        self.i_add_small = QPushButton(self.layoutWidget3)
+        self.i_add_small = QPushButton(self.layoutWidget2)
         self.i_add_small.setObjectName(u"i_add_small")
+        self.i_add_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_4.addWidget(self.i_add_small)
 
-        self.i_add_large = QPushButton(self.layoutWidget3)
+        self.i_add_large = QPushButton(self.layoutWidget2)
         self.i_add_large.setObjectName(u"i_add_large")
+        self.i_add_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_4.addWidget(self.i_add_large)
 
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
-        self.D_label = QLabel(self.layoutWidget3)
+        self.D_label = QLabel(self.layoutWidget2)
         self.D_label.setObjectName(u"D_label")
 
         self.verticalLayout_2.addWidget(self.D_label)
 
         self.horizontalLayout_5 = QHBoxLayout()
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.d_sub_large = QPushButton(self.layoutWidget3)
+        self.d_sub_large = QPushButton(self.layoutWidget2)
         self.d_sub_large.setObjectName(u"d_sub_large")
+        self.d_sub_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_5.addWidget(self.d_sub_large)
 
-        self.d_sub_small = QPushButton(self.layoutWidget3)
+        self.d_sub_small = QPushButton(self.layoutWidget2)
         self.d_sub_small.setObjectName(u"d_sub_small")
+        self.d_sub_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_5.addWidget(self.d_sub_small)
 
-        self.d_add_small = QPushButton(self.layoutWidget3)
+        self.d_add_small = QPushButton(self.layoutWidget2)
         self.d_add_small.setObjectName(u"d_add_small")
+        self.d_add_small.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_5.addWidget(self.d_add_small)
 
-        self.d_add_large = QPushButton(self.layoutWidget3)
+        self.d_add_large = QPushButton(self.layoutWidget2)
         self.d_add_large.setObjectName(u"d_add_large")
+        self.d_add_large.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_5.addWidget(self.d_add_large)
 
@@ -249,7 +236,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
 
-        self.PP_k_label = QLabel(self.layoutWidget3)
+        self.PP_k_label = QLabel(self.layoutWidget2)
         self.PP_k_label.setObjectName(u"PP_k_label")
 
         self.verticalLayout_4.addWidget(self.PP_k_label)
@@ -257,7 +244,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
 
-        self.Warn_alarm = QLabel(self.layoutWidget3)
+        self.Warn_alarm = QLabel(self.layoutWidget2)
         self.Warn_alarm.setObjectName(u"Warn_alarm")
         font1 = QFont()
         font1.setBold(True)
@@ -266,24 +253,78 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.Warn_alarm)
 
-        self.calibrate_button = QPushButton(self.centralwidget)
-        self.calibrate_button.setObjectName(u"calibrate_button")
-        self.calibrate_button.setGeometry(QRect(630, 720, 119, 27))
-        font2 = QFont()
-        font2.setPointSize(10)
-        self.calibrate_button.setFont(font2)
         self.Warn_thrust_alarm = QLabel(self.centralwidget)
         self.Warn_thrust_alarm.setObjectName(u"Warn_thrust_alarm")
         self.Warn_thrust_alarm.setGeometry(QRect(630, 700, 191, 16))
         self.Warn_thrust_alarm.setFont(font1)
         self.Warn_thrust_alarm.setStyleSheet(u"color: rgb(255, 170, 0);")
+        self.widget1 = QWidget(self.centralwidget)
+        self.widget1.setObjectName(u"widget1")
+        self.widget1.setGeometry(QRect(970, 690, 223, 62))
+        self.verticalLayout = QVBoxLayout(self.widget1)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.Recording_rate_adj = QSpinBox(self.widget1)
+        self.Recording_rate_adj.setObjectName(u"Recording_rate_adj")
+        font2 = QFont()
+        font2.setKerning(True)
+        self.Recording_rate_adj.setFont(font2)
+        self.Recording_rate_adj.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.Recording_rate_adj.setFrame(False)
+        self.Recording_rate_adj.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.Recording_rate_adj.setReadOnly(False)
+        self.Recording_rate_adj.setKeyboardTracking(True)
+        self.Recording_rate_adj.setMinimum(1)
+        self.Recording_rate_adj.setMaximum(100)
+        self.Recording_rate_adj.setValue(20)
+
+        self.verticalLayout.addWidget(self.Recording_rate_adj)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.start_recording_btn = QPushButton(self.widget1)
+        self.start_recording_btn.setObjectName(u"start_recording_btn")
+        self.start_recording_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_2.addWidget(self.start_recording_btn)
+
+        self.stop_recording_btn = QPushButton(self.widget1)
+        self.stop_recording_btn.setObjectName(u"stop_recording_btn")
+        self.stop_recording_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_2.addWidget(self.stop_recording_btn)
+
+
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+
+        self.widget2 = QWidget(self.centralwidget)
+        self.widget2.setObjectName(u"widget2")
+        self.widget2.setGeometry(QRect(630, 720, 251, 29))
+        self.horizontalLayout_6 = QHBoxLayout(self.widget2)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.calibrate_button = QPushButton(self.widget2)
+        self.calibrate_button.setObjectName(u"calibrate_button")
+        font3 = QFont()
+        font3.setPointSize(10)
+        self.calibrate_button.setFont(font3)
+        self.calibrate_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_6.addWidget(self.calibrate_button)
+
+        self.sim_btn = QPushButton(self.widget2)
+        self.sim_btn.setObjectName(u"sim_btn")
+        self.sim_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_6.addWidget(self.sim_btn)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1200, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1207, 33))
         MainWindow.setMenuBar(self.menubar)
 
         self.retranslateUi(MainWindow)
@@ -296,9 +337,6 @@ class Ui_MainWindow(object):
         self.recording_label.setText(QCoreApplication.translate("MainWindow", u"\u25cf Recording", None))
         self.Readings_title.setText(QCoreApplication.translate("MainWindow", u"Live Readings", None))
         self.battery_label.setText(QCoreApplication.translate("MainWindow", u"Battery:", None))
-        self.sim_btn.setText(QCoreApplication.translate("MainWindow", u"Simulation: OFF", None))
-        self.start_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Start Recording", None))
-        self.stop_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Stop Recording", None))
         self.yaw_reading.setText(QCoreApplication.translate("MainWindow", u"Yaw: ", None))
         self.pitch_reading.setText(QCoreApplication.translate("MainWindow", u"Pitch:", None))
         self.roll_reading.setText(QCoreApplication.translate("MainWindow", u"Roll:", None))
@@ -324,7 +362,12 @@ class Ui_MainWindow(object):
         self.d_add_large.setText(QCoreApplication.translate("MainWindow", u"+0.25", None))
         self.PP_k_label.setText(QCoreApplication.translate("MainWindow", u"k_0 = ", None))
         self.Warn_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Approaching instability", None))
-        self.calibrate_button.setText(QCoreApplication.translate("MainWindow", u"Calibrate", None))
         self.Warn_thrust_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Using default thrust", None))
+        self.Recording_rate_adj.setSuffix(QCoreApplication.translate("MainWindow", u"Hz", None))
+        self.Recording_rate_adj.setPrefix(QCoreApplication.translate("MainWindow", u"Sample Rate: ", None))
+        self.start_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Start Recording", None))
+        self.stop_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Stop Recording", None))
+        self.calibrate_button.setText(QCoreApplication.translate("MainWindow", u"Calibrate", None))
+        self.sim_btn.setText(QCoreApplication.translate("MainWindow", u"Simulation: OFF", None))
     # retranslateUi
 

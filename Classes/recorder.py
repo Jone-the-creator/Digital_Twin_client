@@ -61,7 +61,7 @@ class RecorderWorker(QObject):
                 ])
 
                 f.flush()
-                QThread.msleep(50)  # 20Hz
+                QThread.msleep((1/self.quadcopter.recording_rate) * 1000)  # Adjustable
 
         self.finished.emit()
 

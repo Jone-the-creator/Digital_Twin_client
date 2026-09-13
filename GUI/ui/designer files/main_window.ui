@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
+    <width>1207</width>
     <height>807</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>920</x>
-      <y>720</y>
+      <y>730</y>
       <width>67</width>
       <height>16</height>
      </rect>
@@ -96,43 +96,6 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
         <number>0</number>
        </property>
       </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>990</x>
-      <y>691</y>
-      <width>204</width>
-      <height>62</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QPushButton" name="sim_btn">
-       <property name="text">
-        <string>Simulation: OFF</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QPushButton" name="start_recording_btn">
-         <property name="text">
-          <string>Start Recording</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="stop_recording_btn">
-         <property name="text">
-          <string>Stop Recording</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </item>
     </layout>
    </widget>
@@ -258,6 +221,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="p_sub_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.25</string>
              </property>
@@ -265,6 +231,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="p_sub_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.05</string>
              </property>
@@ -272,6 +241,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="p_add_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.05</string>
              </property>
@@ -279,6 +251,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="p_add_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.25</string>
              </property>
@@ -297,6 +272,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
             <widget class="QPushButton" name="i_sub_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.25</string>
              </property>
@@ -304,6 +282,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="i_sub_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.05</string>
              </property>
@@ -311,6 +292,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="i_add_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.05</string>
              </property>
@@ -318,6 +302,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="i_add_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.25</string>
              </property>
@@ -336,6 +323,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
             <widget class="QPushButton" name="d_sub_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.25</string>
              </property>
@@ -343,6 +333,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="d_sub_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>-0.05</string>
              </property>
@@ -350,6 +343,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="d_add_small">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.05</string>
              </property>
@@ -357,6 +353,9 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
            </item>
            <item>
             <widget class="QPushButton" name="d_add_large">
+             <property name="cursor">
+              <cursorShape>PointingHandCursor</cursorShape>
+             </property>
              <property name="text">
               <string>+0.25</string>
              </property>
@@ -392,24 +391,6 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="calibrate_button">
-    <property name="geometry">
-     <rect>
-      <x>630</x>
-      <y>720</y>
-      <width>119</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>10</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Calibrate</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="Warn_thrust_alarm">
     <property name="geometry">
      <rect>
@@ -431,6 +412,115 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <string>Warning: Using default thrust</string>
     </property>
    </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>990</x>
+      <y>690</y>
+      <width>204</width>
+      <height>62</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QSpinBox" name="Recording_rate_adj">
+       <property name="font">
+        <font>
+         <kerning>true</kerning>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="frame">
+        <bool>false</bool>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+       <property name="readOnly">
+        <bool>false</bool>
+       </property>
+       <property name="keyboardTracking">
+        <bool>true</bool>
+       </property>
+       <property name="suffix">
+        <string>Hz</string>
+       </property>
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>20</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QPushButton" name="start_recording_btn">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Start Recording</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="stop_recording_btn">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Stop Recording</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>720</y>
+      <width>251</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <item>
+      <widget class="QPushButton" name="calibrate_button">
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Calibrate</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="sim_btn">
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="text">
+        <string>Simulation: OFF</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menubar">
@@ -438,7 +528,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1200</width>
+     <width>1207</width>
      <height>33</height>
     </rect>
    </property>

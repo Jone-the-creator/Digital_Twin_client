@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'setup_dialogFBewZK.ui'
+## Form generated from reading UI file 'setup_dialogxWhEOR.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -79,21 +79,23 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.estimator_dropdown)
 
-        self.widget = QWidget(Dialog)
-        self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(11, 241, 371, 29))
-        self.horizontalLayout = QHBoxLayout(self.widget)
+        self.layoutWidget1 = QWidget(Dialog)
+        self.layoutWidget1.setObjectName(u"layoutWidget1")
+        self.layoutWidget1.setGeometry(QRect(11, 241, 371, 29))
+        self.horizontalLayout = QHBoxLayout(self.layoutWidget1)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.save_button = QPushButton(self.widget)
+        self.save_button = QPushButton(self.layoutWidget1)
         self.save_button.setObjectName(u"save_button")
         self.save_button.setFont(font)
+        self.save_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout.addWidget(self.save_button)
 
-        self.enter_button = QPushButton(self.widget)
+        self.enter_button = QPushButton(self.layoutWidget1)
         self.enter_button.setObjectName(u"enter_button")
         self.enter_button.setFont(font)
+        self.enter_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout.addWidget(self.enter_button)
 

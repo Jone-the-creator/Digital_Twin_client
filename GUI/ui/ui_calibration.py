@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'calibrationvopsBF.ui'
+## Form generated from reading UI file 'calibrationZwAPXQ.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -48,6 +48,7 @@ class Ui_Dialog(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.close_button = QPushButton(self.layoutWidget)
         self.close_button.setObjectName(u"close_button")
+        self.close_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.close_button.setAutoDefault(False)
 
         self.horizontalLayout.addWidget(self.close_button)
@@ -57,12 +58,14 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.save_button.setFont(font1)
+        self.save_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.save_button.setAutoDefault(False)
 
         self.horizontalLayout.addWidget(self.save_button)
 
         self.calibrate_button = QPushButton(self.layoutWidget)
         self.calibrate_button.setObjectName(u"calibrate_button")
+        self.calibrate_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout.addWidget(self.calibrate_button)
 

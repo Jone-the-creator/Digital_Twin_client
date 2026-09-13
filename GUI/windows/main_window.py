@@ -6,8 +6,9 @@
 # -- used to instantiate and control imported main window UI from the designer --
 
 from PySide6 import QtGui
+from PySide6.QtGui import QCursor
 from PySide6.QtCore import (
-    QTimer, QThread, Signal
+    QTimer, QThread, Signal, Qt
 )
 from PySide6.QtWidgets import (
     QPushButton, QHBoxLayout, QMainWindow, QLabel, QVBoxLayout
@@ -332,6 +333,10 @@ class MainWindow(QMainWindow):
         # shows recording status
         self.ui.recording_label.show()
 
+        # block adjustment of recording rate
+        self.ui.Recording_rate_adj.setReadOnly(1)
+        self.ui.Recording_rate_adj.setCursor(QCursor(Qt.CursorShape.ForbiddenCursor))
+
         # creates thread
         self.thread = QThread()
         self.worker = RecorderWorker(self.quadcopter)
@@ -348,6 +353,10 @@ class MainWindow(QMainWindow):
 
 
     def stop_record(self):
+        # allow adjustment of recording rate
+        self.ui.Recording_rate_adj.setReadOnly(0)
+        self.ui.Recording_rate_adj.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
         if hasattr(self, "worker"):
             self.ui.recording_label.hide()
             self.worker.stop()
