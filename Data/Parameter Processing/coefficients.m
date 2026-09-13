@@ -1,0 +1,115 @@
+%% Aerodynamic Damping Identification
+% Uses every sample from every CSV file.
+%
+% Model:
+%   dv/dt = T/m - g - c1*v - c2*v*abs(v)
+%
+% Rearranged:
+%   T/m - g - dv/dt = c1*v + c2*v*abs(v)
+
+clear;
+clc;
+close all;
+
+%% USER SETTINGS
+
+mass = 0.27;                 % kg
+hover_thrust_pwm = 40008;     % PWM corresponding to hover thrust
+
+dataFolder = 'logs';          % Folder containing CSV files
+
+%% CONSTANTS
+
+g = 9.81;
+
+PWM_thrust_gain = hover_thrust_pwm/(mass*g);
+
+%% STORAGE FOR REGRESSION
+
+A = [];
+b = [];
+
+%% FIND FILES
+
+files = dir(fullfile(dataFolder,'*.csv'));
+
+if isempty(files)
+    error('No CSV files found in "%s"', dataFolder);
+end
+
+%% PROCESS EACH FILE
+
+for k = 1:length(files)
+
+    filename = fullfile(files(k).folder, files(k).name);
+
+    fprintf('Processing: %s\n', files(k).name);
+
+    T = readtable(filename);
+
+    time     = T.time;
+    thrust   = T.thrust;
+    altitude = T.altitude;
+    velocity = T.velocity;
+
+    %---------------------------------------------------------------
+
+    % Remove NaNs
+
+    valid = ~( ...
+        isnan(time) | ...
+        isnan(thrust) | ...
+        isnan(altitude) | ...
+        isnan(velocity));
+
+    time     = time(valid);
+    thrust   = thrust(valid);
+    altitude = altitude(valid);
+    velocity = velocity(valid);
+
+    if numel(time) < 10
+        warning('Skipping %s (insufficient samples)', files(k).name);
+        continue;
+    end
+
+    %% Calculate vertical acceleration
+
+    accel = gradient(velocity,time);
+
+    %% Convert PWM to thrust force
+
+    thrust_force = thrust ./ PWM_thrust_gain;
+
+    %% Left-hand side
+
+    lhs = thrust_force./mass - g - accel;
+
+    %% Regression matrix
+
+    A_file = [
+        velocity, ...
+        velocity .* abs(velocity)
+        ];
+
+    %% Store
+
+    A = [A; A_file];
+    b = [b; lhs];
+
+end
+
+%% LEAST SQUARES FIT
+
+c = A\b;
+
+c1 = c(1);
+c2 = c(2);
+
+%% DISPLAY RESULTS
+
+fprintf('\n');
+fprintf('------------------------------------\n');
+fprintf('Estimated Damping Coefficients\n');
+fprintf('------------------------------------\n');
+fprintf('c1 = %.6f [1/s]\n', c1);
+fprintf('c2 = %.6f [1/m]\n', c2);

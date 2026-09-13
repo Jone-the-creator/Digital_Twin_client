@@ -81,10 +81,10 @@ class SetupWindow(QDialog):
             controller=None,
             estimator=self.ui.estimator_dropdown.currentText(),
             control_system=self.ui.controlsystem_dropdown.currentText(),
-            hover_thrust=self.defaults.get("hover thrust",
+            hover_thrust=self.defaults.get("hover thrust"),
             c_0 = float(self.ui.linear_drag_in.text()),
             c_1 = float(self.ui.non_linear_drag_in.text()))
-        )
+        
         print(self.quad.hover_thrust)
 
         self.accept()

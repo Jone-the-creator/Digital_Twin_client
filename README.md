@@ -27,6 +27,9 @@ Mass can simply be found by placing the quadcopter on a scale. It is recommended
 The aerodynamic coefficients are a mathematical representation of the aerodynamic effects that will oppose vertical acceleration relative to velocity.
 > $a_z​=−g−c_1​v_z​−c_2​v_z​∣v_z​∣$
 
+A matlab script has been created for this, in which a sample of test flight data must be obtained and placed in the Data/Parameter Processing/logs folder and when the script is run it will output estimated damping coefficients using the following method. 
+> Before running this script, ensure the mass is correctly measured and the hover thrust has been calibrated and is input in the %% USER SETTINGS section of the script
+
 This system can be written compactly as
 
 $$
@@ -59,14 +62,7 @@ F_n
 \end{bmatrix}.
 $$
 
-Before experimentally finding these coefficients, enter the main window and use the calibrate mode to find the hover thrust. This should be recorded and saved.
 
-Start by calculating the force for a constant thrust slightly above hover. 
-> $F_i = T_i/m - g$ 
-
-Using the Digital Twin, record at a rate of 50Hz and this constant thrust. Record the altitude, vertical velocity and thrust command. 
-
-Repeat this at several different thrust values, collecting \(n\) measurements gives:
 
 $$
 \begin{bmatrix}
@@ -89,13 +85,14 @@ F_n
 $$
 
 
-The coefficients may then be estimated using the least-squares solution
+The coefficients may then be estimated using the least-squares solution.
 
 $$
 \mathbf{c}
 =
 (A^T A)^{-1}A^T\mathbf{F}.
 $$
+
 
 ## Adding Custom Plugins
 As plugins are added, they must be properly integrated to be able to be selected in the setup window. This must updated in the run_setup() function in GUI/windows/setup_window.py, where adding another string in the list will allow it to become selectable.  

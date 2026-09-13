@@ -77,3 +77,5 @@ class Observer:
         if self.x[2,0] <= 0.0:
             self.x[2,0] = 0.0
             self.x[5,0] = max(self.x[5,0], 0.0)
+
+        self.quad.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])
