@@ -38,6 +38,8 @@ class SetupWindow(QDialog):
 
         # Set defaults
         self.ui.mass_input.setText(defaults.get("MASS", ""))
+        self.ui.linear_drag_in.setText(defaults.get("linear drag", ""))
+        self.ui.non_linear_drag_in.setText(defaults.get("non linear drag", ""))
 
         if self.defaults.get("comms") in comms_options:
             self.ui.comms_dropdown.setCurrentText(
@@ -63,6 +65,8 @@ class SetupWindow(QDialog):
         self.values["comms"] = self.ui.comms_dropdown.currentText()
         self.values["control system"] = self.ui.controlsystem_dropdown.currentText()
         self.values["state estimator"] = self.ui.estimator_dropdown.currentText()
+        self.values["linear drag"] = float(self.ui.linear_drag_in.text())
+        self.values["non linear drag"] = float(self.ui.non_linear_drag_in.text())
 
         functions.replace_settings(
             "init_defaults.txt",
@@ -77,7 +81,9 @@ class SetupWindow(QDialog):
             controller=None,
             estimator=self.ui.estimator_dropdown.currentText(),
             control_system=self.ui.controlsystem_dropdown.currentText(),
-            hover_thrust=self.defaults.get("hover thrust")
+            hover_thrust=self.defaults.get("hover thrust",
+            c_0 = float(self.ui.linear_drag_in.text()),
+            c_1 = float(self.ui.non_linear_drag_in.text()))
         )
         print(self.quad.hover_thrust)
 

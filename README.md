@@ -10,6 +10,93 @@ Pre-loaded plugins created for Honours project:
 - Model-free PID control system
 - State space pole-placement control system
 
+## Digital Twin Usage
+The following section details the operation and usage of the Digital Twin client without adding customised plugins. This is only possible if the required plugins are already available on the system, the current supported devices are:
+- Crazyflie 2.x
+
+### Finding Plant-Specific Parameters
+To use the base plant model (9-states, not involving torque representations) three parameters must be input:
+- Mass (kg)
+- Linear aerodynamic coefficient
+- Non-linear aerodynamic coefficient
+
+#### Mass
+Mass can simply be found by placing the quadcopter on a scale. It is recommended to measure this five separate times and find an average of the readings to account for error in the scale's readings.
+
+#### Aerodynamic Coefficients
+The aerodynamic coefficients are a mathematical representation of the aerodynamic effects that will oppose vertical acceleration relative to velocity.
+> $a_z​=−g−c_1​v_z​−c_2​v_z​∣v_z​∣$
+
+This system can be written compactly as
+
+$$
+A\mathbf{c}=\mathbf{F},
+$$
+
+where
+
+$$
+A=
+\begin{bmatrix}
+v_1 & v_1^2 \\
+v_2 & v_2^2 \\
+\vdots & \vdots \\
+v_n & v_n^2
+\end{bmatrix},
+\qquad
+\mathbf{c}=
+\begin{bmatrix}
+c_1 \\
+c_2
+\end{bmatrix},
+\qquad
+\mathbf{F}=
+\begin{bmatrix}
+F_1 \\
+F_2 \\
+\vdots \\
+F_n
+\end{bmatrix}.
+$$
+
+Before experimentally finding these coefficients, enter the main window and use the calibrate mode to find the hover thrust. This should be recorded and saved.
+
+Start by calculating the force for a constant thrust slightly above hover. 
+> $F_i = T_i/m - g$ 
+
+Using the Digital Twin, record at a rate of 50Hz and this constant thrust. Record the altitude, vertical velocity and thrust command. 
+
+Repeat this at several different thrust values, collecting \(n\) measurements gives:
+
+$$
+\begin{bmatrix}
+v_1 & v_1^2 \\
+v_2 & v_2^2 \\
+\vdots & \vdots \\
+v_n & v_n^2
+\end{bmatrix}
+\begin{bmatrix}
+c_1 \\
+c_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+F_1 \\
+F_2 \\
+\vdots \\
+F_n
+\end{bmatrix}.
+$$
+
+
+The coefficients may then be estimated using the least-squares solution
+
+$$
+\mathbf{c}
+=
+(A^T A)^{-1}A^T\mathbf{F}.
+$$
+
 ## Adding Custom Plugins
 As plugins are added, they must be properly integrated to be able to be selected in the setup window. This must updated in the run_setup() function in GUI/windows/setup_window.py, where adding another string in the list will allow it to become selectable.  
 <img width="416" height="82" alt="image" src="https://github.com/user-attachments/assets/43137608-cbbd-4d0b-b769-993cd47947e9" />

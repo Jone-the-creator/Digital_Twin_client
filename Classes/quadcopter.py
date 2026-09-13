@@ -48,7 +48,7 @@ class ControlInputs:
 
 # quadcopter class containing generic data requirements
 class Quadcopter:
-    def __init__(self, MASS:float, comms: str, controller, estimator, control_system, hover_thrust):
+    def __init__(self, MASS:float, comms: str, controller, estimator, control_system, hover_thrust, c_0, c_1):
         self.mass: float = MASS
         # self.I_xx: float = I_xx
         # self.I_yy: float = I_yy
@@ -81,8 +81,8 @@ class Quadcopter:
         self.gyro_z = 0.0
 
         self.c = np.array([
-            [0.5],  # linear aerodynamic damping coefficient
-            [0.25]   # non-linear aerodynamic damping coefficient
+            [c_0],  # linear aerodynamic damping coefficient
+            [c_1]   # non-linear aerodynamic damping coefficient
         ])
 
         self.max_thrust = 54000

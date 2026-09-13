@@ -3,3 +3,5 @@ comms=Crazyradio
 control system=Pole-placement
 state estimator=Extended Kalman Filter
 hover thrust=40008.96477752078
+linear drag=0.5
+non linear drag=0.25
