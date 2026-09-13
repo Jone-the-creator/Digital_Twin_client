@@ -74,8 +74,7 @@ v_n & v_n^2
 \begin{bmatrix}
 c_1 \\
 c_2
-\end{bmatrix}
-=
+\end{bmatrix} =
 \begin{bmatrix}
 F_1 \\
 F_2 \\
@@ -88,8 +87,7 @@ $$
 The coefficients may then be estimated using the least-squares solution.
 
 $$
-\mathbf{c}
-=
+\mathbf{c} =
 (A^T A)^{-1}A^T\mathbf{F}.
 $$
 
