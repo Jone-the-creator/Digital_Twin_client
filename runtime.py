@@ -29,7 +29,7 @@ LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
-def update_active(obs, quad, sim, u, altitude, dt):
+def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
     quad.update_controls(
             yaw_rate = u[0,0],
             pitch = u[1,0],
@@ -45,7 +45,14 @@ def update_active(obs, quad, sim, u, altitude, dt):
             dt
         )
     if quad.simulation_mode:
-        sim.update(np.array([
+        sim_1.update(np.array([
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+        sim_2.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
             [-np.deg2rad(u[1,0])], # pitch rate
             [-np.deg2rad(u[0,0])], # yaw rate
@@ -55,7 +62,7 @@ def update_active(obs, quad, sim, u, altitude, dt):
 
 
     # ---- CONTROL LOOP ----
-def control_loop(obs, quad, PID, sim, PP):
+def control_loop(obs, quad, PID, sim_1, sim_2, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -179,9 +186,9 @@ def control_loop(obs, quad, PID, sim, PP):
             # --- UPDATE CONTROLS ---
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
-                update_active(obs, quad, sim, u, target_altitude, dt)
+                update_active(obs, quad, sim_1, sim_2, u, target_altitude, dt)
             elif not quad.calibrating:
-                update_active(obs, quad, sim, u, altitude, dt)
+                update_active(obs, quad, sim_1, sim_2, u, altitude, dt)
                 
         if quad.test_flight:
             count += 1
@@ -212,7 +219,8 @@ def main():
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
     obs = Observer(quad)
-    sim = Nonlinear_Model(quad)
+    sim_1 = Nonlinear_Model(quad)
+    sim_2 = Observer(quad)
     PID = PIDstabiliser(quad)
     PP = PPstabiliser(obs)
 
@@ -229,7 +237,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
+    threading.Thread(target=control_loop, args=(obs,quad,PID,sim_1,sim_2,PP)).start()
 
     # ---- COMMS ----
     comms = None
