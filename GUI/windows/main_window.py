@@ -497,32 +497,36 @@ class MainWindow(QMainWindow):
         self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")
 
     def update_step_response(self):
-        elapsed = time.time() - self.step_start_time
+        # elapsed = time.time() - self.step_start_time
 
-        self.response_time.append(elapsed)
+        # self.response_time.append(elapsed)
 
-        self.response_altitude.append(
-            self.quadcopter.position.z
-        )
+        # if not self.quadcopter.simulation_mode:
+        #     self.response_altitude.append(self.quadcopter.position.z)
+        #     self.response_setpoint.append(self.quadcopter.controls.z)
+        # elif self.ui.model_select.currentText().lower == "non-linear model":
+        #     self.response_altitude.append(self.sim_non_linear.position.z)
+        #     self.response_setpoint.append(self.sim_non_linear.controls.z)
+        # elif self.ui.model_select.currentText().lower == "linearised model":
+        #     self.response_altitude.append(self.sim_linear.position.z)
+        #     self.response_setpoint.append(self.sim_linear.controls.z)
 
-        self.response_setpoint.append(
-            self.quadcopter.controls.z
-        )
+        # self.alt_curve.setData(
+        #     list(self.response_time),
+        #     list(self.response_altitude)
+        # )
 
-        self.alt_curve.setData(
-            list(self.response_time),
-            list(self.response_altitude)
-        )
-
-        self.sp_curve.setData(
-            list(self.response_time),
-            list(self.response_setpoint)
-        )
+        # self.sp_curve.setData(
+        #     list(self.response_time),
+        #     list(self.response_setpoint)
+        #     )
+        return
     def reset_step_response(self):
-        self.response_time.clear()
-        self.response_altitude.clear()
-        self.response_setpoint.clear()
-        self.logging_response = True
+        # self.response_time.clear()
+        # self.response_altitude.clear()
+        # self.response_setpoint.clear()
+        # self.logging_response = True
+        return
 
     def stop_step_response(self):
         self.logging_response = False
