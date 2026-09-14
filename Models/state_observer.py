@@ -71,15 +71,15 @@ class Observer:
         ])
 
         self.observer_poles = np.array([
-            -4.0,
-            -4.5,
-            -5.0,
-            -5.5,
-            -6.0,
-            -6.5,
-            -7.0,
-            -7.5,
-            -8.0
+            -10 + 13.69j,
+            -10 - 13.69j,
+            -50,
+            -60,
+            -70,
+            -80,
+            -90,
+            -100,
+            -110
         ])
 
         Co = controllability_matrix(self.A, self.B)
@@ -104,7 +104,7 @@ class Observer:
 
         self.sim.attitude.roll = np.rad2deg(float(self.x[6,0]))
         self.sim.attitude.pitch = np.rad2deg(float(self.x[7,0]))
-        self.sim.attitude.yaw = np.rad2deg(float(self.x[8,0]))
+        self.sim.attitude.yaw = wrap(np.rad2deg(float(self.x[8,0])))
 
     def update(self, u, dt):
         u = np.asarray(u, dtype=float).reshape(4,1).copy()
@@ -131,6 +131,7 @@ class Observer:
         if self.x[2,0] <= 0.0:
             self.x[2,0] = 0.0
             self.x[5,0] = max(self.x[5,0], 0.0)
+        self.x[8,0] = wrap(self.x[8,0])
 
         if self.sim is not None:
             self.sim.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])

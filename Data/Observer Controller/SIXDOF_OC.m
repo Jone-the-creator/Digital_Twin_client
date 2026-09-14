@@ -1,41 +1,84 @@
-%% plot_6dof_plant_observer.m
-% Plots the six degrees of freedom for the real plant and observer.
+%% observer_6dof_validation.m
+% Written by Jonah Habel 2026
+% Flinders University
 %
-% Expected CSV headings:
+% Observer 6DOF validation using plant and observer data exported
+% in the same CSV file.
+%
+% REQUIREMENTS
+%
+% Position estimation error:
+%   |x - xobs| <= 0.005 m
+%   |y - yobs| <= 0.005 m
+%   |z - zobs| <= 0.005 m
+%
+% Attitude estimation error:
+%   |roll  - rollobs|  <= 0.2 deg
+%   |pitch - pitchobs| <= 0.2 deg
+%   |yaw   - yawobs|   <= 0.2 deg
+%
+% Temporary exceedances are permitted, provided that the error does not
+% continuously exceed the applicable limit for more than 0.5 seconds.
+%
+% EXPECTED CSV COLUMN HEADINGS
 %
 %   time
-%   x,     y,     z,     roll,     pitch,     yaw
-%   xobs,  yobs,  zobs,  rollobs,  pitchobs,  yawobs
+%   x, y, z
+%   roll, pitch, yaw
+%   xobs, yobs, zobs
+%   rollobs, pitchobs, yawobs
 %
-% All plant and observer signals use the same time vector.
+% Plant and observer data must use the same time vector.
 
 clear;
 clc;
 close all;
 
-%% ------------------------------------------------------------
+%% ============================================================
 % USER SETTINGS
-% -------------------------------------------------------------
+% =============================================================
 
 csvFile = "flight_data.csv";
 
-% Set these according to the units in the CSV.
+% Figure information
+figureHeading = "Observer 6DOF Error vs Time";
+testDescription = ...
+    "Jonah Habel - Observer Validation - 14.09.2026";
+
+% Set these to true if the corresponding CSV attitude values
+% are stored in radians.
 plantAnglesInRadians = false;
 observerAnglesInRadians = false;
 
-% Set to true to create an additional observer-error figure.
-plotObserverErrors = true;
+% Requirement limits
+positionErrorLimit = 0.005;       % metres
+attitudeErrorLimit = 0.2;         % degrees
 
-%% ------------------------------------------------------------
+% Maximum permitted continuous exceedance
+maximumExceedanceDuration = 0.5;  % seconds
+
+% Plot options
+showFailureShading = true;
+showExceedanceMarkers = false;
+showResultTextBoxes = true;
+
+% Output files
+resultsFile = "observer_validation_results.csv";
+eventResultsFile = "observer_exceedance_events.csv";
+figureFile = "observer_6dof_error_validation.png";
+matlabFigureFile = "observer_6dof_error_validation.fig";
+
+%% ============================================================
 % CSV COLUMN NAMES
-% -------------------------------------------------------------
+% =============================================================
 
 columns.time = "time";
 
-% Real plant columns
+% Plant columns
 columns.x = "x";
 columns.y = "y";
 columns.z = "z";
+
 columns.roll = "roll";
 columns.pitch = "pitch";
 columns.yaw = "yaw";
@@ -44,24 +87,80 @@ columns.yaw = "yaw";
 columns.xobs = "x obs";
 columns.yobs = "y obs";
 columns.zobs = "z obs";
+
 columns.rollobs = "roll obs";
 columns.pitchobs = "pitch obs";
 columns.yawobs = "yaw obs";
 
-%% ------------------------------------------------------------
-% IMPORT CSV FILE
-% -------------------------------------------------------------
+%% ============================================================
+% STATE DEFINITIONS
+% =============================================================
+
+stateNames = [
+    "x"
+    "y"
+    "z"
+    "roll"
+    "pitch"
+    "yaw"
+];
+
+observerColumnNames = [
+    "x obs"
+    "y obs"
+    "z obs"
+    "roll obs"
+    "pitch obs"
+    "yaw obs"
+];
+
+stateTitles = [
+    "X Position Error"
+    "Y Position Error"
+    "Z Position Error"
+    "Roll Error"
+    "Pitch Error"
+    "Yaw Error"
+];
+
+stateUnits = [
+    "m"
+    "m"
+    "m"
+    "deg"
+    "deg"
+    "deg"
+];
+
+requirementLimits = [
+    positionErrorLimit
+    positionErrorLimit
+    positionErrorLimit
+    attitudeErrorLimit
+    attitudeErrorLimit
+    attitudeErrorLimit
+];
+
+numberOfStates = numel(stateNames);
+
+%% ============================================================
+% IMPORT CSV
+% =============================================================
+
+if ~isfile(csvFile)
+    error("CSV file not found: %s", csvFile);
+end
 
 data = readtable( ...
     csvFile, ...
     "VariableNamingRule", "preserve");
 
-fprintf("Loaded data from: %s\n", csvFile);
-fprintf("Number of samples: %d\n", height(data));
+fprintf("Loaded CSV file: %s\n", csvFile);
+fprintf("Imported rows: %d\n", height(data));
 
-%% ------------------------------------------------------------
+%% ============================================================
 % CHECK REQUIRED COLUMNS
-% -------------------------------------------------------------
+% =============================================================
 
 requiredColumns = [
     columns.time
@@ -89,23 +188,20 @@ if ~isempty(missingColumns)
     disp(availableColumns');
 
     error( ...
-        "The following required columns are missing: %s", ...
+        "Missing required CSV columns: %s", ...
         strjoin(missingColumns, ", "));
 end
 
-%% ------------------------------------------------------------
+%% ============================================================
 % EXTRACT TIME
-% -------------------------------------------------------------
+% =============================================================
 
 time = double(data.(columns.time));
 time = time(:);
 
-% Remove the absolute starting time so that the plot begins at zero.
-time = time - time(1);
-
-%% ------------------------------------------------------------
-% EXTRACT REAL PLANT DATA
-% -------------------------------------------------------------
+%% ============================================================
+% EXTRACT PLANT DATA
+% =============================================================
 
 plant = struct();
 
@@ -117,9 +213,9 @@ plant.roll = double(data.(columns.roll));
 plant.pitch = double(data.(columns.pitch));
 plant.yaw = double(data.(columns.yaw));
 
-%% ------------------------------------------------------------
+%% ============================================================
 % EXTRACT OBSERVER DATA
-% -------------------------------------------------------------
+% =============================================================
 
 observer = struct();
 
@@ -131,273 +227,546 @@ observer.roll = double(data.(columns.rollobs));
 observer.pitch = double(data.(columns.pitchobs));
 observer.yaw = double(data.(columns.yawobs));
 
-%% ------------------------------------------------------------
-% CONVERT ANGLES TO DEGREES IF REQUIRED
-% -------------------------------------------------------------
+%% ============================================================
+% ENSURE ALL SIGNALS ARE COLUMN VECTORS
+% =============================================================
 
-if plantAnglesInRadians
-    plant.roll = rad2deg(plant.roll);
-    plant.pitch = rad2deg(plant.pitch);
-    plant.yaw = rad2deg(plant.yaw);
+for stateIndex = 1:numberOfStates
+    stateName = stateNames(stateIndex);
+
+    plant.(stateName) = plant.(stateName)(:);
+    observer.(stateName) = observer.(stateName)(:);
 end
 
-if observerAnglesInRadians
-    observer.roll = rad2deg(observer.roll);
-    observer.pitch = rad2deg(observer.pitch);
-    observer.yaw = rad2deg(observer.yaw);
-end
+%% ============================================================
+% CONVERT ATTITUDE TO DEGREES IF REQUIRED
+% =============================================================
 
-%% ------------------------------------------------------------
-% REMOVE ROWS CONTAINING INVALID DATA
-% -------------------------------------------------------------
-
-validRows = isfinite(time);
-
-stateNames = [
-    "x"
-    "y"
-    "z"
+angleStates = [
     "roll"
     "pitch"
     "yaw"
 ];
 
-for stateName = stateNames'
+if plantAnglesInRadians
+    for stateIndex = 1:numel(angleStates)
+        stateName = angleStates(stateIndex);
+
+        plant.(stateName) = ...
+            rad2deg(plant.(stateName));
+    end
+end
+
+if observerAnglesInRadians
+    for stateIndex = 1:numel(angleStates)
+        stateName = angleStates(stateIndex);
+
+        observer.(stateName) = ...
+            rad2deg(observer.(stateName));
+    end
+end
+
+%% ============================================================
+% REMOVE INVALID ROWS
+% =============================================================
+
+validRows = isfinite(time);
+
+for stateIndex = 1:numberOfStates
+    stateName = stateNames(stateIndex);
+
     validRows = validRows ...
         & isfinite(plant.(stateName)) ...
         & isfinite(observer.(stateName));
 end
 
+numberOfRemovedRows = sum(~validRows);
+
 time = time(validRows);
 
-for stateName = stateNames'
-    plant.(stateName) = plant.(stateName)(validRows);
-    observer.(stateName) = observer.(stateName)(validRows);
+for stateIndex = 1:numberOfStates
+    stateName = stateNames(stateIndex);
+
+    plant.(stateName) = ...
+        plant.(stateName)(validRows);
+
+    observer.(stateName) = ...
+        observer.(stateName)(validRows);
 end
 
-%% ------------------------------------------------------------
+fprintf("Removed invalid rows: %d\n", numberOfRemovedRows);
+fprintf("Valid rows remaining: %d\n", numel(time));
+
+if numel(time) < 2
+    error("At least two valid samples are required.");
+end
+
+%% ============================================================
 % SORT DATA BY TIME
-% -------------------------------------------------------------
+% =============================================================
 
 [time, sortIndex] = sort(time);
 
-for stateName = stateNames'
-    plant.(stateName) = plant.(stateName)(sortIndex);
-    observer.(stateName) = observer.(stateName)(sortIndex);
+for stateIndex = 1:numberOfStates
+    stateName = stateNames(stateIndex);
+
+    plant.(stateName) = ...
+        plant.(stateName)(sortIndex);
+
+    observer.(stateName) = ...
+        observer.(stateName)(sortIndex);
 end
 
-%% ------------------------------------------------------------
-% PLOT ALL SIX DEGREES OF FREEDOM
-% -------------------------------------------------------------
+%% ============================================================
+% REMOVE DUPLICATE TIME VALUES
+% =============================================================
 
-figure( ...
-    "Name", "Plant and Observer 6DOF Comparison", ...
-    "Color", "w");
+[time, uniqueTimeIndex] = unique(time, "stable");
 
-plotLayout = tiledlayout(3, 2);
+for stateIndex = 1:numberOfStates
+    stateName = stateNames(stateIndex);
 
-plotLayout.TileSpacing = "compact";
-plotLayout.Padding = "compact";
+    plant.(stateName) = ...
+        plant.(stateName)(uniqueTimeIndex);
 
-title( ...
-    plotLayout, ...
-    "Real Plant and Observer: 6DOF Comparison");
+    observer.(stateName) = ...
+        observer.(stateName)(uniqueTimeIndex);
+end
 
-% X position
-nexttile;
+if numel(time) < 2
+    error("At least two unique time samples are required.");
+end
 
-plotStateComparison( ...
-    time, ...
-    plant.x, ...
-    observer.x, ...
-    "X Position", ...
-    "Position (m)");
+%% ============================================================
+% NORMALISE TIME
+% =============================================================
 
-% Y position
-nexttile;
+time = time - time(1);
 
-plotStateComparison( ...
-    time, ...
-    plant.y, ...
-    observer.y, ...
-    "Y Position", ...
-    "Position (m)");
+timeDifferences = diff(time);
 
-% Z position
-nexttile;
+positiveTimeDifferences = ...
+    timeDifferences(timeDifferences > 0);
 
-plotStateComparison( ...
-    time, ...
-    plant.z, ...
-    observer.z, ...
-    "Z Position", ...
-    "Position (m)");
+if isempty(positiveTimeDifferences)
+    error("The time column does not contain increasing values.");
+end
 
-% Roll
-nexttile;
+medianSampleTime = median(positiveTimeDifferences);
+approximateSampleRate = 1 / medianSampleTime;
 
-plotStateComparison( ...
-    time, ...
-    plant.roll, ...
-    observer.roll, ...
-    "Roll", ...
-    "Angle (deg)");
+fprintf("Test duration: %.3f s\n", time(end));
+fprintf("Median sample time: %.6f s\n", medianSampleTime);
+fprintf("Approximate sample rate: %.2f Hz\n", ...
+    approximateSampleRate);
 
-% Pitch
-nexttile;
+%% ============================================================
+% CALCULATE SIGNED AND ABSOLUTE ERRORS
+% =============================================================
 
-plotStateComparison( ...
-    time, ...
-    plant.pitch, ...
-    observer.pitch, ...
-    "Pitch", ...
-    "Angle (deg)");
+signedErrors = struct();
+absoluteErrors = struct();
+exceedanceMasks = struct();
+failedIntervalMasks = struct();
 
-% Yaw
-nexttile;
+maximumAbsoluteError = zeros(numberOfStates, 1);
+meanAbsoluteError = zeros(numberOfStates, 1);
+rootMeanSquareError = zeros(numberOfStates, 1);
+percentageWithinLimit = zeros(numberOfStates, 1);
 
-plotStateComparison( ...
-    time, ...
-    plant.yaw, ...
-    observer.yaw, ...
-    "Yaw", ...
-    "Angle (deg)");
+longestExceedanceDuration = zeros(numberOfStates, 1);
+numberOfExceedanceEvents = zeros(numberOfStates, 1);
+numberOfFailedEvents = zeros(numberOfStates, 1);
 
-%% ------------------------------------------------------------
-% CALCULATE OBSERVER ERRORS
-% -------------------------------------------------------------
+validationPassed = false(numberOfStates, 1);
 
-errorData = struct();
-rmseValues = zeros(numel(stateNames), 1);
+eventStartIndices = cell(numberOfStates, 1);
+eventEndIndices = cell(numberOfStates, 1);
+eventDurations = cell(numberOfStates, 1);
+eventPeakErrors = cell(numberOfStates, 1);
 
-for index = 1:numel(stateNames)
-    stateName = stateNames(index);
+for stateIndex = 1:numberOfStates
 
-    errorData.(stateName) = ...
+    stateName = stateNames(stateIndex);
+    errorLimit = requirementLimits(stateIndex);
+
+    % Plant minus observer
+    signedError = ...
         plant.(stateName) - observer.(stateName);
 
-    rmseValues(index) = sqrt( ...
-        mean(errorData.(stateName).^2));
+    % Wrap attitude errors so that angular subtraction remains between
+    % -180 degrees and +180 degrees.
+    if any(stateName == angleStates)
+        signedError = mod( ...
+            signedError + 180, ...
+            360) - 180;
+    end
+
+    absoluteError = abs(signedError);
+
+    signedErrors.(stateName) = signedError;
+    absoluteErrors.(stateName) = absoluteError;
+
+    maximumAbsoluteError(stateIndex) = ...
+        max(absoluteError);
+
+    meanAbsoluteError(stateIndex) = ...
+        mean(absoluteError);
+
+    rootMeanSquareError(stateIndex) = ...
+        sqrt(mean(signedError.^2));
+
+    % True whenever the magnitude requirement is exceeded.
+    exceeded = absoluteError > errorLimit;
+
+    exceedanceMasks.(stateName) = exceeded;
+
+    percentageWithinLimit(stateIndex) = ...
+        100 * mean(~exceeded);
+
+    %% Find continuous exceedance intervals
+
+    transitions = diff([false; exceeded; false]);
+
+    runStarts = find(transitions == 1);
+    runEnds = find(transitions == -1) - 1;
+
+    numberOfExceedanceEvents(stateIndex) = ...
+        numel(runStarts);
+
+    durations = zeros(numel(runStarts), 1);
+    peakErrors = zeros(numel(runStarts), 1);
+
+    failedSamples = false(size(exceeded));
+
+    for eventIndex = 1:numel(runStarts)
+
+        startIndex = runStarts(eventIndex);
+        endIndex = runEnds(eventIndex);
+
+        % Include approximately one sample interval. This represents
+        % the time occupied by the final recorded sample in the event.
+        durations(eventIndex) = ...
+            time(endIndex) ...
+            - time(startIndex) ...
+            + medianSampleTime;
+
+        peakErrors(eventIndex) = max( ...
+            absoluteError(startIndex:endIndex));
+
+        % The requirement allows an exceedance lasting up to and
+        % including 0.5 seconds. A failure occurs only when the
+        % continuous duration is greater than 0.5 seconds.
+        if durations(eventIndex) > ...
+                maximumExceedanceDuration
+
+            failedSamples(startIndex:endIndex) = true;
+        end
+    end
+
+    failedIntervalMasks.(stateName) = ...
+        failedSamples;
+
+    eventStartIndices{stateIndex} = runStarts;
+    eventEndIndices{stateIndex} = runEnds;
+    eventDurations{stateIndex} = durations;
+    eventPeakErrors{stateIndex} = peakErrors;
+
+    if isempty(durations)
+        longestExceedanceDuration(stateIndex) = 0;
+    else
+        longestExceedanceDuration(stateIndex) = ...
+            max(durations);
+    end
+
+    numberOfFailedEvents(stateIndex) = sum( ...
+        durations > maximumExceedanceDuration);
+
+    validationPassed(stateIndex) = ...
+        numberOfFailedEvents(stateIndex) == 0;
 end
 
-%% ------------------------------------------------------------
-% DISPLAY RMSE RESULTS
-% -------------------------------------------------------------
+%% ============================================================
+% CREATE VALIDATION RESULTS TABLE
+% =============================================================
 
-fprintf("\nObserver RMSE\n");
-fprintf("--------------------------------\n");
-fprintf("X position: %+.5f m\n", rmseValues(1));
-fprintf("Y position: %+.5f m\n", rmseValues(2));
-fprintf("Z position: %+.5f m\n", rmseValues(3));
-fprintf("Roll:       %+.5f deg\n", rmseValues(4));
-fprintf("Pitch:      %+.5f deg\n", rmseValues(5));
-fprintf("Yaw:        %+.5f deg\n", rmseValues(6));
+resultText = strings(numberOfStates, 1);
 
-%% ------------------------------------------------------------
-% OPTIONAL OBSERVER-ERROR PLOTS
-% -------------------------------------------------------------
-
-if plotObserverErrors
-
-    figure( ...
-        "Name", "6DOF Observer Errors", ...
-        "Color", "w");
-
-    errorLayout = tiledlayout(3, 2);
-
-    errorLayout.TileSpacing = "compact";
-    errorLayout.Padding = "compact";
-
-    title( ...
-        errorLayout, ...
-        "Real Plant Minus Observer");
-
-    stateTitles = [
-        "X Position Error"
-        "Y Position Error"
-        "Z Position Error"
-        "Roll Error"
-        "Pitch Error"
-        "Yaw Error"
-    ];
-
-    stateUnits = [
-        "Error (m)"
-        "Error (m)"
-        "Error (m)"
-        "Error (deg)"
-        "Error (deg)"
-        "Error (deg)"
-    ];
-
-    for index = 1:numel(stateNames)
-        stateName = stateNames(index);
-
-        nexttile;
-
-        plot( ...
-            time, ...
-            errorData.(stateName), ...
-            "k", ...
-            "LineWidth", 1.2, ...
-            "DisplayName", "Estimation error");
-
-        hold on;
-
-        yline( ...
-            0, ...
-            "--", ...
-            "Zero error", ...
-            "Color", [0.5, 0.5, 0.5]);
-
-        grid on;
-        box on;
-
-        title(stateTitles(index));
-        xlabel("Time (s)");
-        ylabel(stateUnits(index));
-
-        xlim([time(1), time(end)]);
+for stateIndex = 1:numberOfStates
+    if validationPassed(stateIndex)
+        resultText(stateIndex) = "PASS";
+    else
+        resultText(stateIndex) = "FAIL";
     end
 end
 
-%% ------------------------------------------------------------
-% LOCAL FUNCTION
-% -------------------------------------------------------------
+allowedExceedanceDurationColumn = repmat( ...
+    maximumExceedanceDuration, ...
+    numberOfStates, ...
+    1);
 
-function plotStateComparison( ...
-    time, ...
-    plantState, ...
-    observerState, ...
-    plotTitle, ...
-    yAxisLabel)
+validationResults = table( ...
+    stateNames, ...
+    observerColumnNames, ...
+    stateUnits, ...
+    requirementLimits, ...
+    allowedExceedanceDurationColumn, ...
+    maximumAbsoluteError, ...
+    meanAbsoluteError, ...
+    rootMeanSquareError, ...
+    longestExceedanceDuration, ...
+    numberOfExceedanceEvents, ...
+    numberOfFailedEvents, ...
+    percentageWithinLimit, ...
+    resultText, ...
+    'VariableNames', { ...
+        'State', ...
+        'ObserverColumn', ...
+        'Unit', ...
+        'ErrorLimit', ...
+        'MaximumAllowedExceedance_s', ...
+        'MaximumAbsoluteError', ...
+        'MeanAbsoluteError', ...
+        'RMSE', ...
+        'LongestExceedance_s', ...
+        'ExceedanceEventCount', ...
+        'FailedEventCount', ...
+        'PercentageWithinLimit', ...
+        'Result' ...
+    });
 
-    plot( ...
-        time, ...
-        plantState, ...
-        "r", ...
-        "LineWidth", 1.5, ...
-        "DisplayName", "Real plant");
+fprintf("\n");
+fprintf("OBSERVER VALIDATION RESULTS\n");
+fprintf("============================================================\n");
+disp(validationResults);
 
-    hold on;
+writetable(validationResults, resultsFile);
 
-    plot( ...
-        time, ...
-        observerState, ...
-        "b--", ...
-        "LineWidth", 1.5, ...
-        "DisplayName", "Observer");
+fprintf("Validation results saved to:\n");
+fprintf("  %s\n", resultsFile);
 
-    grid on;
-    box on;
+%% ============================================================
+% CREATE EXCEEDANCE EVENT TABLE
+% =============================================================
 
-    title(plotTitle);
-    xlabel("Time (s)");
-    ylabel(yAxisLabel);
+eventState = strings(0, 1);
+eventNumber = zeros(0, 1);
+eventStartTime = zeros(0, 1);
+eventEndTime = zeros(0, 1);
+continuousDuration = zeros(0, 1);
+peakAbsoluteError = zeros(0, 1);
+eventLimit = zeros(0, 1);
+eventResult = strings(0, 1);
 
-    xlim([time(1), time(end)]);
+for stateIndex = 1:numberOfStates
 
-    legend( ...
-        "Location", ...
-        "best");
+    stateName = stateNames(stateIndex);
+
+    runStarts = eventStartIndices{stateIndex};
+    runEnds = eventEndIndices{stateIndex};
+    durations = eventDurations{stateIndex};
+    peakErrors = eventPeakErrors{stateIndex};
+
+    for eventIndex = 1:numel(runStarts)
+
+        eventState(end + 1, 1) = stateName;
+        eventNumber(end + 1, 1) = eventIndex;
+
+        eventStartTime(end + 1, 1) = ...
+            time(runStarts(eventIndex));
+
+        eventEndTime(end + 1, 1) = ...
+            time(runEnds(eventIndex));
+
+        continuousDuration(end + 1, 1) = ...
+            durations(eventIndex);
+
+        peakAbsoluteError(end + 1, 1) = ...
+            peakErrors(eventIndex);
+
+        eventLimit(end + 1, 1) = ...
+            requirementLimits(stateIndex);
+
+        if durations(eventIndex) > ...
+                maximumExceedanceDuration
+
+            eventResult(end + 1, 1) = "FAIL";
+        else
+            eventResult(end + 1, 1) = "PERMITTED";
+        end
+    end
 end
+
+exceedanceEventResults = table( ...
+    eventState, ...
+    eventNumber, ...
+    eventStartTime, ...
+    eventEndTime, ...
+    continuousDuration, ...
+    peakAbsoluteError, ...
+    eventLimit, ...
+    eventResult, ...
+    'VariableNames', { ...
+        'State', ...
+        'EventNumber', ...
+        'StartTime_s', ...
+        'EndTime_s', ...
+        'Duration_s', ...
+        'PeakAbsoluteError', ...
+        'RequirementLimit', ...
+        'Result' ...
+    });
+
+writetable( ...
+    exceedanceEventResults, ...
+    eventResultsFile);
+
+fprintf("Exceedance events saved to:\n");
+fprintf("  %s\n", eventResultsFile);
+
+%% ============================================================
+% DETERMINE OVERALL RESULT
+% =============================================================
+
+overallPass = all(validationPassed);
+
+if overallPass
+    overallResultText = "PASS";
+    overallResultColour = [0.00, 0.45, 0.00];
+else
+    overallResultText = "FAIL";
+    overallResultColour = [0.80, 0.00, 0.00];
+end
+
+fprintf('\n');
+fprintf( ...
+    'OVERALL VALIDATION RESULT: %s\n', ...
+    char(overallResultText));
+
+fprintf( ...
+    '============================================================\n');
+
+if overallPass
+
+    fprintf( ...
+        ['No state exceeded its applicable error requirement ' ...
+         'continuously for more than %.3f seconds.\n'], ...
+        maximumExceedanceDuration);
+
+else
+
+    fprintf( ...
+        ['One or more states exceeded the applicable error ' ...
+         'requirement continuously for more than %.3f seconds.\n'], ...
+        maximumExceedanceDuration);
+
+    fprintf('\nFailed states:\n');
+
+    for stateIndex = 1:numberOfStates
+
+        if ~validationPassed(stateIndex)
+
+            fprintf( ...
+                '  %s: longest exceedance = %.3f s\n', ...
+                char(stateNames(stateIndex)), ...
+                longestExceedanceDuration(stateIndex));
+
+        end
+    end
+end
+
+%% ============================================================
+% ADD OVERALL RESULT TO FIGURE
+% =============================================================
+
+overallAnnotation = sprintf( ...
+    [ ...
+        'OVERALL RESULT: %s     ' ...
+        'Maximum continuous exceedance permitted: %.1f s' ...
+    ], ...
+    overallResultText, ...
+    maximumExceedanceDuration);
+
+annotation( ...
+    figureHandle, ...
+    "textbox", ...
+    [0.29, 0.002, 0.42, 0.035], ...
+    "String", overallAnnotation, ...
+    "HorizontalAlignment", "center", ...
+    "VerticalAlignment", "middle", ...
+    "FontWeight", "bold", ...
+    "FontSize", 11, ...
+    "Color", overallResultColour, ...
+    "EdgeColor", overallResultColour, ...
+    "BackgroundColor", "w", ...
+    "LineWidth", 1.2);
+
+%% ============================================================
+% SAVE FIGURE
+% =============================================================
+
+exportgraphics( ...
+    figureHandle, ...
+    figureFile, ...
+    "Resolution", 300);
+
+savefig( ...
+    figureHandle, ...
+    matlabFigureFile);
+
+fprintf("\nSaved validation figure:\n");
+fprintf("  %s\n", figureFile);
+
+fprintf("Saved editable MATLAB figure:\n");
+fprintf("  %s\n", matlabFigureFile);
+
+%% ============================================================
+% PRINT EXCEEDANCE EVENTS
+% =============================================================
+
+fprintf("\n");
+fprintf("CONTINUOUS REQUIREMENT EXCEEDANCE EVENTS\n");
+fprintf("============================================================\n");
+
+for stateIndex = 1:numberOfStates
+
+    stateName = stateNames(stateIndex);
+
+    runStarts = eventStartIndices{stateIndex};
+    runEnds = eventEndIndices{stateIndex};
+    durations = eventDurations{stateIndex};
+    peakErrors = eventPeakErrors{stateIndex};
+
+    fprintf("\n%s:\n", upper(stateName));
+
+    if isempty(durations)
+        fprintf("  No requirement exceedances detected.\n");
+        continue;
+    end
+
+    for eventIndex = 1:numel(durations)
+
+        if durations(eventIndex) > ...
+                maximumExceedanceDuration
+
+            currentEventResult = "FAIL";
+        else
+            currentEventResult = "PERMITTED";
+        end
+
+        fprintf( ...
+            [ ...
+                "  Event %d: %.3f s to %.3f s, " ...
+                "duration %.3f s, peak error %.4g %s, %s\n" ...
+            ], ...
+            eventIndex, ...
+            time(runStarts(eventIndex)), ...
+            time(runEnds(eventIndex)), ...
+            durations(eventIndex), ...
+            peakErrors(eventIndex), ...
+            stateUnits(stateIndex), ...
+            currentEventResult);
+    end
+end
+
+fprintf("\nValidation processing complete.\n");

@@ -10,6 +10,7 @@ from PySide6.QtCore import (
 )
 
 import time, csv, os
+import numpy as np
 from datetime import datetime
 
 # this worker class will be ran as a separate thread so that the recording
@@ -53,9 +54,9 @@ class RecorderWorker(QObject):
                     self.quadcopter.position.x,
                     self.quadcopter.position.y,
                     self.quadcopter.position.z,
-                    self.obs.x[8,0],
-                    self.obs.x[7,0],
-                    self.obs.x[6,0],
+                    np.rad2deg(self.obs.x[8,0]),
+                    np.rad2deg(self.obs.x[7,0]),
+                    np.rad2deg(self.obs.x[6,0]),
                     self.obs.x[0,0],
                     self.obs.x[1,0],
                     self.obs.x[2,0],
