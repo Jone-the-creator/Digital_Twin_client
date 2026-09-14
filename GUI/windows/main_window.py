@@ -161,6 +161,10 @@ class MainWindow(QMainWindow):
         self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
+        self.view.addItem(self.digital_twin)
+        self.view.addItem(self.DT_front_marker)
+        self.digital_twin.hide()
+        self.DT_front_marker.hide()
 
         self.ui.model_select.addItems(["Non-linear Model", "Linearised Model"])
 
@@ -256,6 +260,7 @@ class MainWindow(QMainWindow):
 
         # switch between simulation and real plant when simulation button pressed
         self.ui.sim_btn.clicked.connect(self.toggle_simulation)
+        self.ui.DT_btn.clicked.connect(self.toggle_DT)
 
 
     # update model from quadcopter object
@@ -465,26 +470,72 @@ class MainWindow(QMainWindow):
             self.ui.Warn_alarm.show()
 
     def toggle_simulation(self):
-        self.quadcopter.simulation_mode = (
-            not self.quadcopter.simulation_mode
-        )
+        if self.quadcopter.DT_mode:
+            return
+        self.quadcopter.simulation_mode = not self.quadcopter.simulation_mode
+
+        self.sim_non_linear.attitude.roll = 0
+        self.sim_non_linear.attitude.pitch = 0
+        self.sim_non_linear.attitude.yaw = 0
+        self.sim_non_linear.position.x = 0
+        self.sim_non_linear.position.y = 0
+        self.sim_non_linear.position.z = 0
+        self.sim_linear.attitude.roll = 0
+        self.sim_linear.attitude.pitch = 0
+        self.sim_linear.attitude.yaw = 0
+        self.sim_linear.position.x = 0
+        self.sim_linear.position.y = 0
+        self.sim_linear.position.z = 0
 
         if self.quadcopter.simulation_mode:
             self.ui.sim_btn.setText("Simulation: ON")
-            self.view.addItem(self.digital_twin)
-            self.view.addItem(self.DT_front_marker)
-            self.view.removeItem(self.model)
-            self.view.removeItem(self.front_marker)
-            # reset all attitudes for simulation
-            self.quadcopter.attitude.yaw = 0.0
-            self.quadcopter.attitude.pitch = 0.0
-            self.quadcopter.attitude.roll = 0.0
+            self.digital_twin.show()
+            self.DT_front_marker.show()
+            self.model.hide()
+            self.front_marker.hide()
+            self.ui.DT_btn.setDisabled(1)
         else:
             self.ui.sim_btn.setText("Simulation: OFF")
-            self.view.addItem(self.model)
-            self.view.addItem(self.front_marker)
-            self.view.removeItem(self.digital_twin)
-            self.view.removeItem(self.DT_front_marker)
+            self.model.show()
+            self.front_marker.show()
+            self.digital_twin.hide()
+            self.DT_front_marker.hide()
+            self.ui.DT_btn.setEnabled(1)
+
+    def toggle_DT(self):
+        if self.quadcopter.simulation_mode:
+            return
+        self.quadcopter.DT_mode = not self.quadcopter.DT_mode
+
+        self.sim_non_linear.attitude.roll = self.quad.attitude.roll
+        self.sim_non_linear.attitude.pitch = self.quad.attitude.pitch
+        self.sim_non_linear.attitude.yaw = self.quad.attitude.yaw
+        self.sim_non_linear.position.x = self.quad.position.x
+        self.sim_non_linear.position.y = self.quad.position.y
+        self.sim_non_linear.position.z = self.quad.position.z
+        self.sim_linear.attitude.roll = self.quad.attitude.roll
+        self.sim_linear.attitude.pitch = self.quad.attitude.pitch
+        self.sim_linear.attitude.yaw = self.quad.attitude.yaw
+        self.sim_linear.position.x = self.quad.position.x
+        self.sim_linear.position.y = self.quad.position.y
+        self.sim_linear.position.z = self.quad.position.z
+
+        if self.quadcopter.DT_mode:
+            self.ui.DT_btn.setText("Digital Twin Mode: ON")
+            self.digital_twin.show()
+            self.DT_front_marker.show()
+            self.model.show()
+            self.front_marker.show()
+            self.ui.sim_btn.setDisabled(1)
+        else:
+            self.ui.DT_btn.setText("Digital Twin Mode: OFF")
+            self.model.show()
+            self.front_marker.show()
+            self.digital_twin.hide()
+            self.DT_front_marker.hide()
+            self.ui.sim_btn.setEnabled(1)
+    
+
 
     def update_pid_labels(self, kp, ki, kd):
         self.ui.P_label.setText(f"P: {kp:.2f}")

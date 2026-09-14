@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowUpLAPv.ui'
+## Form generated from reading UI file 'main_windowSROpNv.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -297,23 +297,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
-        self.layoutWidget_2 = QWidget(self.centralwidget)
-        self.layoutWidget_2.setObjectName(u"layoutWidget_2")
-        self.layoutWidget_2.setGeometry(QRect(780, 320, 141, 60))
-        self.verticalLayout_7 = QVBoxLayout(self.layoutWidget_2)
-        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
-        self.DT_model_select = QComboBox(self.layoutWidget_2)
-        self.DT_model_select.setObjectName(u"DT_model_select")
-
-        self.verticalLayout_7.addWidget(self.DT_model_select)
-
-        self.DT_btn = QPushButton(self.layoutWidget_2)
-        self.DT_btn.setObjectName(u"DT_btn")
-        self.DT_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-        self.verticalLayout_7.addWidget(self.DT_btn)
-
         self.calibrate_button = QPushButton(self.centralwidget)
         self.calibrate_button.setObjectName(u"calibrate_button")
         self.calibrate_button.setGeometry(QRect(631, 721, 111, 27))
@@ -323,7 +306,7 @@ class Ui_MainWindow(object):
         self.calibrate_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.widget1 = QWidget(self.centralwidget)
         self.widget1.setObjectName(u"widget1")
-        self.widget1.setGeometry(QRect(630, 320, 141, 60))
+        self.widget1.setGeometry(QRect(631, 321, 249, 62))
         self.verticalLayout_6 = QVBoxLayout(self.widget1)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
@@ -332,11 +315,22 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.model_select)
 
+        self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.sim_btn = QPushButton(self.widget1)
         self.sim_btn.setObjectName(u"sim_btn")
         self.sim_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
-        self.verticalLayout_6.addWidget(self.sim_btn)
+        self.horizontalLayout_6.addWidget(self.sim_btn)
+
+        self.DT_btn = QPushButton(self.widget1)
+        self.DT_btn.setObjectName(u"DT_btn")
+        self.DT_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.horizontalLayout_6.addWidget(self.DT_btn)
+
+
+        self.verticalLayout_6.addLayout(self.horizontalLayout_6)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
@@ -387,8 +381,8 @@ class Ui_MainWindow(object):
         self.Recording_rate_adj.setPrefix(QCoreApplication.translate("MainWindow", u"Sample Rate: ", None))
         self.start_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Start Recording", None))
         self.stop_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Stop Recording", None))
-        self.DT_btn.setText(QCoreApplication.translate("MainWindow", u"Digital Twin Mode: OFF", None))
         self.calibrate_button.setText(QCoreApplication.translate("MainWindow", u"Calibrate", None))
         self.sim_btn.setText(QCoreApplication.translate("MainWindow", u"Simulation: OFF", None))
+        self.DT_btn.setText(QCoreApplication.translate("MainWindow", u"Digital Twin Mode: OFF", None))
     # retranslateUi
 

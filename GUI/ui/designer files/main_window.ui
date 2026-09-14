@@ -487,31 +487,6 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      </item>
     </layout>
    </widget>
-   <widget class="QWidget" name="layoutWidget_2">
-    <property name="geometry">
-     <rect>
-      <x>780</x>
-      <y>320</y>
-      <width>141</width>
-      <height>60</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_7">
-     <item>
-      <widget class="QComboBox" name="DT_model_select"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="DT_btn">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string>Digital Twin Mode: OFF</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QPushButton" name="calibrate_button">
     <property name="geometry">
      <rect>
@@ -536,10 +511,10 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>320</y>
-      <width>141</width>
-      <height>60</height>
+      <x>631</x>
+      <y>321</y>
+      <width>249</width>
+      <height>62</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -547,14 +522,28 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
       <widget class="QComboBox" name="model_select"/>
      </item>
      <item>
-      <widget class="QPushButton" name="sim_btn">
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string>Simulation: OFF</string>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QPushButton" name="sim_btn">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Simulation: OFF</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="DT_btn">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>Digital Twin Mode: OFF</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
