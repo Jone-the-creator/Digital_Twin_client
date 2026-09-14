@@ -38,11 +38,15 @@ md = gl.MeshData.sphere(rows=10,cols=10)
 class MainWindow(QMainWindow):
     start_record_signal = Signal()
     stop_record_signal = Signal()
-    def __init__(self, quadcopter, stabiliser, obs):
+    def __init__(self, quadcopter, stabiliser, obs, sim_non_linear, sim_linear, sim_1, sim_2):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
         self.obs = obs
+        self.sim_non_linear = sim_non_linear
+        self.sim_linear = sim_linear
+        self.sim_1 = sim_1
+        self.sim_2 = sim_2
         self.cal = None
 
         self.response_time = []
@@ -93,27 +97,8 @@ class MainWindow(QMainWindow):
         # grid settings
         self.grid = gl.GLGridItem()
         self.grid.scale(1, 1, 1)
-        self.grid.setSize(10, 10)
+        self.grid.setSize(100, 100)
         self.grid.setSpacing(0.5, 0.5)
-
-        # axes
-        self.x_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[2,0,0]]),
-            color=(1,0,0,1),
-            width=3
-        )
-
-        self.y_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[0,2,0]]),
-            color=(0,1,0,1),
-            width=3
-        )
-
-        self.z_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[0,0,2]]),
-            color=(0,0,1,1),
-            width=3
-        )
 
         # alarms/warnings hidden by default
         self.ui.recording_label.hide()
@@ -132,7 +117,8 @@ class MainWindow(QMainWindow):
         self.base_transform.scale(0.005, 0.005, 0.005)
         self.base_transform.rotate(180, 0, 0, 1)
         self.base_transform.rotate(90, 1, 0, 0)
-        
+
+        # CREATE PHYSICAL PLANT MODEL
         #create quadcopter model
         self.model = gl.GLMeshItem(
             vertexes = vertices,
@@ -151,13 +137,38 @@ class MainWindow(QMainWindow):
             shader='balloon'
         )
 
+        # CREATE SIMULATION PLANT MODEL
+        #create quadcopter model
+        self.digital_twin = gl.GLMeshItem(
+            vertexes=vertices,
+            faces=faces,
+            smooth=True,
+            drawEdges=True,
+            edgeColor=(0.2, 0.7, 0.9, 0.5),
+            color=(0.0, 0.25, 0.65, 0.15),
+            shader='balloon'
+        )
+
+        self.model.setGLOptions('translucent')
+
+        #create front marker
+        self.DT_front_marker = gl.GLMeshItem(
+            meshdata = md,
+            color=(0.0, 0.25, 0.65, 0.8),
+            smooth=False,
+            shader='balloon'
+        )
+
         # add models
         self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
-        self.view.addItem(self.x_axis)
-        self.view.addItem(self.y_axis)
-        self.view.addItem(self.z_axis)
+        self.view.addItem(self.digital_twin)
+        self.view.addItem(self.DT_front_marker)
+        self.digital_twin.hide()
+        self.DT_front_marker.hide()
+
+        self.ui.model_select.addItems(["Non-linear Model", "Linearised Model"])
 
         # Control tuning
         if self.quadcopter.control_system == "Pole-placement":
@@ -195,8 +206,10 @@ class MainWindow(QMainWindow):
 
         # render loop
         self.render_timer = QTimer()
+        self.render_timer.timeout.connect(self.update_DT)
         self.render_timer.timeout.connect(self.update_model)
-        self.render_timer.start(16)  # ~60 FPS
+        self.render_timer.timeout.connect(self.update_camera)
+        self.render_timer.start(10) # 100 Hz
 
         # data update loop
         self.data_timer = QTimer()
@@ -250,6 +263,7 @@ class MainWindow(QMainWindow):
 
         # switch between simulation and real plant when simulation button pressed
         self.ui.sim_btn.clicked.connect(self.toggle_simulation)
+        self.ui.DT_btn.clicked.connect(self.toggle_DT)
 
 
     # update model from quadcopter object
@@ -261,10 +275,6 @@ class MainWindow(QMainWindow):
         y = self.quadcopter.position.y
         z = self.quadcopter.position.z
 
-        self.view.opts["center"].setX(x)
-        self.view.opts["center"].setY(y)
-        self.view.opts["center"].setZ(z)
-                
         transform = QtGui.QMatrix4x4()
 
         transform.translate(x, y, z)
@@ -284,6 +294,57 @@ class MainWindow(QMainWindow):
         local.scale(5, 5, 5)
         world = self.model.transform() * local
         self.front_marker.setTransform(world)
+
+    # update Digital Twin from quadcopter object
+    def update_DT(self):
+        roll = self.sim_linear.attitude.roll
+        pitch = self.sim_linear.attitude.pitch
+        yaw = self.sim_linear.attitude.yaw
+        x = self.sim_linear.position.x
+        y = self.sim_linear.position.y
+        z = self.sim_linear.position.z
+                
+        transform = QtGui.QMatrix4x4()
+
+        transform.translate(x, y, z)
+
+        transform.rotate(yaw, 0, 0, 1)
+        transform.rotate(-pitch, 0, 1, 0)
+        transform.rotate(-roll, 1, 0, 0)
+
+        transform *= self.base_transform
+
+        self.digital_twin.setTransform(transform)
+
+        # position front marker in front of the drone
+        local = QtGui.QMatrix4x4()
+        local.translate(100, -10, 0)
+        local.scale(5, 5, 5)
+        world = self.digital_twin.transform() * local
+        self.DT_front_marker.setTransform(world)
+
+    def update_camera(self):
+        if self.quadcopter.simulation_mode:
+            # Follow simulated model
+
+            if self.ui.model_select.currentText().lower() == "non-linear model":
+                x = self.sim_non_linear.position.x
+                y = self.sim_non_linear.position.y
+                z = self.sim_non_linear.position.z
+            else:
+                x = self.sim_linear.position.x
+                y = self.sim_linear.position.y
+                z = self.sim_linear.position.z
+
+        else:
+            # Normal operation and DT mode
+            x = self.quadcopter.position.x
+            y = self.quadcopter.position.y
+            z = self.quadcopter.position.z
+
+        self.view.opts["center"].setX(x)
+        self.view.opts["center"].setY(y)
+        self.view.opts["center"].setZ(z)
 
     def update_GUI(self):
         # update thrust variable (currently unused)
@@ -418,18 +479,59 @@ class MainWindow(QMainWindow):
             self.ui.Warn_alarm.show()
 
     def toggle_simulation(self):
-        self.quadcopter.simulation_mode = (
-            not self.quadcopter.simulation_mode
-        )
+        if self.quadcopter.DT_mode:
+            return
+        self.quadcopter.simulation_mode = not self.quadcopter.simulation_mode
+
+        self.sim_1.x[:] = 0.0
+        self.sim_2.x[:] = 0.0
 
         if self.quadcopter.simulation_mode:
             self.ui.sim_btn.setText("Simulation: ON")
-            # reset all attitudes for simulation
-            self.quadcopter.attitude.yaw = 0.0
-            self.quadcopter.attitude.pitch = 0.0
-            self.quadcopter.attitude.roll = 0.0
+            self.digital_twin.show()
+            self.DT_front_marker.show()
+            self.model.hide()
+            self.front_marker.hide()
+            self.ui.DT_btn.setDisabled(1)
         else:
             self.ui.sim_btn.setText("Simulation: OFF")
+            self.model.show()
+            self.front_marker.show()
+            self.digital_twin.hide()
+            self.DT_front_marker.hide()
+            self.ui.DT_btn.setEnabled(1)
+
+    def toggle_DT(self):
+        if self.quadcopter.simulation_mode:
+            return
+        self.quadcopter.DT_mode = not self.quadcopter.DT_mode
+
+
+        self.sim_2.x[3:8] = 0.0
+        self.sim_2.x[8,0] = np.deg2rad(self.quadcopter.attitude.yaw)
+        self.sim_2.x[0,0] = self.quadcopter.position.x
+        self.sim_2.x[1,0] = self.quadcopter.position.y
+        self.sim_2.x[2,0] = self.quadcopter.position.z
+
+        if self.quadcopter.DT_mode:
+            self.ui.model_select.setCurrentText("Linearised Model")
+            self.ui.model_select.setDisabled(1)
+            self.ui.DT_btn.setText("Digital Twin Mode: ON")
+            self.digital_twin.show()
+            self.DT_front_marker.show()
+            self.model.show()
+            self.front_marker.show()
+            self.ui.sim_btn.setDisabled(1)
+        else:
+            self.ui.DT_btn.setText("Digital Twin Mode: OFF")
+            self.ui.model_select.setEnabled(1)
+            self.model.show()
+            self.front_marker.show()
+            self.digital_twin.hide()
+            self.DT_front_marker.hide()
+            self.ui.sim_btn.setEnabled(1)
+    
+
 
     def update_pid_labels(self, kp, ki, kd):
         self.ui.P_label.setText(f"P: {kp:.2f}")
@@ -442,32 +544,36 @@ class MainWindow(QMainWindow):
         self.ui.PP_k_label.setText(f"k_0 = {self.stab.K_z[0,0]:.2f}, k_1 = {self.stab.K_z[0,1]:.2f}, k_2 = {self.stab.K_z[0,2]:.2f}")
 
     def update_step_response(self):
-        elapsed = time.time() - self.step_start_time
+        # elapsed = time.time() - self.step_start_time
 
-        self.response_time.append(elapsed)
+        # self.response_time.append(elapsed)
 
-        self.response_altitude.append(
-            self.quadcopter.position.z
-        )
+        # if not self.quadcopter.simulation_mode:
+        #     self.response_altitude.append(self.quadcopter.position.z)
+        #     self.response_setpoint.append(self.quadcopter.controls.z)
+        # elif self.ui.model_select.currentText().lower == "non-linear model":
+        #     self.response_altitude.append(self.sim_non_linear.position.z)
+        #     self.response_setpoint.append(self.sim_non_linear.controls.z)
+        # elif self.ui.model_select.currentText().lower == "linearised model":
+        #     self.response_altitude.append(self.sim_linear.position.z)
+        #     self.response_setpoint.append(self.sim_linear.controls.z)
 
-        self.response_setpoint.append(
-            self.quadcopter.controls.z
-        )
+        # self.alt_curve.setData(
+        #     list(self.response_time),
+        #     list(self.response_altitude)
+        # )
 
-        self.alt_curve.setData(
-            list(self.response_time),
-            list(self.response_altitude)
-        )
-
-        self.sp_curve.setData(
-            list(self.response_time),
-            list(self.response_setpoint)
-        )
+        # self.sp_curve.setData(
+        #     list(self.response_time),
+        #     list(self.response_setpoint)
+        #     )
+        return
     def reset_step_response(self):
-        self.response_time.clear()
-        self.response_altitude.clear()
-        self.response_setpoint.clear()
-        self.logging_response = True
+        # self.response_time.clear()
+        # self.response_altitude.clear()
+        # self.response_setpoint.clear()
+        # self.logging_response = True
+        return
 
     def stop_step_response(self):
         self.logging_response = False

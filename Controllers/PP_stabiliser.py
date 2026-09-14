@@ -11,8 +11,10 @@ from control import ctrb
 g = 9.81 # m/s^2
 
 class PPstabiliser():
-    def __init__(self, state_observer):
+    def __init__(self, state_observer, sim_non_linear, sim_linear):
         self.obs = state_observer
+        self.sim_non_linear = sim_non_linear
+        self.sim_linear = sim_linear
 
         # initialise setpoints, adjust these directly for control
         self.roll_setpoint = 0.0
@@ -71,13 +73,22 @@ class PPstabiliser():
         return None
         
     def altitude_control(self, altitude_setpoint, dt):
-        altitude_error = altitude_setpoint - self.obs.quad.position.z
+        if self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
+            velocity_z = self.sim_non_linear.velocity.z
+            altitude = self.sim_non_linear.position.z
+        elif self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
+            velocity_z = self.sim_non_linear.velocity.z
+            altitude = self.sim_linear.position.z
+        else:
+            velocity_z = self.obs.x[5,0]
+            altitude = self.obs.quad.position.z
+        altitude_error = altitude_setpoint - altitude
         self.integrated_z_error += altitude_error * dt
 
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
         x = np.array([
-            [self.obs.quad.position.z],
-            [self.obs.x[5,0]],
+            [altitude],
+            [velocity_z],
             [self.integrated_z_error]
         ])
 

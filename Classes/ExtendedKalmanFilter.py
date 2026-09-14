@@ -64,7 +64,7 @@ class att_EKF():
         # update covariance
         self.P = F @ self.P @ F.T + G @ self.Q @ G.T
 
-        print(self.P[2,2])
+        # print(self.P[2,2])
 
     def _h(self, x):
         z_hat = np.zeros((4,1))
@@ -150,7 +150,7 @@ class pos_EKF():
         pitch = u[1,0]
         x[0,0] = x[0,0]
         x[1,0] = x[1,0]
-        print(f"x,y = {x[0,0]:.2f},{x[1,0]:.2f}")
+        # print(f"x,y = {x[0,0]:.2f},{x[1,0]:.2f}")
         x[2,0] = x[2,0] 
         #+ x[5,0] * dt
         x[3,0] = 1/2 * x[3,0] + (x[0,0] - self.prev_pos_x) / (2 * dt) # change in x is current (corrected) and previous

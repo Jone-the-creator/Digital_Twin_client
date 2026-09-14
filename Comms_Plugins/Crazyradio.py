@@ -168,7 +168,7 @@ class CRTP_logger:
         # print(f"z = {data['kalman.stateZ']}")
     
     def _log_mag_data_received(self, timestamp, data, logconfig):
-        print(f"mag readings = {data['mag.x']:.10f}, {data['mag.y']:.2f}, {data['mag.z']:.2f}")
+        return
 
     def _log_periph_data_received(self, timestamp, data, logconfig):
         # if no thrust, battery percentage can be safely calculated

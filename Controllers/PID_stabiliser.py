@@ -9,10 +9,11 @@ import numpy as np
 import time
 
 class PIDstabiliser():
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, sim_non_linear, sim_linear):
         self.quad = quadcopter
+        self.sim_non_linear = sim_non_linear
+        self.sim_linear = sim_linear
         
-
         self.z_trim = 0.0
 
         # initialise setpoints, adjust these directly for control
@@ -63,7 +64,19 @@ class PIDstabiliser():
     # hover mode, will control attitude with 0 setpoints
     def hover(self, altitude_setpoint):
         # --- ALTITUDE CONTROL ---
-        altitude = self.quad.position.z
+        # COPY THE FOLLOWING FOR EACH MODE
+        if not self.quad.simulation_mode:
+            roll = self.quad.attitude.roll
+            pitch = self.quad.attitude.pitch
+            altitude = self.quad.position.z
+        elif self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
+            roll = self.sim_non_linear.attitude.roll
+            pitch = self.sim_non_linear.attitude.pitch
+            altitude = self.sim_non_linear.position.z
+        elif self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
+            roll = self.sim_linear.attitude.roll
+            pitch = self.sim_linear.attitude.pitch
+            altitude = self.sim_linear.position.z
         hover_thrust = self.quad.PWM_thrust_gain * self.quad.mass * 9.81 
 
         altitude_error = altitude_setpoint - altitude
@@ -77,8 +90,8 @@ class PIDstabiliser():
         # # --- ATTITUDE CONTROL ---
 
         # Calculate attitude errors
-        pitch_error = -np.clip(self.pitch_setpoint - (self.quad.attitude.pitch ), -self.max_angle, self.max_angle)
-        roll_error = np.clip(self.roll_setpoint - (self.quad.attitude.roll), -self.max_angle, self.max_angle)
+        pitch_error = -np.clip(self.pitch_setpoint - (pitch), -self.max_angle, self.max_angle)
+        roll_error = np.clip(self.roll_setpoint - (roll), -self.max_angle, self.max_angle)
 
         self.pitch_integral += pitch_error * self.quad.dt
         self.roll_integral += roll_error * self.quad.dt

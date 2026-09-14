@@ -13,7 +13,7 @@ from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, QThread
-import pygame
+import pygame, copy
 import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
@@ -29,7 +29,7 @@ LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
-def update_active(obs, quad, sim, u, altitude, dt):
+def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
     quad.update_controls(
             yaw_rate = u[0,0],
             pitch = u[1,0],
@@ -44,18 +44,41 @@ def update_active(obs, quad, sim, u, altitude, dt):
             [u[3,0]]]), # thrust
             dt
         )
-    if quad.simulation_mode:
-        sim.update(np.array([
+    sim_1.update(np.array([
             [np.deg2rad(u[2,0])], # roll rate
             [-np.deg2rad(u[1,0])], # pitch rate
             [-np.deg2rad(u[0,0])], # yaw rate
             [u[3,0]]]), # thrust
             dt
         )
+    sim_2.update(np.array([
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+    # if hasattr(quad, 'viewer'):
+    #     if quad.viewer.ui.model_select.currentText().lower == "non-linear model":  
+    #         sim_1.update(np.array([
+    #             [np.deg2rad(u[2,0])], # roll rate
+    #             [-np.deg2rad(u[1,0])], # pitch rate
+    #             [-np.deg2rad(u[0,0])], # yaw rate
+    #             [u[3,0]]]), # thrust
+    #             dt
+    #         )
+    #     elif quad.viewer.ui.model_select.currentText().lower == "linearised model": 
+    #         sim_2.update(np.array([
+    #             [np.deg2rad(u[2,0])], # roll rate
+    #             [-np.deg2rad(u[1,0])], # pitch rate
+    #             [-np.deg2rad(u[0,0])], # yaw rate
+    #             [u[3,0]]]), # thrust
+    #             dt
+    #         )
 
 
     # ---- CONTROL LOOP ----
-def control_loop(obs, quad, PID, sim, PP):
+def control_loop(obs, quad, PID, sim_1, sim_2, PP):
     # -- CONTROL VARIABLES --
     quad._thrust_smoothed = 0
     alpha = 0.1
@@ -66,9 +89,11 @@ def control_loop(obs, quad, PID, sim, PP):
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
+
+    loop_time = dt
     
     while running:
-        start_time = time.time()
+        start_time = time.perf_counter()
         if quad.controller:
             try:
                 lx, ly, lt, l1, rx, ry, rt, r1, cross, circle, square, triangle = quad.controller.read()
@@ -179,9 +204,9 @@ def control_loop(obs, quad, PID, sim, PP):
             # --- UPDATE CONTROLS ---
             # update control values in quadcopter object, these are read to send controls to quadcopter
             if quad.test_flight:
-                update_active(obs, quad, sim, u, target_altitude, dt)
+                update_active(obs, quad, sim_1, sim_2, u, target_altitude, dt)
             elif not quad.calibrating:
-                update_active(obs, quad, sim, u, altitude, dt)
+                update_active(obs, quad, sim_1, sim_2, u, altitude, dt)
                 
         if quad.test_flight:
             count += 1
@@ -193,10 +218,10 @@ def control_loop(obs, quad, PID, sim, PP):
 
 
         # --- CONTROL LOOP TIMING ---
-        loop_time = time.time() - start_time
+        loop_time = time.perf_counter() - start_time
         while(loop_time < dt):
             time.sleep(0.00001)
-            loop_time = time.time() - start_time
+            loop_time = time.perf_counter() - start_time
 
         if eff_count % (LOOP_RATE/2) == 0:
             quad.dt = loop_time
@@ -211,10 +236,14 @@ def main():
 
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
-    obs = Observer(quad)
-    sim = Nonlinear_Model(quad)
-    PID = PIDstabiliser(quad)
-    PP = PPstabiliser(obs)
+    sim_nonlinear_quad = copy.deepcopy(quad)
+    sim_linear_quad = copy.deepcopy(quad)
+    # instantiate observer, first arg is the object that it checks and second is the one it changes
+    obs = Observer(quad, None)
+    sim_1 = Nonlinear_Model(quad, sim_nonlinear_quad)
+    sim_2 = Observer(quad, sim_linear_quad)
+    PID = PIDstabiliser(quad, sim_nonlinear_quad, sim_linear_quad)
+    PP = PPstabiliser(obs, sim_nonlinear_quad, sim_linear_quad)
 
     if quad is None:
         print("User cancelled startup.")
@@ -229,7 +258,7 @@ def main():
     print("Quad ready:", quad)
 
     # Run as a separate thread (CHANGE TO asynchIO in the future)
-    threading.Thread(target=control_loop, args=(obs,quad,PID,sim,PP)).start()
+    threading.Thread(target=control_loop, args=(obs,quad,PID,sim_1,sim_2,PP)).start()
 
     # ---- COMMS ----
     comms = None
@@ -249,9 +278,9 @@ def main():
     timer.start(10)  # 100 Hz
 
     if quad.control_system == "PID":
-        quad.viewer = MainWindow(quad, PID, obs)
+        quad.viewer = MainWindow(quad, PID, obs, sim_nonlinear_quad, sim_linear_quad, sim_1, sim_2)
     elif quad.control_system == "Pole-placement":
-        quad.viewer = MainWindow(quad, PP, obs)
+        quad.viewer = MainWindow(quad, PP, obs, sim_nonlinear_quad, sim_linear_quad, sim_1, sim_2)
 
     # Explicit shutdown function
     def shutdown():
