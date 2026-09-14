@@ -400,7 +400,7 @@ class MainWindow(QMainWindow):
 
         # creates thread
         self.thread = QThread()
-        self.worker = RecorderWorker(self.quadcopter)
+        self.worker = RecorderWorker(self.quadcopter, self.obs)
 
         # recorder worker is moved to the thread, can then be run in the background
         self.worker.moveToThread(self.thread)
