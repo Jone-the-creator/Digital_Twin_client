@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import os, trimesh, time, collections
+import os, trimesh, time
 import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
@@ -400,7 +400,7 @@ class MainWindow(QMainWindow):
 
         # creates thread
         self.thread = QThread()
-        self.worker = RecorderWorker(self.quadcopter)
+        self.worker = RecorderWorker(self.quadcopter, self.obs)
 
         # recorder worker is moved to the thread, can then be run in the background
         self.worker.moveToThread(self.thread)

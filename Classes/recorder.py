@@ -10,6 +10,7 @@ from PySide6.QtCore import (
 )
 
 import time, csv, os
+import numpy as np
 from datetime import datetime
 
 # this worker class will be ran as a separate thread so that the recording
@@ -17,10 +18,11 @@ from datetime import datetime
 class RecorderWorker(QObject):
     finished = Signal()
 
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, observer):
         super().__init__()
         self.running = False
         self.quadcopter = quadcopter
+        self.obs = observer
 
     def start(self):
         self.running = True
@@ -37,27 +39,27 @@ class RecorderWorker(QObject):
 
         with open(filepath, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(["time (s)", "thrust", "velocity (m/s)", "yaw", "pitch", "roll", "battery", "acc_x", "acc_y", "acc_z", "gyro_roll", "gyro_pitch", "gyro_yaw", "x (m)", "y (m)", "altitude (m)", "loop rate (Hz)", "target altitude (m)"])
-            start_time = time.time()
+            writer.writerow(["time", "thrust", "velocity", "yaw", "pitch", "roll", "battery", "x", "y", "z", "yaw obs", "pitch obs", "roll obs", "x obs", "y obs", "z obs",  "loop rate (Hz)", "target altitude (m)"])
+            start_time = time.perf_counter()
             while self.running and not QThread.currentThread().isInterruptionRequested():
                 #update this function when new variables desired
                 writer.writerow([
-                    round(time.time() - start_time, 3),
+                    round(time.perf_counter() - start_time, 3),
                     self.quadcopter.controls.thrust,
                     self.quadcopter.velocity.z,
                     self.quadcopter.attitude.yaw,
                     self.quadcopter.attitude.pitch,
                     self.quadcopter.attitude.roll,
                     self.quadcopter.battery_percent,
-                    self.quadcopter.acc_x,
-                    self.quadcopter.acc_y,
-                    self.quadcopter.acc_z,
-                    self.quadcopter.gyro_x,
-                    self.quadcopter.gyro_y,
-                    self.quadcopter.gyro_z,
                     self.quadcopter.position.x,
                     self.quadcopter.position.y,
                     self.quadcopter.position.z,
+                    np.rad2deg(self.obs.x[8,0]),
+                    np.rad2deg(self.obs.x[7,0]),
+                    np.rad2deg(self.obs.x[6,0]),
+                    self.obs.x[0,0],
+                    self.obs.x[1,0],
+                    self.obs.x[2,0],
                     self.quadcopter.loop_rate,
                     self.quadcopter.controls.z
                 ])
