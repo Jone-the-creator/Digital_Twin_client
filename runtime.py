@@ -45,20 +45,20 @@ def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
             dt
         )
     if quad.simulation_mode:
-        sim_1.update(np.array([
-            [np.deg2rad(u[2,0])], # roll rate
-            [-np.deg2rad(u[1,0])], # pitch rate
-            [-np.deg2rad(u[0,0])], # yaw rate
-            [u[3,0]]]), # thrust
-            dt
-        )
-        sim_2.update(np.array([
-            [np.deg2rad(u[2,0])], # roll rate
-            [-np.deg2rad(u[1,0])], # pitch rate
-            [-np.deg2rad(u[0,0])], # yaw rate
-            [u[3,0]]]), # thrust
-            dt
-        )
+            sim_1.update(np.array([
+                [np.deg2rad(u[2,0])], # roll rate
+                [-np.deg2rad(u[1,0])], # pitch rate
+                [-np.deg2rad(u[0,0])], # yaw rate
+                [u[3,0]]]), # thrust
+                dt
+            )
+            sim_2.update(np.array([
+                [np.deg2rad(u[2,0])], # roll rate
+                [-np.deg2rad(u[1,0])], # pitch rate
+                [-np.deg2rad(u[0,0])], # yaw rate
+                [u[3,0]]]), # thrust
+                dt
+            )
 
 
     # ---- CONTROL LOOP ----

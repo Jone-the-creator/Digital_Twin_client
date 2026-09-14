@@ -159,6 +159,8 @@ class MainWindow(QMainWindow):
         self.view.addItem(self.y_axis)
         self.view.addItem(self.z_axis)
 
+        self.ui.model_select.addItems(["Non-linear Model", "Linearised Model"])
+
         # Control tuning
         if self.quadcopter.control_system == "Pole-placement":
             self.ui.title.setText("Pole-placement Tuning")
@@ -307,6 +309,7 @@ class MainWindow(QMainWindow):
         self.ui.altitude_sp_reading.setText(f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m")
         self.ui.loop_rate_reading.setText(f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz")
         controller = self.ui.controller_select.currentText().lower()
+        model = self.ui.model_select.currentText().lower()
 
         if self.quadcopter.control_system == "Pole-placement":
             self.update_PP_labels(

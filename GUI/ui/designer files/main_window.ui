@@ -412,7 +412,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <string>Warning: Using default thrust</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>970</x>
@@ -487,30 +487,39 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="calibrate_button">
+    <property name="geometry">
+     <rect>
+      <x>631</x>
+      <y>721</y>
+      <width>111</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string>Calibrate</string>
+    </property>
+   </widget>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>630</x>
-      <y>720</y>
-      <width>251</width>
-      <height>29</height>
+      <y>320</y>
+      <width>141</width>
+      <height>60</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <layout class="QVBoxLayout" name="verticalLayout_6">
      <item>
-      <widget class="QPushButton" name="calibrate_button">
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-        </font>
-       </property>
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="text">
-        <string>Calibrate</string>
-       </property>
-      </widget>
+      <widget class="QComboBox" name="model_select"/>
      </item>
      <item>
       <widget class="QPushButton" name="sim_btn">

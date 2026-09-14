@@ -65,6 +65,20 @@ class Observer:
             [0, 0, 0, 0]
         ])
 
+    # write states to quadcopter object
+    def _write_back(self): 
+        self.quad.position.x = float(self.x[0,0])
+        self.quad.position.y = float(self.x[1,0])
+        self.quad.position.z = max(float(self.x[2,0]), 0.0)
+
+        self.quad.velocity.x = float(self.x[3,0])
+        self.quad.velocity.y = float(self.x[4,0])
+        self.quad.velocity.z = float(self.x[5,0])
+
+        self.quad.attitude.roll = np.rad2deg(float(self.x[6,0]))
+        self.quad.attitude.pitch = np.rad2deg(float(self.x[7,0]))
+        self.quad.attitude.yaw = np.rad2deg(float(self.x[8,0]))
+
     def update(self, u, dt):
 
         # convert thrust as PWM to force (N)
@@ -79,3 +93,6 @@ class Observer:
             self.x[5,0] = max(self.x[5,0], 0.0)
 
         self.quad.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])
+
+        if self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
+            self._write_back()

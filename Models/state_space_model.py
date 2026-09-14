@@ -76,4 +76,5 @@ class Nonlinear_Model:
             self.x[2,0] = 0.0
             self.x[5,0] = max(self.x[5,0], 0.0)
 
-        self._write_back()
+        if self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
+            self._write_back()
