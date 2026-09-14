@@ -25,8 +25,8 @@ class PPstabiliser():
         self.integrated_z_error = 0 
 
         # adjustable altitude specifications
-        self.settling_time_z = 3 # seconds
-        self.overshoot_z = 20 # %
+        self.settling_time_z = 4.5 # seconds
+        self.overshoot_z = 22 # %
         self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications

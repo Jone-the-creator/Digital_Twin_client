@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import os, trimesh, time, collections
+import os, trimesh, time
 import numpy as np
 from Classes.recorder import RecorderWorker
 from GUI.ui.ui_main import Ui_MainWindow
