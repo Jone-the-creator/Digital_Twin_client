@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
         self.render_timer = QTimer()
         self.render_timer.timeout.connect(self.update_DT)
         self.render_timer.timeout.connect(self.update_model)
-        self.render_timer.start(16)  # ~60 FPS
+        self.render_timer.start(self.quadcopter.dt)
 
         # data update loop
         self.data_timer = QTimer()
@@ -274,10 +274,6 @@ class MainWindow(QMainWindow):
         y = self.quadcopter.position.y
         z = self.quadcopter.position.z
 
-        self.view.opts["center"].setX(x)
-        self.view.opts["center"].setY(y)
-        self.view.opts["center"].setZ(z)
-                
         transform = QtGui.QMatrix4x4()
 
         transform.translate(x, y, z)
@@ -314,10 +310,6 @@ class MainWindow(QMainWindow):
             x = self.sim_linear.position.x
             y = self.sim_linear.position.y
             z = self.sim_linear.position.z
-
-        self.view.opts["center"].setX(x)
-        self.view.opts["center"].setY(y)
-        self.view.opts["center"].setZ(z)
                 
         transform = QtGui.QMatrix4x4()
 
@@ -330,7 +322,6 @@ class MainWindow(QMainWindow):
         transform *= self.base_transform
 
         self.digital_twin.setTransform(transform)
-
 
         # position front marker in front of the drone
         local = QtGui.QMatrix4x4()
@@ -499,20 +490,15 @@ class MainWindow(QMainWindow):
             return
         self.quadcopter.DT_mode = not self.quadcopter.DT_mode
 
-        self.sim_1.x[6,0] = self.quadcopter.attitude.roll
-        self.sim_1.x[7,0] = self.quadcopter.attitude.pitch
-        self.sim_1.x[8,0] = self.quadcopter.attitude.yaw
-        self.sim_1.x[0,0] = self.quadcopter.position.x
-        self.sim_1.x[1,0] = self.quadcopter.position.y
-        self.sim_1.x[2,0] = self.quadcopter.position.z
-        self.sim_2.x[6,0] = self.quadcopter.attitude.roll
-        self.sim_2.x[7,0] = self.quadcopter.attitude.pitch
-        self.sim_2.x[8,0] = self.quadcopter.attitude.yaw
+
+        self.sim_2.x[3:9] = 0.0
         self.sim_2.x[0,0] = self.quadcopter.position.x
         self.sim_2.x[1,0] = self.quadcopter.position.y
         self.sim_2.x[2,0] = self.quadcopter.position.z
 
         if self.quadcopter.DT_mode:
+            self.ui.model_select.setCurrentText("Linearised Model")
+            self.ui.model_select.setDisabled(1)
             self.ui.DT_btn.setText("Digital Twin Mode: ON")
             self.digital_twin.show()
             self.DT_front_marker.show()
@@ -521,6 +507,7 @@ class MainWindow(QMainWindow):
             self.ui.sim_btn.setDisabled(1)
         else:
             self.ui.DT_btn.setText("Digital Twin Mode: OFF")
+            self.ui.model_select.setEnabled(1)
             self.model.show()
             self.front_marker.show()
             self.digital_twin.hide()

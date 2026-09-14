@@ -11,7 +11,10 @@ g = 9.81 # m/s^2
 class Observer:
     def __init__(self, quadcopter, sim):
         self.quad = quadcopter
-        self.sim = sim
+        self.sim = None
+        if sim is not None:
+            self.sim = sim
+            
         self.x = np.array([
             [0.0], # x
             [0.0], # y
@@ -68,6 +71,8 @@ class Observer:
 
     # write states to quadcopter object
     def _write_back(self): 
+        if self.sim is None:
+            return
         self.sim.position.x = float(self.x[0,0])
         self.sim.position.y = float(self.x[1,0])
         self.sim.position.z = max(float(self.x[2,0]), 0.0)
@@ -93,7 +98,8 @@ class Observer:
             self.x[2,0] = 0.0
             self.x[5,0] = max(self.x[5,0], 0.0)
 
-        self.quad.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])
+        if self.sim is not None:
+            self.sim.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])
 
         if (self.quad.simulation_mode or self.quad.DT_mode) and self.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
             self._write_back()

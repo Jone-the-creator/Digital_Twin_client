@@ -41,17 +41,17 @@ class Nonlinear_Model:
 
     def update(self, u, dt):
         # update state matrix
-        self.x = np.array([
-            [self.sim.position.x],
-            [self.sim.position.y],
-            [max(self.sim.position.z, 0.0)],
-            [self.sim.velocity.x],
-            [self.sim.velocity.y],
-            [self.sim.velocity.z],
-            [np.deg2rad(self.sim.attitude.roll)],
-            [np.deg2rad(self.sim.attitude.pitch)],
-            [np.deg2rad(self.sim.attitude.yaw)]
-        ])
+        # self.x = np.array([
+        #     [self.sim.position.x],
+        #     [self.sim.position.y],
+        #     [max(self.sim.position.z, 0.0)],
+        #     [self.sim.velocity.x],
+        #     [self.sim.velocity.y],
+        #     [self.sim.velocity.z],
+        #     [np.deg2rad(self.sim.attitude.roll)],
+        #     [np.deg2rad(self.sim.attitude.pitch)],
+        #     [np.deg2rad(self.sim.attitude.yaw)]
+        # ])
 
         # convert thrust as PWM to force (N)
         u[3,0] = float(u[3,0]) / self.quad.PWM_thrust_gain
@@ -71,6 +71,8 @@ class Nonlinear_Model:
             [u[2,0]]
         ])
 
+        old_x = self.x.copy()
+
         self.x += x_dot * dt
 
         if self.x[2,0] <= 0.0:
@@ -79,10 +81,3 @@ class Nonlinear_Model:
 
         if (self.quad.simulation_mode or self.quad.DT_mode) and self.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
             self._write_back()
-
-        if abs(self.x[2,0]) > 0.5:
-            print(
-            f"z={self.x[2,0]:.2f}, "
-            f"vz={self.x[5,0]:.2f}, "
-            f"thrust={u[3,0]:.2f}"
-            )

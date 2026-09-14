@@ -45,19 +45,36 @@ def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
             dt
         )
     sim_1.update(np.array([
-        [np.deg2rad(u[2,0])], # roll rate
-        [-np.deg2rad(u[1,0])], # pitch rate
-        [-np.deg2rad(u[0,0])], # yaw rate
-        [u[3,0]]]), # thrust
-        dt
-    )
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
     sim_2.update(np.array([
-        [np.deg2rad(u[2,0])], # roll rate
-        [-np.deg2rad(u[1,0])], # pitch rate
-        [-np.deg2rad(u[0,0])], # yaw rate
-        [u[3,0]]]), # thrust
-        dt
-    )
+            [np.deg2rad(u[2,0])], # roll rate
+            [-np.deg2rad(u[1,0])], # pitch rate
+            [-np.deg2rad(u[0,0])], # yaw rate
+            [u[3,0]]]), # thrust
+            dt
+        )
+    # if hasattr(quad, 'viewer'):
+    #     if quad.viewer.ui.model_select.currentText().lower == "non-linear model":  
+    #         sim_1.update(np.array([
+    #             [np.deg2rad(u[2,0])], # roll rate
+    #             [-np.deg2rad(u[1,0])], # pitch rate
+    #             [-np.deg2rad(u[0,0])], # yaw rate
+    #             [u[3,0]]]), # thrust
+    #             dt
+    #         )
+    #     elif quad.viewer.ui.model_select.currentText().lower == "linearised model": 
+    #         sim_2.update(np.array([
+    #             [np.deg2rad(u[2,0])], # roll rate
+    #             [-np.deg2rad(u[1,0])], # pitch rate
+    #             [-np.deg2rad(u[0,0])], # yaw rate
+    #             [u[3,0]]]), # thrust
+    #             dt
+    #         )
 
 
     # ---- CONTROL LOOP ----
@@ -220,7 +237,7 @@ def main():
     sim_nonlinear_quad = copy.deepcopy(quad)
     sim_linear_quad = copy.deepcopy(quad)
     # instantiate observer, first arg is the object that it checks and second is the one it changes
-    obs = Observer(quad, quad)
+    obs = Observer(quad, None)
     sim_1 = Nonlinear_Model(quad, sim_nonlinear_quad)
     sim_2 = Observer(quad, sim_linear_quad)
     PID = PIDstabiliser(quad, sim_nonlinear_quad, sim_linear_quad)
