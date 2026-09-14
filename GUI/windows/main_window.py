@@ -38,13 +38,15 @@ md = gl.MeshData.sphere(rows=10,cols=10)
 class MainWindow(QMainWindow):
     start_record_signal = Signal()
     stop_record_signal = Signal()
-    def __init__(self, quadcopter, stabiliser, obs, sim_non_linear, sim_linear):
+    def __init__(self, quadcopter, stabiliser, obs, sim_non_linear, sim_linear, sim_1, sim_2):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
         self.obs = obs
         self.sim_non_linear = sim_non_linear
         self.sim_linear = sim_linear
+        self.sim_1 = sim_1
+        self.sim_2 = sim_2
         self.cal = None
 
         self.response_time = []
@@ -204,8 +206,8 @@ class MainWindow(QMainWindow):
 
         # render loop
         self.render_timer = QTimer()
-        self.render_timer.timeout.connect(self.update_model)
         self.render_timer.timeout.connect(self.update_DT)
+        self.render_timer.timeout.connect(self.update_model)
         self.render_timer.start(16)  # ~60 FPS
 
         # data update loop
@@ -474,18 +476,8 @@ class MainWindow(QMainWindow):
             return
         self.quadcopter.simulation_mode = not self.quadcopter.simulation_mode
 
-        self.sim_non_linear.attitude.roll = 0
-        self.sim_non_linear.attitude.pitch = 0
-        self.sim_non_linear.attitude.yaw = 0
-        self.sim_non_linear.position.x = 0
-        self.sim_non_linear.position.y = 0
-        self.sim_non_linear.position.z = 0
-        self.sim_linear.attitude.roll = 0
-        self.sim_linear.attitude.pitch = 0
-        self.sim_linear.attitude.yaw = 0
-        self.sim_linear.position.x = 0
-        self.sim_linear.position.y = 0
-        self.sim_linear.position.z = 0
+        self.sim_1.x[:] = 0.0
+        self.sim_2.x[:] = 0.0
 
         if self.quadcopter.simulation_mode:
             self.ui.sim_btn.setText("Simulation: ON")
@@ -507,18 +499,18 @@ class MainWindow(QMainWindow):
             return
         self.quadcopter.DT_mode = not self.quadcopter.DT_mode
 
-        self.sim_non_linear.attitude.roll = self.quad.attitude.roll
-        self.sim_non_linear.attitude.pitch = self.quad.attitude.pitch
-        self.sim_non_linear.attitude.yaw = self.quad.attitude.yaw
-        self.sim_non_linear.position.x = self.quad.position.x
-        self.sim_non_linear.position.y = self.quad.position.y
-        self.sim_non_linear.position.z = self.quad.position.z
-        self.sim_linear.attitude.roll = self.quad.attitude.roll
-        self.sim_linear.attitude.pitch = self.quad.attitude.pitch
-        self.sim_linear.attitude.yaw = self.quad.attitude.yaw
-        self.sim_linear.position.x = self.quad.position.x
-        self.sim_linear.position.y = self.quad.position.y
-        self.sim_linear.position.z = self.quad.position.z
+        self.sim_1.x[6,0] = self.quadcopter.attitude.roll
+        self.sim_1.x[7,0] = self.quadcopter.attitude.pitch
+        self.sim_1.x[8,0] = self.quadcopter.attitude.yaw
+        self.sim_1.x[0,0] = self.quadcopter.position.x
+        self.sim_1.x[1,0] = self.quadcopter.position.y
+        self.sim_1.x[2,0] = self.quadcopter.position.z
+        self.sim_2.x[6,0] = self.quadcopter.attitude.roll
+        self.sim_2.x[7,0] = self.quadcopter.attitude.pitch
+        self.sim_2.x[8,0] = self.quadcopter.attitude.yaw
+        self.sim_2.x[0,0] = self.quadcopter.position.x
+        self.sim_2.x[1,0] = self.quadcopter.position.y
+        self.sim_2.x[2,0] = self.quadcopter.position.z
 
         if self.quadcopter.DT_mode:
             self.ui.DT_btn.setText("Digital Twin Mode: ON")

@@ -95,5 +95,5 @@ class Observer:
 
         self.quad.update_velocity(x = self.x[3,0], y = self.x[4,0], z = self.x[5,0])
 
-        if self.quad.simulation_mode or self.quad.DT_mode and self.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
+        if (self.quad.simulation_mode or self.quad.DT_mode) and self.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
             self._write_back()

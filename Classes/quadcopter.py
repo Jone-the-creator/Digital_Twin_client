@@ -125,11 +125,9 @@ class Quadcopter:
         if x is not None:
             z[0,0] = x
             self.position_reading.x = x
-            print(f"x reading = {x:.2f}")
         if y is not None:
             z[1,0] = y
             self.position_reading.y = y
-            print(f"y reading = {y:.2f}")
         if alt is not None:
             # Loco positioning system has a bias near-ground this logic accounts for that smoothly
             # print(f"before offset = {alt:.2f}")

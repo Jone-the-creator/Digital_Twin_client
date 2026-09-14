@@ -69,6 +69,7 @@ class PIDstabiliser():
             roll = self.quad.attitude.roll
             pitch = self.quad.attitude.pitch
             altitude = self.quad.position.z
+            print("yep")
         elif self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
             roll = self.sim_non_linear.attitude.roll
             pitch = self.sim_non_linear.attitude.pitch
