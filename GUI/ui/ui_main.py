@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowfBeZYN.ui'
+## Form generated from reading UI file 'main_windowUpLAPv.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -110,7 +110,7 @@ class Ui_MainWindow(object):
         self.Response_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.widget = QWidget(self.centralwidget)
         self.widget.setObjectName(u"widget")
-        self.widget.setGeometry(QRect(860, 60, 331, 281))
+        self.widget.setGeometry(QRect(880, 60, 311, 251))
         self.layoutWidget2 = QWidget(self.centralwidget)
         self.layoutWidget2.setObjectName(u"layoutWidget2")
         self.layoutWidget2.setGeometry(QRect(630, 400, 561, 266))
@@ -297,6 +297,23 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
+        self.layoutWidget_2 = QWidget(self.centralwidget)
+        self.layoutWidget_2.setObjectName(u"layoutWidget_2")
+        self.layoutWidget_2.setGeometry(QRect(780, 320, 141, 60))
+        self.verticalLayout_7 = QVBoxLayout(self.layoutWidget_2)
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
+        self.DT_model_select = QComboBox(self.layoutWidget_2)
+        self.DT_model_select.setObjectName(u"DT_model_select")
+
+        self.verticalLayout_7.addWidget(self.DT_model_select)
+
+        self.DT_btn = QPushButton(self.layoutWidget_2)
+        self.DT_btn.setObjectName(u"DT_btn")
+        self.DT_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.verticalLayout_7.addWidget(self.DT_btn)
+
         self.calibrate_button = QPushButton(self.centralwidget)
         self.calibrate_button.setObjectName(u"calibrate_button")
         self.calibrate_button.setGeometry(QRect(631, 721, 111, 27))
@@ -370,6 +387,7 @@ class Ui_MainWindow(object):
         self.Recording_rate_adj.setPrefix(QCoreApplication.translate("MainWindow", u"Sample Rate: ", None))
         self.start_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Start Recording", None))
         self.stop_recording_btn.setText(QCoreApplication.translate("MainWindow", u"Stop Recording", None))
+        self.DT_btn.setText(QCoreApplication.translate("MainWindow", u"Digital Twin Mode: OFF", None))
         self.calibrate_button.setText(QCoreApplication.translate("MainWindow", u"Calibrate", None))
         self.sim_btn.setText(QCoreApplication.translate("MainWindow", u"Simulation: OFF", None))
     # retranslateUi

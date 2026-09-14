@@ -38,11 +38,13 @@ md = gl.MeshData.sphere(rows=10,cols=10)
 class MainWindow(QMainWindow):
     start_record_signal = Signal()
     stop_record_signal = Signal()
-    def __init__(self, quadcopter, stabiliser, obs):
+    def __init__(self, quadcopter, stabiliser, obs, sim_non_linear, sim_linear):
         super().__init__()
         self.quadcopter = quadcopter
         self.stab = stabiliser
         self.obs = obs
+        self.sim_non_linear = sim_non_linear
+        self.sim_linear = sim_linear
         self.cal = None
 
         self.response_time = []
@@ -95,25 +97,6 @@ class MainWindow(QMainWindow):
         self.grid.scale(1, 1, 1)
         self.grid.setSize(100, 100)
         self.grid.setSpacing(0.5, 0.5)
-
-        # axes
-        self.x_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[2,0,0]]),
-            color=(1,0,0,1),
-            width=3
-        )
-
-        self.y_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[0,2,0]]),
-            color=(0,1,0,1),
-            width=3
-        )
-
-        self.z_axis = gl.GLLinePlotItem(
-            pos=np.array([[0,0,0],[0,0,2]]),
-            color=(0,0,1,1),
-            width=3
-        )
 
         # alarms/warnings hidden by default
         self.ui.recording_label.hide()
@@ -178,9 +161,6 @@ class MainWindow(QMainWindow):
         self.view.addItem(self.grid)
         self.view.addItem(self.model)
         self.view.addItem(self.front_marker)
-        self.view.addItem(self.x_axis)
-        self.view.addItem(self.y_axis)
-        self.view.addItem(self.z_axis)
 
         self.ui.model_select.addItems(["Non-linear Model", "Linearised Model"])
 
@@ -313,12 +293,20 @@ class MainWindow(QMainWindow):
 
     # update Digital Twin from quadcopter object
     def update_DT(self):
-        roll = self.quadcopter.attitude.roll
-        pitch = self.quadcopter.attitude.pitch
-        yaw = self.quadcopter.attitude.yaw
-        x = self.quadcopter.position.x
-        y = self.quadcopter.position.y
-        z = self.quadcopter.position.z
+        if self.ui.model_select.currentText().lower() == "non-linear model":
+            roll = self.sim_non_linear.attitude.roll
+            pitch = self.sim_non_linear.attitude.pitch
+            yaw = self.sim_non_linear.attitude.yaw
+            x = self.sim_non_linear.position.x
+            y = self.sim_non_linear.position.y
+            z = self.sim_non_linear.position.z
+        if self.ui.model_select.currentText().lower() == "linearised model":
+            roll = self.sim_linear.attitude.roll
+            pitch = self.sim_linear.attitude.pitch
+            yaw = self.sim_linear.attitude.yaw
+            x = self.sim_linear.position.x
+            y = self.sim_linear.position.y
+            z = self.sim_linear.position.z
 
         self.view.opts["center"].setX(x)
         self.view.opts["center"].setY(y)

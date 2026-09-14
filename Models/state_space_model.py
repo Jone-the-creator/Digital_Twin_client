@@ -10,8 +10,9 @@ import state_space as ss
 g = 9.81 # m/s^2
 
 class Nonlinear_Model:
-    def __init__(self, quadcopter):
+    def __init__(self, quadcopter, sim):
         self.quad = quadcopter
+        self.sim = sim
         self.x = np.array([
             [0.0],
             [0.0],
@@ -26,30 +27,30 @@ class Nonlinear_Model:
 
     # write states to quadcopter object
     def _write_back(self): 
-        self.quad.position.x = float(self.x[0,0])
-        self.quad.position.y = float(self.x[1,0])
-        self.quad.position.z = max(float(self.x[2,0]), 0.0)
+        self.sim.position.x = float(self.x[0,0])
+        self.sim.position.y = float(self.x[1,0])
+        self.sim.position.z = max(float(self.x[2,0]), 0.0)
 
-        self.quad.velocity.x = float(self.x[3,0])
-        self.quad.velocity.y = float(self.x[4,0])
-        self.quad.velocity.z = float(self.x[5,0])
+        self.sim.velocity.x = float(self.x[3,0])
+        self.sim.velocity.y = float(self.x[4,0])
+        self.sim.velocity.z = float(self.x[5,0])
 
-        self.quad.attitude.roll = np.rad2deg(float(self.x[6,0]))
-        self.quad.attitude.pitch = np.rad2deg(float(self.x[7,0]))
-        self.quad.attitude.yaw = np.rad2deg(float(self.x[8,0]))
+        self.sim.attitude.roll = np.rad2deg(float(self.x[6,0]))
+        self.sim.attitude.pitch = np.rad2deg(float(self.x[7,0]))
+        self.sim.attitude.yaw = np.rad2deg(float(self.x[8,0]))
 
     def update(self, u, dt):
         # update state matrix
         self.x = np.array([
-            [self.quad.position.x],
-            [self.quad.position.y],
-            [max(self.quad.position.z, 0.0)],
-            [self.quad.velocity.x],
-            [self.quad.velocity.y],
-            [self.quad.velocity.z],
-            [np.deg2rad(self.quad.attitude.roll)],
-            [np.deg2rad(self.quad.attitude.pitch)],
-            [np.deg2rad(self.quad.attitude.yaw)]
+            [self.sim.position.x],
+            [self.sim.position.y],
+            [max(self.sim.position.z, 0.0)],
+            [self.sim.velocity.x],
+            [self.sim.velocity.y],
+            [self.sim.velocity.z],
+            [np.deg2rad(self.sim.attitude.roll)],
+            [np.deg2rad(self.sim.attitude.pitch)],
+            [np.deg2rad(self.sim.attitude.yaw)]
         ])
 
         # convert thrust as PWM to force (N)
@@ -78,3 +79,10 @@ class Nonlinear_Model:
 
         if self.quad.simulation_mode and self.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
             self._write_back()
+
+        if abs(self.x[2,0]) > 0.5:
+            print(
+            f"z={self.x[2,0]:.2f}, "
+            f"vz={self.x[5,0]:.2f}, "
+            f"thrust={u[3,0]:.2f}"
+            )

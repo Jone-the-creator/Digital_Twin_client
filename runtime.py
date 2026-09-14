@@ -13,7 +13,7 @@ from Comms_Plugins import CRTP_logger
 import functions, threading, time, sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QTimer, QThread
-import pygame
+import pygame, copy
 import numpy as np
 from GUI.windows.setup_window import run_setup
 from GUI.windows.main_window import MainWindow
@@ -44,21 +44,20 @@ def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
             [u[3,0]]]), # thrust
             dt
         )
-    if quad.simulation_mode:
-            sim_1.update(np.array([
-                [np.deg2rad(u[2,0])], # roll rate
-                [-np.deg2rad(u[1,0])], # pitch rate
-                [-np.deg2rad(u[0,0])], # yaw rate
-                [u[3,0]]]), # thrust
-                dt
-            )
-            sim_2.update(np.array([
-                [np.deg2rad(u[2,0])], # roll rate
-                [-np.deg2rad(u[1,0])], # pitch rate
-                [-np.deg2rad(u[0,0])], # yaw rate
-                [u[3,0]]]), # thrust
-                dt
-            )
+    sim_1.update(np.array([
+        [np.deg2rad(u[2,0])], # roll rate
+        [-np.deg2rad(u[1,0])], # pitch rate
+        [-np.deg2rad(u[0,0])], # yaw rate
+        [u[3,0]]]), # thrust
+        dt
+    )
+    sim_2.update(np.array([
+        [np.deg2rad(u[2,0])], # roll rate
+        [-np.deg2rad(u[1,0])], # pitch rate
+        [-np.deg2rad(u[0,0])], # yaw rate
+        [u[3,0]]]), # thrust
+        dt
+    )
 
 
     # ---- CONTROL LOOP ----
@@ -218,11 +217,14 @@ def main():
 
     # ---- QUADCOPTER/STABILISER INSTANTIATE/SETUP ----
     quad = run_setup()
-    obs = Observer(quad)
-    sim_1 = Nonlinear_Model(quad)
-    sim_2 = Observer(quad)
-    PID = PIDstabiliser(quad)
-    PP = PPstabiliser(obs)
+    sim_nonlinear_quad = copy.deepcopy(quad)
+    sim_linear_quad = copy.deepcopy(quad)
+    # instantiate observer, first arg is the object that it checks and second is the one it changes
+    obs = Observer(quad, quad)
+    sim_1 = Nonlinear_Model(quad, sim_nonlinear_quad)
+    sim_2 = Observer(quad, sim_linear_quad)
+    PID = PIDstabiliser(quad, sim_nonlinear_quad, sim_linear_quad)
+    PP = PPstabiliser(obs, sim_nonlinear_quad, sim_linear_quad)
 
     if quad is None:
         print("User cancelled startup.")
@@ -257,9 +259,9 @@ def main():
     timer.start(10)  # 100 Hz
 
     if quad.control_system == "PID":
-        quad.viewer = MainWindow(quad, PID, obs)
+        quad.viewer = MainWindow(quad, PID, obs, sim_nonlinear_quad, sim_linear_quad)
     elif quad.control_system == "Pole-placement":
-        quad.viewer = MainWindow(quad, PP, obs)
+        quad.viewer = MainWindow(quad, PP, obs, sim_nonlinear_quad, sim_linear_quad)
 
     # Explicit shutdown function
     def shutdown():
