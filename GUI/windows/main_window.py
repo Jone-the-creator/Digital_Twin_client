@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
         # grid settings
         self.grid = gl.GLGridItem()
         self.grid.scale(1, 1, 1)
-        self.grid.setSize(10, 10)
+        self.grid.setSize(100, 100)
         self.grid.setSpacing(0.5, 0.5)
 
         # axes
@@ -132,7 +132,8 @@ class MainWindow(QMainWindow):
         self.base_transform.scale(0.005, 0.005, 0.005)
         self.base_transform.rotate(180, 0, 0, 1)
         self.base_transform.rotate(90, 1, 0, 0)
-        
+
+        # CREATE PHYSICAL PLANT MODEL
         #create quadcopter model
         self.model = gl.GLMeshItem(
             vertexes = vertices,
@@ -147,6 +148,28 @@ class MainWindow(QMainWindow):
         self.front_marker = gl.GLMeshItem(
             meshdata = md,
             color=(1, 0, 0, 1),
+            smooth=False,
+            shader='balloon'
+        )
+
+        # CREATE SIMULATION PLANT MODEL
+        #create quadcopter model
+        self.digital_twin = gl.GLMeshItem(
+            vertexes=vertices,
+            faces=faces,
+            smooth=True,
+            drawEdges=True,
+            edgeColor=(0.2, 0.7, 0.9, 0.5),
+            color=(0.0, 0.25, 0.65, 0.15),
+            shader='balloon'
+        )
+
+        self.model.setGLOptions('translucent')
+
+        #create front marker
+        self.DT_front_marker = gl.GLMeshItem(
+            meshdata = md,
+            color=(0.0, 0.25, 0.65, 0.8),
             smooth=False,
             shader='balloon'
         )
@@ -198,6 +221,7 @@ class MainWindow(QMainWindow):
         # render loop
         self.render_timer = QTimer()
         self.render_timer.timeout.connect(self.update_model)
+        self.render_timer.timeout.connect(self.update_DT)
         self.render_timer.start(16)  # ~60 FPS
 
         # data update loop
@@ -287,6 +311,39 @@ class MainWindow(QMainWindow):
         world = self.model.transform() * local
         self.front_marker.setTransform(world)
 
+    # update Digital Twin from quadcopter object
+    def update_DT(self):
+        roll = self.quadcopter.attitude.roll
+        pitch = self.quadcopter.attitude.pitch
+        yaw = self.quadcopter.attitude.yaw
+        x = self.quadcopter.position.x
+        y = self.quadcopter.position.y
+        z = self.quadcopter.position.z
+
+        self.view.opts["center"].setX(x)
+        self.view.opts["center"].setY(y)
+        self.view.opts["center"].setZ(z)
+                
+        transform = QtGui.QMatrix4x4()
+
+        transform.translate(x, y, z)
+
+        transform.rotate(yaw, 0, 0, 1)
+        transform.rotate(-pitch, 0, 1, 0)
+        transform.rotate(-roll, 1, 0, 0)
+
+        transform *= self.base_transform
+
+        self.digital_twin.setTransform(transform)
+
+
+        # position front marker in front of the drone
+        local = QtGui.QMatrix4x4()
+        local.translate(100, -10, 0)
+        local.scale(5, 5, 5)
+        world = self.digital_twin.transform() * local
+        self.DT_front_marker.setTransform(world)
+
     def update_GUI(self):
         # update thrust variable (currently unused)
         thrust = ((self.quadcopter.controls.thrust / self.quadcopter.max_thrust) * 100)
@@ -309,7 +366,6 @@ class MainWindow(QMainWindow):
         self.ui.altitude_sp_reading.setText(f"Altitude Setpoint: {self.quadcopter.controls.z:.2f} m")
         self.ui.loop_rate_reading.setText(f"Loop Rate: {self.quadcopter.loop_rate:.1f} Hz")
         controller = self.ui.controller_select.currentText().lower()
-        model = self.ui.model_select.currentText().lower()
 
         if self.quadcopter.control_system == "Pole-placement":
             self.update_PP_labels(
@@ -427,12 +483,20 @@ class MainWindow(QMainWindow):
 
         if self.quadcopter.simulation_mode:
             self.ui.sim_btn.setText("Simulation: ON")
+            self.view.addItem(self.digital_twin)
+            self.view.addItem(self.DT_front_marker)
+            self.view.removeItem(self.model)
+            self.view.removeItem(self.front_marker)
             # reset all attitudes for simulation
             self.quadcopter.attitude.yaw = 0.0
             self.quadcopter.attitude.pitch = 0.0
             self.quadcopter.attitude.roll = 0.0
         else:
             self.ui.sim_btn.setText("Simulation: OFF")
+            self.view.addItem(self.model)
+            self.view.addItem(self.front_marker)
+            self.view.removeItem(self.digital_twin)
+            self.view.removeItem(self.DT_front_marker)
 
     def update_pid_labels(self, kp, ki, kd):
         self.ui.P_label.setText(f"P: {kp:.2f}")
