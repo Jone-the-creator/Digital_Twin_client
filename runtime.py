@@ -89,9 +89,11 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
+
+    loop_time = dt
     
     while running:
-        start_time = time.time()
+        start_time = time.perf_counter()
         if quad.controller:
             try:
                 lx, ly, lt, l1, rx, ry, rt, r1, cross, circle, square, triangle = quad.controller.read()
@@ -216,10 +218,10 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
 
 
         # --- CONTROL LOOP TIMING ---
-        loop_time = time.time() - start_time
+        loop_time = time.perf_counter() - start_time
         while(loop_time < dt):
             time.sleep(0.00001)
-            loop_time = time.time() - start_time
+            loop_time = time.perf_counter() - start_time
 
         if eff_count % (LOOP_RATE/2) == 0:
             quad.dt = loop_time

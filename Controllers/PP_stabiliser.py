@@ -73,15 +73,15 @@ class PPstabiliser():
         return None
         
     def altitude_control(self, altitude_setpoint, dt):
-        if not self.obs.quad.simulation_mode:
-            velocity_z = self.obs.quad.velocity.z
-            altitude = self.obs.quad.position.z
-        elif self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
+        if self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
             velocity_z = self.sim_non_linear.velocity.z
             altitude = self.sim_non_linear.position.z
         elif self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
             velocity_z = self.sim_non_linear.velocity.z
             altitude = self.sim_linear.position.z
+        else:
+            velocity_z = self.obs.x[5,0]
+            altitude = self.obs.quad.position.z
         altitude_error = altitude_setpoint - altitude
         self.integrated_z_error += altitude_error * dt
 

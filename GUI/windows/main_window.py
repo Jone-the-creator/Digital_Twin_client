@@ -208,7 +208,8 @@ class MainWindow(QMainWindow):
         self.render_timer = QTimer()
         self.render_timer.timeout.connect(self.update_DT)
         self.render_timer.timeout.connect(self.update_model)
-        self.render_timer.start(self.quadcopter.dt)
+        self.render_timer.timeout.connect(self.update_camera)
+        self.render_timer.start(10) # 100 Hz
 
         # data update loop
         self.data_timer = QTimer()
@@ -296,20 +297,12 @@ class MainWindow(QMainWindow):
 
     # update Digital Twin from quadcopter object
     def update_DT(self):
-        if self.ui.model_select.currentText().lower() == "non-linear model":
-            roll = self.sim_non_linear.attitude.roll
-            pitch = self.sim_non_linear.attitude.pitch
-            yaw = self.sim_non_linear.attitude.yaw
-            x = self.sim_non_linear.position.x
-            y = self.sim_non_linear.position.y
-            z = self.sim_non_linear.position.z
-        if self.ui.model_select.currentText().lower() == "linearised model":
-            roll = self.sim_linear.attitude.roll
-            pitch = self.sim_linear.attitude.pitch
-            yaw = self.sim_linear.attitude.yaw
-            x = self.sim_linear.position.x
-            y = self.sim_linear.position.y
-            z = self.sim_linear.position.z
+        roll = self.sim_linear.attitude.roll
+        pitch = self.sim_linear.attitude.pitch
+        yaw = self.sim_linear.attitude.yaw
+        x = self.sim_linear.position.x
+        y = self.sim_linear.position.y
+        z = self.sim_linear.position.z
                 
         transform = QtGui.QMatrix4x4()
 
@@ -329,6 +322,29 @@ class MainWindow(QMainWindow):
         local.scale(5, 5, 5)
         world = self.digital_twin.transform() * local
         self.DT_front_marker.setTransform(world)
+
+    def update_camera(self):
+        if self.quadcopter.simulation_mode:
+            # Follow simulated model
+
+            if self.ui.model_select.currentText().lower() == "non-linear model":
+                x = self.sim_non_linear.position.x
+                y = self.sim_non_linear.position.y
+                z = self.sim_non_linear.position.z
+            else:
+                x = self.sim_linear.position.x
+                y = self.sim_linear.position.y
+                z = self.sim_linear.position.z
+
+        else:
+            # Normal operation and DT mode
+            x = self.quadcopter.position.x
+            y = self.quadcopter.position.y
+            z = self.quadcopter.position.z
+
+        self.view.opts["center"].setX(x)
+        self.view.opts["center"].setY(y)
+        self.view.opts["center"].setZ(z)
 
     def update_GUI(self):
         # update thrust variable (currently unused)
@@ -491,7 +507,8 @@ class MainWindow(QMainWindow):
         self.quadcopter.DT_mode = not self.quadcopter.DT_mode
 
 
-        self.sim_2.x[3:9] = 0.0
+        self.sim_2.x[3:8] = 0.0
+        self.sim_2.x[8,0] = np.deg2rad(self.quadcopter.attitude.yaw)
         self.sim_2.x[0,0] = self.quadcopter.position.x
         self.sim_2.x[1,0] = self.quadcopter.position.y
         self.sim_2.x[2,0] = self.quadcopter.position.z
