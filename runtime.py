@@ -118,9 +118,10 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                     PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
-                    u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
-                    # PP.pitch_setpoint = -pitch 
-                    # PP.roll_setpoint = roll
+                    # u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
+                    PP.pitch_setpoint = pitch 
+                    PP.roll_setpoint = roll
+                    u[1,0], u[2,0] = PP.attitude_control(dt)
                     # att_u = PP.attitude_control()
                     # u = np.vstack([att_u, np.zeros((1,1))])
                     thrust_raw = PP.altitude_control(altitude, dt)
