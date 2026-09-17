@@ -21,14 +21,23 @@ close all;
 csvFile = "flight_data.csv";
 
 figureHeading = "Observer 6DOF Error vs Time";
-testDescription = "Jonah Habel - Observer Validation - 14.09.2026";
+testDescription = "Jonah Habel - Observer Validation";
 
 plantAnglesInRadians = false;
 observerAnglesInRadians = false;
 
-positionErrorLimit = 0.005;       % m
-attitudeErrorLimit = 0.2;         % deg
-maximumExceedanceDuration = 0.5;  % s
+% ==========================
+% Requirements
+% ==========================
+
+XYPositionErrorLimit = 10;    % cm
+AltitudeErrorLimit   = 4;     % cm
+
+RollErrorLimit  = 0.5;        % deg
+PitchErrorLimit = 0.5;        % deg
+YawErrorLimit   = 0.3;        % deg
+
+maximumExceedanceDuration = 1.5;   % s
 
 showFailureShading = true;
 showExceedanceMarkers = false;
@@ -56,16 +65,43 @@ columns.yawobs = "yaw obs";
 
 %% STATE DEFINITIONS
 stateNames = ["x"; "y"; "z"; "roll"; "pitch"; "yaw"];
-observerColumnNames = ["x obs"; "y obs"; "z obs"; ...
-    "roll obs"; "pitch obs"; "yaw obs"];
-stateTitles = ["X Position Error"; "Y Position Error"; ...
-    "Z Position Error"; "Roll Error"; "Pitch Error"; "Yaw Error"];
-stateUnits = ["m"; "m"; "m"; "deg"; "deg"; "deg"];
-requirementLimits = [positionErrorLimit; positionErrorLimit; ...
-    positionErrorLimit; attitudeErrorLimit; attitudeErrorLimit; ...
-    attitudeErrorLimit];
+
+observerColumnNames = [ ...
+    "x obs";
+    "y obs";
+    "z obs";
+    "roll obs";
+    "pitch obs";
+    "yaw obs"];
+
+stateTitles = [ ...
+    "X Position Error";
+    "Y Position Error";
+    "Altitude Error";
+    "Roll Error";
+    "Pitch Error";
+    "Yaw Error"];
+
+stateUnits = [ ...
+    "cm";
+    "cm";
+    "cm";
+    "deg";
+    "deg";
+    "deg"];
+
+requirementLimits = [ ...
+    XYPositionErrorLimit;
+    XYPositionErrorLimit;
+    AltitudeErrorLimit;
+    RollErrorLimit;
+    PitchErrorLimit;
+    YawErrorLimit];
+
 numberOfStates = numel(stateNames);
+
 angleStates = ["roll"; "pitch"; "yaw"];
+positionStates = ["x"; "y"; "z"];
 
 %% IMPORT CSV
 if ~isfile(csvFile)
@@ -130,6 +166,17 @@ if observerAnglesInRadians
         stateName = char(angleStates(stateIndex));
         observer.(stateName) = rad2deg(observer.(stateName));
     end
+end
+
+%% CONVERT POSITIONS TO CM
+
+for stateIndex = 1:numel(positionStates)
+
+    stateName = char(positionStates(stateIndex));
+
+    plant.(stateName) = plant.(stateName) .* 100;
+    observer.(stateName) = observer.(stateName) .* 100;
+
 end
 
 %% REMOVE INVALID ROWS
@@ -397,10 +444,15 @@ for stateIndex = 1:numberOfStates
     observedMaximum = max(abs(signedError));
     verticalLimit = max(1.5 * errorLimit, 1.10 * observedMaximum);
 
-    if stateUnits(stateIndex) == "m"
-        verticalLimit = max(verticalLimit, 0.0075);
+    if stateUnits(stateIndex) == "cm"
+    
+        verticalLimit = max(verticalLimit, ...
+            1.5 * requirementLimits(stateIndex));
+    
     else
-        verticalLimit = max(verticalLimit, 0.30);
+    
+        verticalLimit = max(verticalLimit, 0.75);
+    
     end
 
     if showFailureShading && any(failedSamples)
@@ -493,9 +545,9 @@ for stateIndex = 1:numberOfStates
 end
 
 %% ADD OVERALL RESULT TO FIGURE
-overallAnnotation = sprintf(['OVERALL RESULT: %s     ' ...
-    'Maximum continuous exceedance permitted: %.1f s'], ...
-    char(overallResultText), maximumExceedanceDuration);
+overallAnnotation = sprintf( ...
+    'OVERALL RESULT: %s | Maximum continuous exceedance permitted: 1.5 s', ...
+    char(overallResultText));
 
 annotation(figureHandle, "textbox", [0.29, 0.002, 0.42, 0.035], ...
     "String", overallAnnotation, "HorizontalAlignment", "center", ...

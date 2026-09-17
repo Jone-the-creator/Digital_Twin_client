@@ -5,14 +5,17 @@ close all;
 %% ==========================
 %% Settings
 %% ==========================
-numFiles = 1;
+numFiles = 10;
+
+ATTITUDE_LIMIT_DEG = 2.25;
+ALT_ERROR_LIMIT_CM = 18;
 
 % CSV column headers
-COLS.time            = "Time";
-COLS.pitch           = "Pitch";
-COLS.roll            = "Roll";
-COLS.altitude        = "Altitude";
-COLS.targetAltitude  = "Target Altitude";
+COLS.time            = "time (s)";
+COLS.pitch           = "pitch";
+COLS.roll            = "roll";
+COLS.altitude        = "altitude (m)";
+COLS.targetAltitude  = "target altitude (m)";
 
 %% ==========================
 %% Find Shortest Run
@@ -21,7 +24,7 @@ minLength = inf;
 
 for k = 1:numFiles
 
-    filename = sprintf('V_Simulation_Validation_%d.csv', k);
+    filename = sprintf('III_Validation_result_%d.csv', k);
 
     data = readtable(filename, ...
         'VariableNamingRule','preserve');
@@ -35,16 +38,16 @@ fprintf('Shortest run length = %d samples\n', minLength);
 %% ==========================
 %% Preallocate
 %% ==========================
-pitch_all    = zeros(minLength, numFiles);
-roll_all     = zeros(minLength, numFiles);
-altitude_all = zeros(minLength, numFiles);
+pitch_all    = zeros(minLength,numFiles);
+roll_all     = zeros(minLength,numFiles);
+altitude_all = zeros(minLength,numFiles);
 
 %% ==========================
 %% Load Data
 %% ==========================
 for k = 1:numFiles
 
-    filename = sprintf('V_Simulation_Validation_%d.csv', k);
+    filename = sprintf('III_Validation_result_%d.csv', k);
 
     data = readtable(filename, ...
         'VariableNamingRule','preserve');
@@ -66,8 +69,8 @@ for k = 1:numFiles
 
     %% Extract Data
 
-    pitch_all(:,k) = data.(COLS.pitch)(1:minLength);
-    roll_all(:,k)  = data.(COLS.roll)(1:minLength);
+    pitch_all(:,k)    = data.(COLS.pitch)(1:minLength);
+    roll_all(:,k)     = data.(COLS.roll)(1:minLength);
     altitude_all(:,k) = data.(COLS.altitude)(1:minLength);
 
     %% Use First Run As Reference
@@ -84,13 +87,19 @@ for k = 1:numFiles
 end
 
 %% ==========================
-%% Means
+%% Statistics
 %% ==========================
 mean_pitch = mean(pitch_all,2);
 mean_roll  = mean(roll_all,2);
 mean_alt   = mean(altitude_all,2);
 
-mean_alt_error = target_altitude - mean_alt;
+%% Convert Altitude to cm
+altitude_all_cm    = altitude_all .* 100;
+mean_alt_cm        = mean_alt .* 100;
+target_altitude_cm = target_altitude .* 100;
+
+mean_alt_error_cm = ...
+    target_altitude_cm - mean_alt_cm;
 
 %% ==========================
 %% Diagnostics
@@ -109,126 +118,143 @@ for k = 1:numFiles
 end
 
 %% ==========================
+%% Combined Figure
+%% ==========================
+figure( ...
+    'Color','w', ...
+    'Position',[100 100 1400 900]);
+
+tiledlayout(3,1, ...
+    'TileSpacing','compact', ...
+    'Padding','compact');
+
+%% ==========================
 %% Attitude Plot
 %% ==========================
-figure;
+ax1 = nexttile;
 hold on;
 
 for k = 1:numFiles
 
-    plot(time, pitch_all(:,k), ...
-        'Color',[0.8 0.8 0.8], ...
+    plot(time,pitch_all(:,k), ...
+        'Color',[0.85 0.85 0.85], ...
         'HandleVisibility','off');
 
-    plot(time, roll_all(:,k), ...
-        'Color',[0.8 0.8 0.8], ...
+    plot(time,roll_all(:,k), ...
+        'Color',[0.85 0.85 0.85], ...
         'HandleVisibility','off');
 
 end
 
-plot(time, mean_pitch, ...
+plot(time,mean_pitch, ...
     'g', ...
     'LineWidth',2.5, ...
     'DisplayName','Mean Pitch');
 
-plot(time, mean_roll, ...
+plot(time,mean_roll, ...
     'b', ...
     'LineWidth',2.5, ...
     'DisplayName','Mean Roll');
 
-yline(2, ...
+yline(ATTITUDE_LIMIT_DEG, ...
     'r--', ...
     'LineWidth',2, ...
-    'DisplayName','+2° Requirement');
+    'DisplayName','+2.25° Requirement');
 
-yline(-2, ...
+yline(-ATTITUDE_LIMIT_DEG, ...
     'r--', ...
     'LineWidth',2, ...
-    'DisplayName','-2° Requirement');
+    'DisplayName','-2.25° Requirement');
 
-xlabel('Time (s)');
 ylabel('Angle (deg)');
-
-title( ...
-    sprintf('Attitude vs Time (%d-Run Average)', numFiles), ...
-    'Jonah Habel - Simulation Validation III - 17.08.2026');
-
-legend('Location','best');
 grid on;
 ylim([-3 3]);
+
+legend('Location','eastoutside');
 
 %% ==========================
 %% Altitude Plot
 %% ==========================
-figure;
+ax2 = nexttile;
 hold on;
 
 for k = 1:numFiles
 
-    plot(time, altitude_all(:,k), ...
-        'Color',[0.8 0.8 0.8], ...
+    plot(time,altitude_all_cm(:,k), ...
+        'Color',[0.85 0.85 0.85], ...
         'HandleVisibility','off');
 
 end
 
-plot(time, mean_alt, ...
+plot(time,mean_alt_cm, ...
     'b', ...
     'LineWidth',2.5, ...
     'DisplayName','Mean Altitude');
 
-plot(time, target_altitude, ...
+plot(time,target_altitude_cm, ...
     'k--', ...
     'LineWidth',2, ...
     'DisplayName','Target Altitude');
 
-xlabel('Time (s)');
-ylabel('Altitude (m)');
-
-title( ...
-    sprintf('Altitude vs Time (%d-Run Average)', numFiles), ...
-    'Jonah Habel - Simulation Validation III - 17.08.2026');
-
-legend('Location','best');
+ylabel('Altitude (cm)');
 grid on;
+
+legend('Location','eastoutside');
 
 %% ==========================
 %% Altitude Error Plot
 %% ==========================
-figure;
+ax3 = nexttile;
 hold on;
 
 for k = 1:numFiles
 
-    err = target_altitude - altitude_all(:,k);
+    err_cm = ...
+        (target_altitude - altitude_all(:,k))*100;
 
-    plot(time, err, ...
-        'Color',[0.8 0.8 0.8], ...
+    plot(time,err_cm, ...
+        'Color',[0.85 0.85 0.85], ...
         'HandleVisibility','off');
 
 end
 
-plot(time, mean_alt_error, ...
+plot(time,mean_alt_error_cm, ...
     'k', ...
     'LineWidth',2.5, ...
     'DisplayName','Mean Altitude Error');
 
-yline(0.25, ...
+yline(ALT_ERROR_LIMIT_CM, ...
     'r--', ...
     'LineWidth',2, ...
-    'DisplayName','+0.25 m Requirement');
+    'DisplayName','+18 cm Requirement');
 
-yline(-0.25, ...
+yline(-ALT_ERROR_LIMIT_CM, ...
     'r--', ...
     'LineWidth',2, ...
-    'DisplayName','-0.25 m Requirement');
+    'DisplayName','-18 cm Requirement');
 
 xlabel('Time (s)');
-ylabel('Altitude Error (m)');
+ylabel('Error (cm)');
 
-title( ...
-    sprintf('Altitude Error vs Time (%d-Run Average)', numFiles), ...
-    'Jonah Habel - Simulation Validation III - 17.08.2026');
-
-legend('Location','best');
 grid on;
-ylim([-0.5 0.5]);
+ylim([-30 30]);
+
+legend('Location','eastoutside');
+
+%% ==========================
+%% Synchronise X-Axes
+%% ==========================
+linkaxes([ax1 ax2 ax3],'x');
+
+xlim(ax1,[time(1) time(end)]);
+xlim(ax2,[time(1) time(end)]);
+xlim(ax3,[time(1) time(end)]);
+
+%% ==========================
+%% Overall Figure Title
+%% ==========================
+sgtitle( ...
+    sprintf('PID Controller Validation Results', ...
+    numFiles), ...
+    'FontWeight','bold', ...
+    'FontSize',14);
