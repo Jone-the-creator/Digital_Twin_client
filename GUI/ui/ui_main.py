@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'main_windowSROpNv.ui'
+## Form generated from reading UI file 'main_windowmBVXqM.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.11.1
 ##
@@ -236,11 +236,6 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
 
-        self.PP_k_label = QLabel(self.layoutWidget2)
-        self.PP_k_label.setObjectName(u"PP_k_label")
-
-        self.verticalLayout_4.addWidget(self.PP_k_label)
-
 
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
 
@@ -304,26 +299,26 @@ class Ui_MainWindow(object):
         font3.setPointSize(10)
         self.calibrate_button.setFont(font3)
         self.calibrate_button.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.widget1 = QWidget(self.centralwidget)
-        self.widget1.setObjectName(u"widget1")
-        self.widget1.setGeometry(QRect(631, 321, 249, 62))
-        self.verticalLayout_6 = QVBoxLayout(self.widget1)
+        self.layoutWidget4 = QWidget(self.centralwidget)
+        self.layoutWidget4.setObjectName(u"layoutWidget4")
+        self.layoutWidget4.setGeometry(QRect(631, 321, 249, 62))
+        self.verticalLayout_6 = QVBoxLayout(self.layoutWidget4)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.model_select = QComboBox(self.widget1)
+        self.model_select = QComboBox(self.layoutWidget4)
         self.model_select.setObjectName(u"model_select")
 
         self.verticalLayout_6.addWidget(self.model_select)
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.sim_btn = QPushButton(self.widget1)
+        self.sim_btn = QPushButton(self.layoutWidget4)
         self.sim_btn.setObjectName(u"sim_btn")
         self.sim_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.horizontalLayout_6.addWidget(self.sim_btn)
 
-        self.DT_btn = QPushButton(self.widget1)
+        self.DT_btn = QPushButton(self.layoutWidget4)
         self.DT_btn.setObjectName(u"DT_btn")
         self.DT_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
@@ -374,7 +369,6 @@ class Ui_MainWindow(object):
         self.d_sub_small.setText(QCoreApplication.translate("MainWindow", u"-0.05", None))
         self.d_add_small.setText(QCoreApplication.translate("MainWindow", u"+0.05", None))
         self.d_add_large.setText(QCoreApplication.translate("MainWindow", u"+0.25", None))
-        self.PP_k_label.setText(QCoreApplication.translate("MainWindow", u"k_0 = ", None))
         self.Warn_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Approaching instability", None))
         self.Warn_thrust_alarm.setText(QCoreApplication.translate("MainWindow", u"Warning: Using default thrust", None))
         self.Recording_rate_adj.setSuffix(QCoreApplication.translate("MainWindow", u"Hz", None))

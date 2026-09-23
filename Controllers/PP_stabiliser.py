@@ -25,7 +25,7 @@ class PPstabiliser():
         self.integrated_z_error = 0 
         self.integrated_roll_error = 0 
         self.integrated_pitch_error = 0 
-        self.max_integration = 100
+        self.max_att_integration = 10
 
         # adjustable altitude specifications
         self.settling_time_z = 4 # seconds
@@ -33,11 +33,11 @@ class PPstabiliser():
         self.delay_ratio_z = 0.0
 
         # adjustable attitude specifications
-        self.settling_time_att = 2 # seconds
-        self.overshoot_att = 0.25 # %
+        self.settling_time_att = 0.75 # seconds
+        self.overshoot_att = 3.5 # %
 
         # maximum angle change to remain within linear approximation (small angle change)
-        self.max_angle_rate = 20 # in degrees/s
+        self.max_angle_rate = 10 # in degrees/s
 
         # -- MATRICES FOR ALTITUDE --
         self.A_z = np.array([
@@ -58,8 +58,8 @@ class PPstabiliser():
         self.A_att = np.array([
             [0,0,0,0],
             [0,0,0,0],
-            [1,0,0,0],
-            [0,1,0,0]
+            [-1,0,0,0],
+            [0,-1,0,0]
         ])
 
         self.B_att = np.array([
@@ -102,17 +102,16 @@ class PPstabiliser():
         return u[0,0]
 
     def attitude_control(self, dt):
-        roll_error = self.obs.quad.attitude.roll - self.roll_setpoint
-        pitch_error = self.obs.quad.attitude.pitch - self.pitch_setpoint
-
-        self.integrated_roll_error += roll_error * dt
-        self.integrated_pitch_error += pitch_error * dt
+        roll_error = self.roll_setpoint - self.obs.quad.attitude.roll
+        pitch_error = self.pitch_setpoint - self.obs.quad.attitude.pitch
 
         x = np.array([
-            [roll_error],
-            [pitch_error],
-            [np.clip(self.integrated_roll_error, -self.max_integration, self.max_integration)],
-            [np.clip(self.integrated_pitch_error, -self.max_integration, self.max_integration)]
+            [self.obs.quad.attitude.roll],
+            [self.obs.quad.attitude.pitch],
+            [0],
+            [0]
+            # [np.clip(self.integrated_roll_error, -self.max_att_integration, self.max_att_integration)],
+            # [np.clip(self.integrated_pitch_error, -self.max_att_integration, self.max_att_integration)]
         ])
 
         u = -self.K_att @ x
@@ -126,7 +125,7 @@ class PPstabiliser():
         roll_cmd = np.clip(u[0,0], -self.max_angle_rate, self.max_angle_rate)
         pitch_cmd = np.clip(u[1,0], -self.max_angle_rate, self.max_angle_rate)
         print(f"from attitude controller: pitch_cmd = {pitch_cmd:.2f}, roll_cmd = {roll_cmd:.2f}")
-        return pitch_cmd, roll_cmd
+        return -pitch_cmd, roll_cmd
 
     def reset(self):
         # Reset setpoints

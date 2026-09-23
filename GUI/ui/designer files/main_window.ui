@@ -365,13 +365,6 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
          </item>
         </layout>
        </item>
-       <item>
-        <widget class="QLabel" name="PP_k_label">
-         <property name="text">
-          <string>k_0 = </string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </item>
      <item>
@@ -508,7 +501,7 @@ font: 700 9pt &quot;Segoe UI&quot;;</string>
      <string>Calibrate</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>631</x>

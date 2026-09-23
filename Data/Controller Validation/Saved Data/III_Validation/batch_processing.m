@@ -9,6 +9,9 @@ numFiles = 10;
 
 ATTITUDE_LIMIT_DEG = 2.25;
 ALT_ERROR_LIMIT_CM = 18;
+AXIS_FONT_SIZE = 20
+LEGEND_FONT_SIZE = 18
+TICK_FONT_SIZE = 16
 
 % CSV column headers
 COLS.time            = "time (s)";
@@ -166,11 +169,13 @@ yline(-ATTITUDE_LIMIT_DEG, ...
     'LineWidth',2, ...
     'DisplayName','-2.25° Requirement');
 
-ylabel('Angle (deg)');
+ylabel('Angle (deg)', 'FontSize', AXIS_FONT_SIZE);
+set(gca,'FontSize',TICK_FONT_SIZE);
 grid on;
 ylim([-3 3]);
 
-legend('Location','eastoutside');
+legend('Location','eastoutside', ...
+       'FontSize',LEGEND_FONT_SIZE);
 
 %% ==========================
 %% Altitude Plot
@@ -196,10 +201,12 @@ plot(time,target_altitude_cm, ...
     'LineWidth',2, ...
     'DisplayName','Target Altitude');
 
-ylabel('Altitude (cm)');
+ylabel('Altitude (cm)', 'FontSize', AXIS_FONT_SIZE);
+set(gca,'FontSize',TICK_FONT_SIZE);
 grid on;
 
-legend('Location','eastoutside');
+legend('Location','eastoutside', ...
+       'FontSize',LEGEND_FONT_SIZE);
 
 %% ==========================
 %% Altitude Error Plot
@@ -233,13 +240,15 @@ yline(-ALT_ERROR_LIMIT_CM, ...
     'LineWidth',2, ...
     'DisplayName','-18 cm Requirement');
 
-xlabel('Time (s)');
-ylabel('Error (cm)');
+xlabel('Time (s)', 'FontSize', AXIS_FONT_SIZE);
+ylabel('Error (cm)', 'FontSize', AXIS_FONT_SIZE);
+set(gca,'FontSize',TICK_FONT_SIZE);
 
 grid on;
 ylim([-30 30]);
 
-legend('Location','eastoutside');
+legend('Location','eastoutside', ...
+       'FontSize',LEGEND_FONT_SIZE);
 
 %% ==========================
 %% Synchronise X-Axes
@@ -257,4 +266,4 @@ sgtitle( ...
     sprintf('PID Controller Validation Results', ...
     numFiles), ...
     'FontWeight','bold', ...
-    'FontSize',14);
+    'FontSize',26);
