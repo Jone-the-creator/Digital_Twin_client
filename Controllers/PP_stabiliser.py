@@ -97,54 +97,6 @@ class PPstabiliser():
         print(u)
         print(f"pitch_cmd = {pitch_rate_cmd:.2f}, roll_cmd = {roll_rate_cmd:.2f}, thrust_cmd = {thrust_cmd:.2f}")
         return roll_rate_cmd, pitch_rate_cmd, thrust_cmd
-        
-    def altitude_control(self, altitude_setpoint, dt):
-        if self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
-            velocity_z = self.sim_non_linear.velocity.z
-            altitude = self.sim_non_linear.position.z
-        elif self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "linearised model":
-            velocity_z = self.sim_non_linear.velocity.z
-            altitude = self.sim_linear.position.z
-        else:
-            velocity_z = self.obs.x[5,0]
-            altitude = self.obs.quad.position.z
-        altitude_error = altitude_setpoint - altitude
-        self.integrated_z_error += altitude_error * dt
-
-        hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
-        x = np.array([
-            [altitude_error],
-            [velocity_z],
-            [self.integrated_z_error]
-        ])
-
-        u = hover_thrust - (self.K_z @ x) * self.obs.quad.PWM_thrust_gain
-
-        return u[0,0]
-
-    def attitude_control(self, dt):
-        roll_error = np.deg2rad(self.roll_setpoint - self.obs.quad.attitude.roll)
-        pitch_error = np.deg2rad(self.pitch_setpoint - self.obs.quad.attitude.pitch)
-
-        x = np.array([
-            [roll_error],
-            [pitch_error],
-            [np.clip(self.integrated_roll_error, -self.max_att_integration, self.max_att_integration)],
-            [np.clip(self.integrated_pitch_error, -self.max_att_integration, self.max_att_integration)]
-        ])
-
-        u = -self.K_att @ x
-
-        if abs(u[1,0]) < self.max_angle_rate:
-            self.integrated_pitch_error += pitch_error * dt
-
-        if abs(u[0,0]) < self.max_angle_rate:
-            self.integrated_roll_error += roll_error * dt
-
-        roll_cmd = np.clip(u[0,0], -self.max_angle_rate, self.max_angle_rate)
-        pitch_cmd = np.clip(u[1,0], -self.max_angle_rate, self.max_angle_rate)
-        print(f"from attitude controller: pitch_cmd = {pitch_cmd:.2f}, roll_cmd = {roll_cmd:.2f}")
-        return -np.rad2deg(pitch_cmd), np.rad2deg(roll_cmd)
 
     def reset(self):
         # Reset setpoints
