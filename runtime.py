@@ -171,7 +171,7 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                     quad.recording_active = True
 
                 # -- TEST FLIGHT SEQUENCE --
-                if flight_time < 5:
+                if flight_time < 10:
                     target_altitude = 1 # hold at altitude for 5 seconds  
                 
                 else:
@@ -186,8 +186,7 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
 
-                u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
-                thrust_raw = PP.altitude_control(target_altitude, dt)
+                u[2,0], u[1,0], thrust_raw = PP.hover(target_altitude, dt)
 
             elif not r1 and not quad.calibrating:
                 # If no test flight started reset stabiliser and disable recording

@@ -42,6 +42,24 @@ class PPstabiliser():
         # maximum angle change to remain within linear approximation (small angle change)
         self.max_angle_rate = 15 # in degrees/s
 
+        self.A_aug = np.block([
+            [self.obs.A, np.zeros((9,1))],
+            [-np.array([[0, 0, 1, 0, 0, 0, 0, 0, 0]]), np.zeros((1,1))],
+        ])
+
+        self.B_aug = np.vstack([
+            self.obs.B,
+            np.zeros((1,4))
+        ])
+
+        print(self.A_aug.shape)
+        print(self.B_aug.shape)
+
+        C = ctrb(self.A_aug, self.B_aug)
+
+        print("rank =", np.linalg.matrix_rank(C))
+        print("states =", self.A_aug.shape[0])
+
         self.K = self.altitude_spec_update()
 
     def hover(self, altitude_setpoint, dt):
@@ -50,23 +68,32 @@ class PPstabiliser():
             [self.obs.x[0,0]],
             [self.obs.x[1,0]],
             [altitude_setpoint],
-            [0],
-            [0],
+            [self.obs.x[3,0]],
+            [self.obs.x[4,0]],
             [0],
             [np.deg2rad(self.roll_setpoint)],
             [np.deg2rad(self.pitch_setpoint)],
             [self.obs.x[8,0]]
         ])
 
-        error = self.obs.x - x_sp
-        print(error.T)
-        u = -self.K @ error
+        error = x_sp - self.obs.x 
 
-        roll_rate_cmd = np.clip(np.rad2deg(u[0,0]), -self.max_angle_rate, self.max_angle_rate)
-        pitch_rate_cmd = np.clip(np.rad2deg(u[1,0]), -self.max_angle_rate, self.max_angle_rate)
+        self.integrated_z_error += error[2,0] * dt
+
+        # augmented error matrix with integratal states
+        e_aug = np.vstack(
+            [error,
+            -self.integrated_z_error]
+        )
+
+        print(e_aug.T)
+        u = -self.K @ e_aug
+
+        roll_rate_cmd = -np.clip(np.rad2deg(u[0,0]), -self.max_angle_rate, self.max_angle_rate)
+        pitch_rate_cmd = -np.clip(np.rad2deg(u[1,0]), -self.max_angle_rate, self.max_angle_rate)
 
         thrust_delta = float(u[3,0]) * self.obs.quad.PWM_thrust_gain
-        thrust_cmd = self.obs.quad.hover_thrust + thrust_delta
+        thrust_cmd = self.obs.quad.hover_thrust - thrust_delta
         print(u)
         print(f"pitch_cmd = {pitch_rate_cmd:.2f}, roll_cmd = {roll_rate_cmd:.2f}, thrust_cmd = {thrust_cmd:.2f}")
         return roll_rate_cmd, pitch_rate_cmd, thrust_cmd
@@ -138,7 +165,7 @@ class PPstabiliser():
         self.omega_z = 4/(self.zeta_z*self.settling_time_z)
         self.delay_ratio_z = self.omega_z * self.obs.quad.dt # should be under 0.1 for stability
 
-        self.desired_poles = np.array([
+        desired_poles = np.array([
             -1+1j,
             -1-1j,
             -1.5+1.5j,
@@ -146,12 +173,13 @@ class PPstabiliser():
             -2+2j,
             -2-2j,
             -3,
-            -4,
-            -5
+            -1.2,
+            -0.8,
+            -0.5,
         ])
 
 
-        return place_poles(self.obs.A,self.obs.B,self.desired_poles).gain_matrix
+        return place_poles(self.A_aug,self.B_aug,desired_poles).gain_matrix
 
     def attitude_spec_update(self):
         # poles that adjust based on specifications

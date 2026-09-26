@@ -560,13 +560,13 @@ class MainWindow(QMainWindow):
         self.ui.I_label.setText(f"Overshoot: {Mp:.2f} %")
 
     def update_step_response(self):
-        # elapsed = time.time() - self.step_start_time
+        elapsed = time.time() - self.step_start_time
 
-        # self.response_time.append(elapsed)
+        self.response_time.append(elapsed)
 
-        # if not self.quadcopter.simulation_mode:
-        #     self.response_altitude.append(self.quadcopter.position.z)
-        #     self.response_setpoint.append(self.quadcopter.controls.z)
+        if not self.quadcopter.simulation_mode:
+            self.response_altitude.append(self.quadcopter.position.z)
+            self.response_setpoint.append(self.quadcopter.controls.z)
         # elif self.ui.model_select.currentText().lower == "non-linear model":
         #     self.response_altitude.append(self.sim_non_linear.position.z)
         #     self.response_setpoint.append(self.sim_non_linear.controls.z)
@@ -574,15 +574,15 @@ class MainWindow(QMainWindow):
         #     self.response_altitude.append(self.sim_linear.position.z)
         #     self.response_setpoint.append(self.sim_linear.controls.z)
 
-        # self.alt_curve.setData(
-        #     list(self.response_time),
-        #     list(self.response_altitude)
-        # )
+        self.alt_curve.setData(
+            list(self.response_time),
+            list(self.response_altitude)
+        )
 
-        # self.sp_curve.setData(
-        #     list(self.response_time),
-        #     list(self.response_setpoint)
-        #     )
+        self.sp_curve.setData(
+            list(self.response_time),
+            list(self.response_setpoint)
+            )
         return
     
     def reset_step_response(self):
