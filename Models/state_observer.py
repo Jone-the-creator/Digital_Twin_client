@@ -6,6 +6,7 @@
 
 import numpy as np
 from scipy.signal import place_poles
+import control as co
 
 g = 9.81 # m/s^2
 
@@ -70,6 +71,8 @@ class Observer:
             [0, 0, 0, 0]
         ])
 
+        self.sys = co.ss(self.A, self.B, self.C, self.D)
+
         self.observer_poles = np.array([
             -10 + 13.69j,
             -10 - 13.69j,
@@ -82,11 +85,11 @@ class Observer:
             -110
         ])
 
-        Co = controllability_matrix(self.A, self.B)
-        print("Controllability rank:", np.linalg.matrix_rank(Co), "/", self.A.shape[0])
+        # Co = controllability_matrix(self.A, self.B)
+        # print("Controllability rank:", np.linalg.matrix_rank(Co), "/", self.A.shape[0])
 
-        Ob = observability_matrix(self.A, self.C)
-        print("Observability rank:", np.linalg.matrix_rank(Ob), "/", self.A.shape[0])
+        # Ob = observability_matrix(self.A, self.C)
+        # print("Observability rank:", np.linalg.matrix_rank(Ob), "/", self.A.shape[0])
 
         self.L = place_poles(self.A.T, self.C.T, self.observer_poles).gain_matrix.T
 

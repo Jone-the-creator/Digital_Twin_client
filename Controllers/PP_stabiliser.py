@@ -7,6 +7,7 @@
 import numpy as np
 from scipy.signal import place_poles
 from control import ctrb
+import control as co
 
 g = 9.81 # m/s^2
 
@@ -25,7 +26,7 @@ class PPstabiliser():
         self.integrated_z_error = 0 
         self.integrated_roll_error = 0 
         self.integrated_pitch_error = 0 
-        self.max_att_integration = 10
+        self.max_att_integration = 2
 
         # adjustable altitude specifications
         self.settling_time_z = 4 # seconds
@@ -35,47 +36,40 @@ class PPstabiliser():
         # adjustable attitude specifications
         self.settling_time_att = 0.75 # seconds
         self.overshoot_att = 3.5 # %
+        self.zeta_att = np.sqrt(((np.log(self.overshoot_att/100))**2)/(np.pi**2+(np.log(self.overshoot_att/100))**2))
+        self.omega_att = 4/(self.zeta_att*self.settling_time_att)
 
         # maximum angle change to remain within linear approximation (small angle change)
-        self.max_angle_rate = 10 # in degrees/s
+        self.max_angle_rate = 15 # in degrees/s
 
-        # -- MATRICES FOR ALTITUDE --
-        self.A_z = np.array([
-            [0,         1,             0],
-            [0, -self.obs.quad.c[0,0], 0],
-            [-1,        0,             0]
-        ])
+        self.K = self.altitude_spec_update()
 
-        self.B_z = np.array([
+    def hover(self, altitude_setpoint, dt):
+        # x setpoint states, any that aren't to be used are set to zero by using the observed value
+        x_sp = np.array([
+            [self.obs.x[0,0]],
+            [self.obs.x[1,0]],
+            [altitude_setpoint],
             [0],
-            [1/self.obs.quad.mass],
-            [0]
+            [0],
+            [0],
+            [np.deg2rad(self.roll_setpoint)],
+            [np.deg2rad(self.pitch_setpoint)],
+            [self.obs.x[8,0]]
         ])
 
-        self.K_z = self.altitude_spec_update()
+        error = self.obs.x - x_sp
+        print(error.T)
+        u = -self.K @ error
 
-        # -- MATRICES FOR ATTITUDE --
-        self.A_att = np.array([
-            [0,0,0,0],
-            [0,0,0,0],
-            [-1,0,0,0],
-            [0,-1,0,0]
-        ])
+        roll_rate_cmd = np.clip(np.rad2deg(u[0,0]), -self.max_angle_rate, self.max_angle_rate)
+        pitch_rate_cmd = np.clip(np.rad2deg(u[1,0]), -self.max_angle_rate, self.max_angle_rate)
 
-        self.B_att = np.array([
-            [1, 0],
-            [0, 1],
-            [0, 0],
-            [0, 0],
-        ])
-
-        self.K_att = self.attitude_spec_update()
-        print(self.K_att)
-
-        print(np.linalg.matrix_rank(ctrb(self.A_att,self.B_att)))
-
-    def hover():
-        return None
+        thrust_delta = float(u[3,0]) * self.obs.quad.PWM_thrust_gain
+        thrust_cmd = self.obs.quad.hover_thrust + thrust_delta
+        print(u)
+        print(f"pitch_cmd = {pitch_rate_cmd:.2f}, roll_cmd = {roll_rate_cmd:.2f}, thrust_cmd = {thrust_cmd:.2f}")
+        return roll_rate_cmd, pitch_rate_cmd, thrust_cmd
         
     def altitude_control(self, altitude_setpoint, dt):
         if self.obs.quad.simulation_mode and self.obs.quad.viewer.ui.model_select.currentText().lower() == "non-linear model":
@@ -92,7 +86,7 @@ class PPstabiliser():
 
         hover_thrust = self.obs.quad.PWM_thrust_gain * self.obs.quad.mass * 9.81 
         x = np.array([
-            [altitude],
+            [altitude_error],
             [velocity_z],
             [self.integrated_z_error]
         ])
@@ -102,16 +96,14 @@ class PPstabiliser():
         return u[0,0]
 
     def attitude_control(self, dt):
-        roll_error = self.roll_setpoint - self.obs.quad.attitude.roll
-        pitch_error = self.pitch_setpoint - self.obs.quad.attitude.pitch
+        roll_error = np.deg2rad(self.roll_setpoint - self.obs.quad.attitude.roll)
+        pitch_error = np.deg2rad(self.pitch_setpoint - self.obs.quad.attitude.pitch)
 
         x = np.array([
-            [self.obs.quad.attitude.roll],
-            [self.obs.quad.attitude.pitch],
-            [0],
-            [0]
-            # [np.clip(self.integrated_roll_error, -self.max_att_integration, self.max_att_integration)],
-            # [np.clip(self.integrated_pitch_error, -self.max_att_integration, self.max_att_integration)]
+            [roll_error],
+            [pitch_error],
+            [np.clip(self.integrated_roll_error, -self.max_att_integration, self.max_att_integration)],
+            [np.clip(self.integrated_pitch_error, -self.max_att_integration, self.max_att_integration)]
         ])
 
         u = -self.K_att @ x
@@ -125,7 +117,7 @@ class PPstabiliser():
         roll_cmd = np.clip(u[0,0], -self.max_angle_rate, self.max_angle_rate)
         pitch_cmd = np.clip(u[1,0], -self.max_angle_rate, self.max_angle_rate)
         print(f"from attitude controller: pitch_cmd = {pitch_cmd:.2f}, roll_cmd = {roll_cmd:.2f}")
-        return -pitch_cmd, roll_cmd
+        return -np.rad2deg(pitch_cmd), np.rad2deg(roll_cmd)
 
     def reset(self):
         # Reset setpoints
@@ -145,15 +137,21 @@ class PPstabiliser():
         self.zeta_z = np.sqrt(((np.log(self.overshoot_z/100))**2)/(np.pi**2+(np.log(self.overshoot_z/100))**2))
         self.omega_z = 4/(self.zeta_z*self.settling_time_z)
         self.delay_ratio_z = self.omega_z * self.obs.quad.dt # should be under 0.1 for stability
-     
-        # calculate poles based on adjustable specifications
-        self.desired_poles_z = np.array([-self.zeta_z*self.omega_z * 5, 
-                                -self.zeta_z*self.omega_z + (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j, 
-                                -self.zeta_z*self.omega_z - (self.omega_z*np.sqrt(1-self.zeta_z**2))*1j 
-                                ])
+
+        self.desired_poles = np.array([
+            -1+1j,
+            -1-1j,
+            -1.5+1.5j,
+            -1.5-1.5j,
+            -2+2j,
+            -2-2j,
+            -3,
+            -4,
+            -5
+        ])
 
 
-        return place_poles(self.A_z,self.B_z,self.desired_poles_z).gain_matrix
+        return place_poles(self.obs.A,self.obs.B,self.desired_poles).gain_matrix
 
     def attitude_spec_update(self):
         # poles that adjust based on specifications

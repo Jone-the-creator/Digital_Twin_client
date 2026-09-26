@@ -104,6 +104,7 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
             if square: 
                 quad.killed = True
                 print("KILL SWITCH PRESSED")
+
             
             # --- MANUAL CONTROL MODE ---
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
@@ -118,11 +119,14 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                     PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
-                    # u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
                     PP.pitch_setpoint = pitch 
                     PP.roll_setpoint = roll
-                    u[1,0], u[2,0] = PP.attitude_control(dt)
-                    thrust_raw = PP.altitude_control(altitude, dt)
+                    u[2,0], u[1,0], thrust_raw = PP.hover(altitude, dt)
+                    # u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
+                    # PP.pitch_setpoint = pitch 
+                    # PP.roll_setpoint = roll
+                    # u[1,0], u[2,0] = PP.attitude_control(dt)
+                    # thrust_raw = PP.altitude_control(altitude, dt)
 
             # Cancel test flight if circle pressed
             elif circle: 
@@ -134,7 +138,6 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                         quad.recording_active = False
                     target_altitude = 0.0
 
-            
             # Start test flight with triangle, only works if kill switch not pressed and manual mode not armed
             elif triangle and not quad.killed and eff_count % 2 == 0:
                 quad.test_flight = True
