@@ -94,8 +94,7 @@ class PPstabiliser():
 
         thrust_delta = float(u[3,0]) * self.obs.quad.PWM_thrust_gain
         thrust_cmd = self.obs.quad.hover_thrust - thrust_delta
-        print(u)
-        print(f"pitch_cmd = {pitch_rate_cmd:.2f}, roll_cmd = {roll_rate_cmd:.2f}, thrust_cmd = {thrust_cmd:.2f}")
+        
         return roll_rate_cmd, pitch_rate_cmd, thrust_cmd
 
     def reset(self):
@@ -118,32 +117,16 @@ class PPstabiliser():
         self.delay_ratio_z = self.omega_z * self.obs.quad.dt # should be under 0.1 for stability
 
         desired_poles = np.array([
-            -1+1j,
-            -1-1j,
-            -1.5+1.5j,
-            -1.5-1.5j,
-            -2+2j,
-            -2-2j,
-            -3,
+            -1+1.37j, -1-1.37j,
+            -1.1,
             -1.2,
-            -0.8,
-            -0.5,
+            -1.3,
+            -1.4,
+            -1.5,
+            -1.6,
+            -1.7,
+            -0.25
         ])
 
 
         return place_poles(self.A_aug,self.B_aug,desired_poles).gain_matrix
-
-    def attitude_spec_update(self):
-        # poles that adjust based on specifications
-        self.zeta_att = np.sqrt(((np.log(self.overshoot_att/100))**2)/(np.pi**2+(np.log(self.overshoot_att/100))**2))
-        self.omega_att = 4/(self.zeta_att*self.settling_time_att)
-     
-        # calculate poles based on adjustable specifications
-        self.desired_poles_att = np.array([
-                                -self.zeta_att*self.omega_att + (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j, 
-                                -self.zeta_att*self.omega_att - (self.omega_att*np.sqrt(1-self.zeta_att**2))*1j,
-                                -self.zeta_att*self.omega_att * 1.1,
-                                -self.zeta_att*self.omega_att * 1.15,                             
-                                ])
-
-        return place_poles(self.A_att,self.B_att,self.desired_poles_att).gain_matrix

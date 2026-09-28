@@ -27,6 +27,7 @@ from Models.state_observer import Observer
 running = True
 LOOP_RATE = 300 # control loop rate in Hz
 dt = 1/LOOP_RATE # dt based on loop rate (in seconds)
+null = 0 
 
 # -- FUNCTION TO UPDATE THE ACTIVE PLANT --
 def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
@@ -58,24 +59,6 @@ def update_active(obs, quad, sim_1, sim_2, u, altitude, dt):
             [u[3,0]]]), # thrust
             dt
         )
-    # if hasattr(quad, 'viewer'):
-    #     if quad.viewer.ui.model_select.currentText().lower == "non-linear model":  
-    #         sim_1.update(np.array([
-    #             [np.deg2rad(u[2,0])], # roll rate
-    #             [-np.deg2rad(u[1,0])], # pitch rate
-    #             [-np.deg2rad(u[0,0])], # yaw rate
-    #             [u[3,0]]]), # thrust
-    #             dt
-    #         )
-    #     elif quad.viewer.ui.model_select.currentText().lower == "linearised model": 
-    #         sim_2.update(np.array([
-    #             [np.deg2rad(u[2,0])], # roll rate
-    #             [-np.deg2rad(u[1,0])], # pitch rate
-    #             [-np.deg2rad(u[0,0])], # yaw rate
-    #             [u[3,0]]]), # thrust
-    #             dt
-    #         )
-
 
     # ---- CONTROL LOOP ----
 def control_loop(obs, quad, PID, sim_1, sim_2, PP):
@@ -119,14 +102,8 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                     PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
-                    PP.pitch_setpoint = pitch 
-                    PP.roll_setpoint = roll
                     u[2,0], u[1,0], thrust_raw = PP.hover(altitude, dt)
-                    # u[1,0], u[2,0], thrust_raw = PID.hover(altitude) # temporarily use PID stabiliser
-                    # PP.pitch_setpoint = pitch 
-                    # PP.roll_setpoint = roll
-                    # u[1,0], u[2,0] = PP.attitude_control(dt)
-                    # thrust_raw = PP.altitude_control(altitude, dt)
+                    u[1,0], u[2,0], null = PID.hover(altitude) # temporarily use PID stabiliser
 
             # Cancel test flight if circle pressed
             elif circle: 

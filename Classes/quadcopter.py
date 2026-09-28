@@ -209,16 +209,16 @@ class Quadcopter:
 
         # fill control matrix with attitude velocities
         if roll_vel is not None:
-            u[0,0] = np.deg2rad(roll_vel - 0.0034)
-            self.gyro_y = roll_vel - 0.0034
+            u[0,0] = np.deg2rad(roll_vel - 0.00344)
+            self.gyro_y = roll_vel - 0.00344
         
         if pitch_vel is not None:
-            u[1,0] = np.deg2rad(pitch_vel - 0.0039)
-            self.gyro_x = pitch_vel - 0.0039
+            u[1,0] = np.deg2rad(pitch_vel - 0.00397)
+            self.gyro_x = pitch_vel - 0.00397
         
         if yaw_vel is not None:
 
-            u[2,0] = np.deg2rad(yaw_vel - 0.009)
+            u[2,0] = np.deg2rad(yaw_vel)
             self.gyro_z = yaw_vel
 
         # ADD ESTIMATOR PLUGIN HERE AS AN ELIF STATEMENT
