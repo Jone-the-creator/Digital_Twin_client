@@ -14,10 +14,10 @@ LEGEND_FONT_SIZE = 18
 TICK_FONT_SIZE = 16
 
 % CSV column headers
-COLS.time            = "time (s)";
+COLS.time            = "time";
 COLS.pitch           = "pitch";
 COLS.roll            = "roll";
-COLS.altitude        = "altitude (m)";
+COLS.altitude        = "z";
 COLS.targetAltitude  = "target altitude (m)";
 
 %% ==========================
@@ -27,7 +27,7 @@ minLength = inf;
 
 for k = 1:numFiles
 
-    filename = sprintf('III_Validation_result_%d.csv', k);
+    filename = sprintf('I_PP_Validation_result_%d.csv', k);
 
     data = readtable(filename, ...
         'VariableNamingRule','preserve');
@@ -50,7 +50,7 @@ altitude_all = zeros(minLength,numFiles);
 %% ==========================
 for k = 1:numFiles
 
-    filename = sprintf('III_Validation_result_%d.csv', k);
+    filename = sprintf('I_PP_Validation_result_%d.csv', k);
 
     data = readtable(filename, ...
         'VariableNamingRule','preserve');
@@ -263,7 +263,7 @@ xlim(ax3,[time(1) time(end)]);
 %% Overall Figure Title
 %% ==========================
 sgtitle( ...
-    sprintf('PID Controller Validation Results', ...
+    sprintf('PP Controller Validation Results', ...
     numFiles), ...
     'FontWeight','bold', ...
     'FontSize',26);
