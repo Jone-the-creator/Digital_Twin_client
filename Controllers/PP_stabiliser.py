@@ -52,13 +52,13 @@ class PPstabiliser():
             np.zeros((1,4))
         ])
 
-        print(self.A_aug.shape)
-        print(self.B_aug.shape)
+        # print(self.A_aug.shape)
+        # print(self.B_aug.shape)
 
         C = ctrb(self.A_aug, self.B_aug)
 
-        print("rank =", np.linalg.matrix_rank(C))
-        print("states =", self.A_aug.shape[0])
+        # print("rank =", np.linalg.matrix_rank(C))
+        # print("states =", self.A_aug.shape[0])
 
         self.K = self.altitude_spec_update()
 
@@ -86,7 +86,7 @@ class PPstabiliser():
             -self.integrated_z_error]
         )
 
-        print(e_aug.T)
+        # print(e_aug.T)
         u = -self.K @ e_aug
 
         roll_rate_cmd = -np.clip(np.rad2deg(u[0,0]), -self.max_angle_rate, self.max_angle_rate)

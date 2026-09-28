@@ -68,7 +68,6 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
     count = 0
     eff_count = 0
     u = np.zeros((4,1))
-    att_u = np.zeros((3,1))
     thrust_raw = 0
     altitude = 0.0
     target_altitude = 0.0
@@ -91,15 +90,13 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
             
             # --- MANUAL CONTROL MODE ---
             # Arm with R1 (bumper), only works if kill switch not pressed and test flight not happening
-            if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:
-                roll, pitch, yaw_rate, altitude = \
-                functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)   
-                PID.pitch_setpoint = -pitch
-                PID.roll_setpoint = roll
-                u[0,0] = yaw_rate
+            roll, pitch, yaw_rate, altitude = \
+            functions.joystick_to_setpoint(lx, ly, lt, rx, ry, rt, loop_time)  
+            PID.pitch_setpoint = -pitch
+            PID.roll_setpoint = roll
+            u[0,0] = yaw_rate
+            if r1 and not quad.killed and not quad.test_flight and eff_count % 2 == 0:  
                 if quad.control_system == "PID":
-                    PID.pitch_setpoint = -pitch
-                    PID.roll_setpoint = roll
                     u[1,0], u[2,0], thrust_raw = PID.hover(altitude)
                 elif quad.control_system == "Pole-placement":
                     u[2,0], u[1,0], thrust_raw = PP.hover(altitude, dt)
@@ -141,6 +138,8 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                 if count == 0:
                     target_altitude = 0.0     
                     PID.zero() # Zeros the setpoints
+                    PP.reset()
+                    PID.reset()
                 flight_time = count * dt
                 if not quad.recording_active:
                     # Start Recording thread
@@ -148,9 +147,30 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                     quad.recording_active = True
 
                 # -- TEST FLIGHT SEQUENCE --
-                if flight_time < 10:
-                    target_altitude = 1 # hold at altitude for 5 seconds  
-                
+                if flight_time < 2:
+                    target_altitude = 0.25 * flight_time # slowly increase to 0.5
+
+                elif flight_time < 6:
+                    target_altitude = 0.5 # hold at altitude for 4 seconds
+
+                elif flight_time < 8:
+                    # Only start a recording thread if one hasn't started
+                    if not quad.recording_active:
+                        # Start Recording thread
+                        quad.viewer.start_record_signal.emit()
+                        quad.recording_active = True
+                    target_altitude += 0.25 * dt # slowly increase to 1m
+
+                elif flight_time < 16:
+                    target_altitude = 1.0 # hold at altitude for 8 seconds   
+                    
+                elif flight_time < 20:
+                    target_altitude -= 0.25 * dt # slowly decrease to 0m
+                    if target_altitude < 0.5: # stop recording at 0.5m
+                        if quad.recording_active:
+                            quad.viewer.stop_record_signal.emit()
+                            quad.recording_active = False
+
                 else:
                     quad.test_flight = False
                     PID.reset()
@@ -163,7 +183,13 @@ def control_loop(obs, quad, PID, sim_1, sim_2, PP):
                         quad.viewer.stop_record_signal.emit()
                         quad.recording_active = False
 
-                u[2,0], u[1,0], thrust_raw = PP.hover(target_altitude, dt)
+                if quad.control_system == "PID":
+                    u[1,0], u[2,0], thrust_raw = PID.hover(target_altitude)
+                elif quad.control_system == "Pole-placement":
+                    u[2,0], u[1,0], thrust_raw = PP.hover(target_altitude, dt)
+                    u[1,0], u[2,0], null = PID.hover(target_altitude) # temporarily use PID stabiliser
+                
+
 
             elif not r1 and not quad.calibrating:
                 # If no test flight started reset stabiliser and disable recording
